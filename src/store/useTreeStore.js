@@ -269,6 +269,15 @@ export const useTreeStore = create((set) => ({
       ),
     })),
 
+    toggleEdgesCost: (sourceNodeId) =>
+    set((state) => ({
+      edges: state.edges.map((e) =>
+        e.source === sourceNodeId
+          ? { ...e, data: { ...e.data, showCost: !e.data?.showCost } }
+          : e
+      ),
+    })),
+
     updateNodeData: (nodeId, patch) =>
     set((state) => ({
       nodes: state.nodes.map((n) =>

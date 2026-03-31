@@ -25,10 +25,10 @@ export function ChanceNode({ id, data }) {
     <div className="group relative z-10 hover:!z-[9999]">
       {isError && (
         <div 
-          className="absolute -right-3 -top-3 z-30 flex h-6 items-center justify-center whitespace-nowrap min-w-max rounded-full bg-red-500 px-2.5 text-[11px] font-bold text-white shadow-md ring-2 ring-white"
+          className="absolute -top-3 z-30 flex h-6 items-center justify-center whitespace-nowrap min-w-max rounded-full bg-red-500 px-2.5 text-[11px] font-bold text-white shadow-md ring-2 ring-white"
           title="Suma prawdopodobieństw musi wynosić dokładnie 100%"
         >
-          ⚠️ {Math.round(probSum)}%
+           {Math.round(probSum)}%
         </div>
       )}
 

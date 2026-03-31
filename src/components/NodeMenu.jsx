@@ -4,16 +4,18 @@ export function NodeMenu({ nodeId, nodeType, hasIncoming }) {
   const addBranch = useTreeStore((s) => s.addBranch);
   const removeNode = useTreeStore((s) => s.removeNode);
   const swapNodeType = useTreeStore((s) => s.swapNodeType);
+  const toggleEdgesCost = useTreeStore((s) => s.toggleEdgesCost);
 
   const isTerminal = nodeType === 'terminal';
 
-  // Style dla elementów
-  const btnClass = "flex w-full items-center gap-3 px-3 py-2 text-left font-sans text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-cyan-600 transition-colors";
-  const iconClass = "h-[16px] w-[16px] shrink-0";
-  const dividerClass = "mx-2 my-1 h-px bg-slate-100";
+  // ŚCIŚNIĘTE STYLE: mniejszy padding pionowy (py-1.5 zamiast py-2), mniejsza czcionka (text-[12px])
+  const btnClass = "flex w-full items-center gap-2.5 px-3 py-1.5 text-left font-sans text-[12px] font-medium text-slate-700 hover:bg-slate-50 hover:text-cyan-600 transition-colors";
+  const iconClass = "h-[15px] w-[15px] shrink-0";
+  const dividerClass = "mx-2 my-0.5 h-px bg-slate-100"; // Mniejszy margines (my-0.5)
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl w-48 py-1.5 z-50 relative">
+    // Zmniejszony pionowy padding całego diva (py-1)
+    <div className="flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl w-48 py-1 z-50 relative">
       
       {/* SEKCJA: DODAWANIE (ukryta dla terminali) */}
       {!isTerminal && (
@@ -71,7 +73,21 @@ export function NodeMenu({ nodeId, nodeType, hasIncoming }) {
         </button>
       )}
 
-      {/* SEKCJA: USUWANIE (widoczne dla wszystkich oprócz głównego korzenia) */}
+      {/* SEKCJA: KOSZTY I USUWANIE */}
+      {!isTerminal && (
+        <>
+          <div className={dividerClass} />
+          <button className={`${btnClass} text-emerald-600 hover:bg-emerald-50`} onClick={() => toggleEdgesCost(nodeId)}>
+            {/* Ikonka pieniądza (dolar) */}
+            <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+            Koszty/Zyski
+          </button>
+        </>
+      )}
+
       {hasIncoming && (
         <>
           <div className={dividerClass} />
