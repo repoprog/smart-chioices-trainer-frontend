@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import {
   ReactFlow,
   Background,
@@ -15,8 +15,30 @@ import { useTreeStore } from '../store/useTreeStore.js'
 import { StageHeadersFlow } from './StageHeadersFlow.jsx'
 
 export function DecisionTreeCanvas() {
-  const nodes = useTreeStore((s) => s.nodes)
-  const edges = useTreeStore((s) => s.edges)
+  const allNodes = useTreeStore((s) => s.nodes)
+  const allEdges = useTreeStore((s) => s.edges)
+  const winningPath = useTreeStore((s) => s.winningPath);
+
+  const nodes = useMemo(() => {
+    return allNodes.map((node) => ({
+      ...node,
+      data: {
+        ...node.data,
+        isHighlighted: winningPath.has(node.id),
+      },
+    }));
+  }, [allNodes, winningPath]);
+
+  const edges = useMemo(() => {
+    return allEdges.map((edge) => ({
+      ...edge,
+      data: {
+        ...edge.data,
+        isHighlighted: winningPath.has(edge.id),
+      },
+    }));
+  }, [allEdges, winningPath]);
+
 
   const onInit = useCallback((rf) => {
     requestAnimationFrame(() =>

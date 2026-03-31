@@ -7,10 +7,19 @@ const handleClass =
 
 export function TerminalNode({ id, data }) {
   const updateNodeData = useTreeStore((s) => s.updateNodeData);
+  const isHighlighted = data?.isHighlighted;
 
   const handlePayoffChange = (e) => {
     updateNodeData(id, { payoff: e.target.value });
   };
+  
+  const polygonClasses = isHighlighted ? 'fill-emerald-50 stroke-emerald-600' : 'fill-white stroke-[#0f172a]';
+  const inputClasses = `w-28 rounded border bg-white px-2 py-1.5 font-sans text-xs font-bold tabular-nums outline-none shadow-sm transition-colors focus:ring-1 nodrag nopan pointer-events-auto ${
+    isHighlighted
+      ? 'border-emerald-400 bg-emerald-50 text-emerald-900 focus:border-emerald-500 focus:ring-emerald-500'
+      : 'border-slate-300 text-slate-900 focus:border-sky-500 focus:ring-sky-500'
+  }`;
+
 
   return (
     // Główny kontener dba o wywindowanie na wierzch przy hoverze:
@@ -22,12 +31,11 @@ export function TerminalNode({ id, data }) {
       />
       
       {/* 1. Perfekcyjny trójkąt SVG */}
-      <div className="relative flex h-11 w-11 shrink-0 items-center justify-center drop-shadow-sm">
+      <div className={`relative flex h-11 w-11 shrink-0 items-center justify-center drop-shadow-sm ${isHighlighted ? "highlighted" : ""}`}>
         <svg className="h-full w-full" viewBox="0 0 44 44">
           <polygon 
             points="2,2 42,22 2,42" 
-            fill="white" 
-            stroke="#0f172a"
+            className={polygonClasses}
             strokeWidth="1.5" 
             strokeLinejoin="round"
           />
@@ -41,7 +49,7 @@ export function TerminalNode({ id, data }) {
           value={data.payoff || ''}
           onChange={handlePayoffChange}
           placeholder="np. 120 000 zł"
-          className="w-28 rounded border border-slate-300 bg-white px-2 py-1.5 font-sans text-xs font-bold tabular-nums text-slate-900 outline-none shadow-sm transition-colors focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 nodrag nopan pointer-events-auto"
+          className={inputClasses}
         />
       </div>
 

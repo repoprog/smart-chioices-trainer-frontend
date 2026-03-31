@@ -8,6 +8,7 @@ import {
   nextDomId,
   renumberDecisionAndChanceNodes,
 } from './treeUtils.js';
+import { evaluateDecisionTree } from '../logic/evaluation.js';
 
 function syncColumnLabels(nodes, edges, prevLabels) {
   const dm = computeDepthMap(nodes, edges);
@@ -247,11 +248,75 @@ function rebalanceProbabilities(edges, sourceId) {
 
     return updatedEdges;
 }
+const evaluateAndSetWinningPath = (state) => {
+  const { nodes, edges, evaluationMode } = state;
+  const evaluationMap = evaluateDecisionTree(nodes, edges, evaluationMode);
 
-export const useTreeStore = create((set) => ({
+  const nodesWithEv = nodes.map(node => {
+    const evaluationResult = evaluationMap[node.id];
+    // Strip out old EV before adding the new one, to handle nodes that no longer have one.
+    const { expectedValue, ...restData } = node.data; 
+    
+    if (evaluationResult && typeof evaluationResult.ev === 'number') {
+      return {
+        ...node,
+        data: {
+          ...restData,
+          expectedValue: evaluationResult.ev,
+        },
+      };
+    }
+    return { ...node, data: restData };
+  });
+
+  const winningPath = new Set();
+  const rootNode = nodesWithEv.find(
+    (n) => n.type === 'decision' && !edges.some((e) => e.target === n.id)
+  );
+
+  if (rootNode) {
+    const queue = [rootNode.id];
+    winningPath.add(rootNode.id);
+
+    while (queue.length > 0) {
+      const currentNodeId = queue.shift();
+      const currentNode = nodesWithEv.find((n) => n.id === currentNodeId);
+      const evaluationResult = evaluationMap[currentNodeId];
+
+      if (currentNode?.type === 'decision' && evaluationResult?.optimalEdgeId) {
+        const optimalEdge = edges.find((e) => e.id === evaluationResult.optimalEdgeId);
+        if (optimalEdge) {
+          winningPath.add(optimalEdge.id);
+          winningPath.add(optimalEdge.target);
+          queue.push(optimalEdge.target);
+        }
+      } else {
+        const childEdges = edges.filter((e) => e.source === currentNodeId);
+        childEdges.forEach((edge) => {
+          // For non-decision nodes, we can trace all paths or none.
+          // For now, let's just highlight the nodes and edges leading from chance nodes too.
+          if(currentNode?.type === 'chance') {
+             winningPath.add(edge.id);
+             winningPath.add(edge.target);
+             queue.push(edge.target);
+          }
+        });
+      }
+    }
+  }
+
+  return { ...state, nodes: nodesWithEv, evaluationMap, winningPath };
+};
+
+export const useTreeStore = create((set, get) => ({
   nodes: numberedInitial,
   edges: initialEdges,
   stageColumnLabels: initialStageLabels,
+  evaluationMode: 'max',
+  evaluationMap: {},
+  winningPath: new Set(),
+
+  setEvaluationMode: (mode) => set((state) => evaluateAndSetWinningPath({ ...state, evaluationMode: mode })),
 
   setStageColumnLabel: (index, text) =>
     set((state) => {
@@ -263,11 +328,15 @@ export const useTreeStore = create((set) => ({
     }),
 
   updateEdgeData: (edgeId, patch) =>
-    set((state) => ({
-      edges: state.edges.map((e) =>
-        e.id === edgeId ? { ...e, data: { ...e.data, ...patch } } : e
-      ),
-    })),
+    set((state) => {
+      const newState = {
+        ...state,
+        edges: state.edges.map((e) =>
+          e.id === edgeId ? { ...e, data: { ...e.data, ...patch } } : e
+        ),
+      };
+      return evaluateAndSetWinningPath(newState);
+    }),
 
     toggleEdgesCost: (sourceNodeId) =>
     set((state) => ({
@@ -279,11 +348,15 @@ export const useTreeStore = create((set) => ({
     })),
 
     updateNodeData: (nodeId, patch) =>
-    set((state) => ({
-      nodes: state.nodes.map((n) =>
-        n.id === nodeId ? { ...n, data: { ...n.data, ...patch } } : n
-      ),
-    })),
+    set((state) => {
+       const newState = {
+        ...state,
+        nodes: state.nodes.map((n) =>
+          n.id === nodeId ? { ...n, data: { ...n.data, ...patch } } : n
+        ),
+      };
+      return evaluateAndSetWinningPath(newState);
+    }),
 
   setEdgeProbability: (edgeId, newProbabilityValue) =>
     set((state) => {
@@ -307,7 +380,8 @@ export const useTreeStore = create((set) => ({
       
       const updatedEdges = rebalanceProbabilities(allEdges, sourceNodeId);
 
-      return { edges: updatedEdges };
+      const newState = { ...state, edges: updatedEdges };
+      return evaluateAndSetWinningPath(newState);
     }),
 
   addBranch: (parentId, childKind) =>
@@ -381,11 +455,13 @@ export const useTreeStore = create((set) => ({
         state.stageColumnLabels
       );
 
-      return {
+      const newState = {
+        ...state,
         nodes: renumbered,
         edges: edgesWithNew,
         stageColumnLabels,
       };
+      return evaluateAndSetWinningPath(newState);
     }),
    removeNode: (nodeId) =>
     set((state) => {
@@ -426,11 +502,14 @@ export const useTreeStore = create((set) => ({
         state.stageColumnLabels
       );
       
-      return {
+      const newState = {
+        ...state,
         nodes: renumbered,
         edges: remainingEdges,
         stageColumnLabels,
       };
+
+      return evaluateAndSetWinningPath(newState);
     }),
  swapNodeType: (nodeId, newType) =>
     set((state) => {
@@ -503,7 +582,8 @@ export const useTreeStore = create((set) => ({
       const renumbered = renumberDecisionAndChanceNodes(layoutedNodes, remainingEdges);
       const stageColumnLabels = syncColumnLabels(renumbered, remainingEdges, state.stageColumnLabels);
 
-      return { nodes: renumbered, edges: remainingEdges, stageColumnLabels };
+      const newState = { ...state, nodes: renumbered, edges: remainingEdges, stageColumnLabels };
+      return evaluateAndSetWinningPath(newState);
     }),
     
   removeBranch: (parentId) =>
@@ -553,10 +633,17 @@ export const useTreeStore = create((set) => ({
         state.stageColumnLabels
       );
       
-      return {
+      const newState = {
+        ...state,
         nodes: renumbered,
         edges: remainingEdges,
         stageColumnLabels,
       };
+      return evaluateAndSetWinningPath(newState);
     }),
+    
+    // Initial evaluation
+    init: () => set(state => evaluateAndSetWinningPath(state)),
 }));
+
+useTreeStore.getState().init();
