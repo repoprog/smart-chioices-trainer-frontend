@@ -13,7 +13,7 @@ export function TerminalNode({ id, data }) {
   };
 
   return (
-    // Node ma zmienną szerokość (będzie wystawał w prawo), ale wysokość równiutkie 44px
+    // Główny kontener dba o wywindowanie na wierzch przy hoverze:
     <div className="group relative z-10 hover:!z-[9999] flex h-11 items-center transition-all">
       <Handle
         type="target"
@@ -21,13 +21,13 @@ export function TerminalNode({ id, data }) {
         className={handleClass}
       />
       
-      {/* 1. Perfekcyjny trójkąt SVG (wymiary 44x44) */}
+      {/* 1. Perfekcyjny trójkąt SVG */}
       <div className="relative flex h-11 w-11 shrink-0 items-center justify-center drop-shadow-sm">
         <svg className="h-full w-full" viewBox="0 0 44 44">
           <polygon 
             points="2,2 42,22 2,42" 
             fill="white" 
-            stroke="#0f172a" /* slate-900 */
+            stroke="#0f172a"
             strokeWidth="1.5" 
             strokeLinejoin="round"
           />
@@ -45,9 +45,9 @@ export function TerminalNode({ id, data }) {
         />
       </div>
 
-      {/* 3. Menu z bezpiecznym marginesem, nie nachodzi na input */}
+      {/* 3. Menu (usunięto stąd zbędne !z-[9999], bo rodzic to ogarnia) */}
       <div
-        className="absolute left-full top-1/2 !z-[9999] pl-1 flex -translate-y-1/2 flex-col opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100 pointer-events-none"
+        className="absolute left-full top-1/2 pl-1 flex -translate-y-1/2 flex-col opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100 pointer-events-none"
         onPointerDown={(e) => e.stopPropagation()}
       >
         <NodeMenu nodeId={id} nodeType="terminal" hasIncoming={true} />

@@ -21,7 +21,7 @@ export function ChanceNode({ id, data }) {
   const isError = hasChildren && Math.abs(probSum - 100) > 0.1;
 
   return (
-    // KLUCZOWE: Dodano z-10 i hover:!z-[9999] tutaj!
+    // Zostawiamy tak jak miałeś: z-10 hover:!z-[9999]
     <div className="group relative z-10 hover:!z-[9999]">
       {isError && (
         <div 
@@ -45,7 +45,7 @@ export function ChanceNode({ id, data }) {
       </div>
 
       <div
-        className="absolute left-full top-1/2 !z-[9999] pl-1 flex -translate-y-1/2 flex-col opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100 pointer-events-none"
+        className="absolute left-full top-1/2 pl-1 flex -translate-y-1/2 flex-col opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100 pointer-events-none"
         onPointerDown={(e) => e.stopPropagation()}
       >
         <NodeMenu nodeId={id} nodeType="chance" hasIncoming={hasIncoming} />

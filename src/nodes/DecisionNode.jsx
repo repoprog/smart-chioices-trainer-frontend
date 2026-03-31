@@ -1,5 +1,4 @@
 import { Handle, Position } from '@xyflow/react'
-//import { BranchAddMenu } from '../components/BranchAddMenu.jsx'
 import { useTreeStore } from '../store/useTreeStore.js'
 import { NodeMenu } from '../components/NodeMenu.jsx'
 
@@ -7,15 +6,12 @@ const handleClass =
   '!h-2 !w-2 !min-h-0 !min-w-0 !border !border-slate-900 !bg-white !opacity-80'
 
 export function DecisionNode({ id, data }) {
- // const removeNode = useTreeStore((s) => s.removeNode)
   const edges = useTreeStore((s) => s.edges)
-  
-  // Przycisk "minus" pojawia się tylko, jeśli węzeł ma "rodzica" (czyli nie jest głównym korzeniem)
   const hasIncoming = edges.some((e) => e.target === id)
- // const removeTitle = `Usuń gałąź ${data.nodeNumber}`
 
   return (
-    <div className="group relative">
+    // DODANO: z-10 hover:!z-[9999] tak jak w pozostałych
+    <div className="group relative z-10 hover:!z-[9999]">
       <div className="flex h-11 w-11 items-center justify-center rounded-sm border border-slate-900 bg-white shadow-sm">
         <span className="font-sans text-sm font-semibold tabular-nums text-slate-900">
           {data.nodeNumber}

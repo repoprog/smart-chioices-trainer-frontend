@@ -21,25 +21,76 @@ function syncColumnLabels(nodes, edges, prevLabels) {
 export function getLayoutedElements(nodes, edges) {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
-
   dagreGraph.setGraph({ rankdir: 'LR', ranksep: 260, nodesep: 60 });
 
-  // 1. Definiujemy wymiary - TERAZ WSZYSTKO MA SZTYWNE 44x44!
-  nodes.forEach((node) => {
+  const depthMap = computeDepthMap(nodes, edges);
+  const maxDepth = getTreeMaxDepth(depthMap);
+
+  const nodesForDagre = [...nodes];
+  const edgesForDagre = [];
+
+  edges.forEach((edge) => {
+    const targetNode = nodes.find((n) => n.id === edge.target);
+
+    if (targetNode?.type === 'terminal') {
+      const sourceNodeId = edge.source;
+      const targetNodeId = edge.target;
+
+      const sourceNodeDepth = depthMap.get(sourceNodeId) ?? 0;
+      const terminalNodeDepth = sourceNodeDepth + 1;
+
+      const depthDiff = maxDepth - terminalNodeDepth;
+
+      if (depthDiff > 0) {
+        let lastNodeIdInChain = sourceNodeId;
+        for (let i = 0; i < depthDiff; i++) {
+          const dummyId = `dummy|${edge.id}|${i}`;
+          nodesForDagre.push({ id: dummyId });
+
+          edgesForDagre.push({
+            source: lastNodeIdInChain,
+            target: dummyId,
+            id: `e-dummy|${lastNodeIdInChain}|${dummyId}`,
+            type: 'smartChoices', // Make it a known type
+            data: {}, // Add clean data object
+          });
+          lastNodeIdInChain = dummyId;
+        }
+        edgesForDagre.push({
+          source: lastNodeIdInChain,
+          target: targetNodeId,
+          id: `e-dummy|${lastNodeIdInChain}|${targetNodeId}`,
+          type: 'smartChoices', // Make it a known type
+          data: {}, // Add clean data object
+        });
+      } else {
+        edgesForDagre.push(edge);
+      }
+    } else {
+      edgesForDagre.push(edge);
+    }
+  });
+
+  // 1. Define dimensions for all nodes, including dummy ones
+  nodesForDagre.forEach((node) => {
     dagreGraph.setNode(node.id, { width: 44, height: 44 });
   });
 
-  edges.forEach((edge) => {
+  edgesForDagre.forEach((edge) => {
     dagreGraph.setEdge(edge.source, edge.target);
   });
 
   dagre.layout(dagreGraph);
 
-  // 2. Szukamy "linii mety" dla węzłów końcowych i normalizujemy pozycje Y
+  // 2. Find the "finish line" for terminal nodes and normalize Y positions
   let maxLeftX = 0;
   let minY = Infinity;
   nodes.forEach((node) => {
+    // Only iterate over original nodes to calculate bounds
     const pos = dagreGraph.node(node.id);
+    if (!pos) {
+      return;
+    }
     const leftX = pos.x - 22; // 44 / 2 = 22
     if (leftX > maxLeftX) {
       maxLeftX = leftX;
@@ -52,14 +103,14 @@ export function getLayoutedElements(nodes, edges) {
 
   const yOffset = -minY + 20; // 20px padding from the top
 
-  // 3. Nadajemy ostateczne pozycje
+  // 3. Assign final positions
   return nodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
-    
+
     let finalX = nodeWithPosition.x - 22;
     const finalY = nodeWithPosition.y - 22 + yOffset;
 
-    // Równamy terminale do prawej krawędzi
+    // Align terminals to the right edge
     if (node.type === 'terminal') {
       finalX = maxLeftX;
     }

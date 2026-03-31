@@ -160,7 +160,7 @@ export function minNodeTopY(nodes) {
 /** Wysokość pola Etap (h-8 + obramowanie), px w przestrzeni flow */
 const STAGE_HEADER_INPUT_HEIGHT = 38
 /** Minimalna luka między dolną krawędzią nagłówka a górną krawędzią najwyższego węzła */
-const STAGE_HEADER_BASE_GAP = 48
+const STAGE_HEADER_BASE_GAP = 68
 /** Węzły w tym przedziale poniżej minY zwiększają dodatkowy odstęp (więcej gałęzi w górę) */
 const STAGE_HEADER_CLUSTER_RANGE = 140
 const STAGE_HEADER_CLUSTER_STEP = 14

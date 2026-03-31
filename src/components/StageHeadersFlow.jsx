@@ -43,7 +43,7 @@ export function StageHeadersFlow() {
               position: 'absolute',
               transform: `translate(${centerX - headerWidth / 2}px, ${rowY}px)`,
               width: `${headerWidth}px`,
-              zIndex: 10,
+              zIndex: -1,
             }}
           >
             <input
