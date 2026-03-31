@@ -265,3 +265,39 @@ export function ensureColumnLabelsLength(labels, len) {
   if (base.length > len) return base.slice(0, len)
   return base
 }
+
+export function findMainPathNodes(nodes, edges) {
+  const hasIncoming = new Set(edges.map(e => e.target));
+  const root = nodes.find(n => !hasIncoming.has(n.id));
+  if (!root) return [];
+
+  const pathNodes = [root];
+  const byId = new Map(nodes.map(n => [n.id, n]));
+
+  let currentNode = root;
+  while (currentNode) {
+      const outgoingEdges = edges.filter(e => e.source === currentNode.id);
+      if (outgoingEdges.length === 0) {
+          break; // End of path
+      }
+
+      // Sort children by position (top-to-bottom)
+      outgoingEdges.sort((a, b) => {
+          const nodeA = byId.get(a.target);
+          const nodeB = byId.get(b.target);
+          if (!nodeA || !nodeB) return 0;
+          return nodeA.position.y - nodeB.position.y;
+      });
+
+      // The next node in the path is the target of the top-most edge
+      const nextNodeInPath = byId.get(outgoingEdges[0].target);
+      if (nextNodeInPath) {
+          pathNodes.push(nextNodeInPath);
+          currentNode = nextNodeInPath;
+      } else {
+          break;
+      }
+  }
+
+  return pathNodes;
+}

@@ -35,22 +35,29 @@ export function getLayoutedElements(nodes, edges) {
 
   dagre.layout(dagreGraph);
 
-  // 2. Szukamy "linii mety" dla węzłów końcowych
+  // 2. Szukamy "linii mety" dla węzłów końcowych i normalizujemy pozycje Y
   let maxLeftX = 0;
+  let minY = Infinity;
   nodes.forEach((node) => {
     const pos = dagreGraph.node(node.id);
     const leftX = pos.x - 22; // 44 / 2 = 22
     if (leftX > maxLeftX) {
       maxLeftX = leftX;
     }
+    const topY = pos.y - 22;
+    if (topY < minY) {
+      minY = topY;
+    }
   });
+
+  const yOffset = -minY + 20; // 20px padding from the top
 
   // 3. Nadajemy ostateczne pozycje
   return nodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
     
     let finalX = nodeWithPosition.x - 22;
-    const finalY = nodeWithPosition.y - 22;
+    const finalY = nodeWithPosition.y - 22 + yOffset;
 
     // Równamy terminale do prawej krawędzi
     if (node.type === 'terminal') {

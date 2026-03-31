@@ -108,8 +108,8 @@ export function SmartChoicesEdge({
                 <span className="pl-1 text-xs text-cyan-400">%</span>
               </div>
               
-              {/* ZWRÓCONY SUWAK RANGE */}
-              <div className="absolute top-full left-1/2 mb-2 hidden w-32 -translate-x-1/2 group-hover:block group-focus-within:block z-50">
+              {/* ZWRÓCONY SUWAK RANGE - Dodałem klasy: hidden group-hover:block */}
+              <div className="absolute top-full left-1/2 mt-1 w-32 -translate-x-1/2 z-50 hidden group-hover:block">
                 <div className="rounded-md border border-cyan-500/60 bg-slate-900/90 p-2 shadow-lg backdrop-blur-sm">
                   <input
                     type="range"

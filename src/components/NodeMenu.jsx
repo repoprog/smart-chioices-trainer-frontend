@@ -13,7 +13,7 @@ export function NodeMenu({ nodeId, nodeType, hasIncoming }) {
   const dividerClass = "mx-2 my-1 h-px bg-slate-100";
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl w-56 py-1.5 !z-[9999] relative">
+    <div className="flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl w-48 py-1.5 !z-[9999] relative">
       
       {/* SEKCJA: DODAWANIE (ukryta dla terminali) */}
       {!isTerminal && (

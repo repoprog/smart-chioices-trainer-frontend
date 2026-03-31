@@ -47,7 +47,7 @@ export function TerminalNode({ id, data }) {
 
       {/* 3. Menu z bezpiecznym marginesem, nie nachodzi na input */}
       <div
-        className="absolute left-full top-1/2 !z-[9999] pl-2 flex -translate-y-1/2 flex-col opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100 pointer-events-none"
+        className="absolute left-full top-1/2 !z-[9999] pl-1 flex -translate-y-1/2 flex-col opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100 pointer-events-none"
         onPointerDown={(e) => e.stopPropagation()}
       >
         <NodeMenu nodeId={id} nodeType="terminal" hasIncoming={true} />

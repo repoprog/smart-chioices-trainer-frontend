@@ -2,10 +2,11 @@ import { useMemo } from 'react'
 import { ViewportPortal } from '@xyflow/react'
 
 import { useTreeStore } from '../store/useTreeStore.js'
-import { computeStageHeaderRowY } from '../store/treeUtils.js'
+import { computeStageHeaderRowY, findMainPathNodes } from '../store/treeUtils.js'
 
 export function StageHeadersFlow() {
   const nodes = useTreeStore((s) => s.nodes)
+  const edges = useTreeStore((s) => s.edges)
   const labels = useTreeStore((s) => s.stageColumnLabels)
   const setStageColumnLabel = useTreeStore((s) => s.setStageColumnLabel)
 
@@ -13,7 +14,8 @@ export function StageHeadersFlow() {
 
   // Znajdujemy faktyczne osie pionowe wszystkich kolumn
   const columnXs = useMemo(() => {
-    const xs = nodes.map(n => n.position.x + 22); // środek węzła 44px
+    const mainPathNodes = findMainPathNodes(nodes, edges); // Get the main path
+    const xs = mainPathNodes.map(n => n.position.x + 22); // środek węzła 44px
     const unique = [];
     xs.forEach(x => {
       if (!unique.some(ux => Math.abs(ux - x) < 5)) {
@@ -21,7 +23,7 @@ export function StageHeadersFlow() {
       }
     });
     return unique.sort((a, b) => a - b);
-  }, [nodes]);
+  }, [nodes, edges]);
 
   if (!columnXs.length) return null
 
