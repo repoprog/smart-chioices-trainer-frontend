@@ -93,16 +93,18 @@ export function evaluateDecisionTree(nodes, edges, optimizationMode = 'max') {
         };
       });
 
-      if (optimizationMode === 'max') {
+      if (childValues.length === 0) {
+        result = { ev: 0 };
+      } else if (optimizationMode === 'max') {
         result = childValues.reduce(
           (max, current) => (current.ev > max.ev ? current : max),
-          { ev: -Infinity }
+          { ev: -Infinity, edgeId: null }
         );
       } else {
         // 'min' mode
         result = childValues.reduce(
           (min, current) => (current.ev < min.ev ? current : min),
-          { ev: Infinity }
+          { ev: Infinity, edgeId: null }
         );
       }
       result = { ev: result.ev, optimalEdgeId: result.edgeId };

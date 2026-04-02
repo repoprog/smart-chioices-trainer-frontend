@@ -102,14 +102,14 @@ export function StageHeadersFlow() {
               {isLast && (
                 <button
                   onClick={handleToggleMode}
-                  className='absolute right-0 top-1/2 -translate-y-1/2 translate-x-full flex items-center gap-1.5 whitespace-nowrap pl-3 pr-2 py-1 rounded-full text-xs font-semibold'
-                  style={{
-                    backgroundColor: evaluationMode === 'max' ? 'rgba(22, 163, 74, 0.1)' : 'rgba(220, 38, 38, 0.1)',
-                    color: evaluationMode === 'max' ? 'rgb(22, 163, 74)' : 'rgb(220, 38, 38)',
-                  }}
+                  className='absolute -right-4 top-1/2 -translate-y-1/2 translate-x-full flex items-center gap-1.5 whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold border border-green-500 text-green-700  hover:bg-green-300 transition-colors'
                 >
-                  {evaluationMode === 'max' ? <ArrowUp /> : <ArrowDown />}
-                  {evaluationMode === 'max' ? 'Lepiej' : 'Gorzej'}
+                  <span className="text-base leading-none">
+                    {evaluationMode === 'max' ? '⭡' : '⭣'}
+                  </span>
+                  <span>
+                    {evaluationMode === 'max' ? 'Better [Max]' : 'Better [Min]'}
+                  </span>
                 </button>
               )}
             </div>
