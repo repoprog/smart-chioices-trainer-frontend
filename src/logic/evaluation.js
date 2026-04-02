@@ -10,12 +10,12 @@ const parseValue = (value) => {
     .replace(/\s/g, '')
     .replace(',', '.')
     .replace('−', '-'); 
-
+//100win reads as 100 number
   const parsed = parseFloat(numberString);
   return isNaN(parsed) ? 0 : parsed;
 };
 
-const parseProbability = (prob, allSiblings, thisEdge) => {
+const parseProbability = (prob, allSiblings) => {
   if (prob != null) {
     return parseValue(prob) / 100;
   }
@@ -46,7 +46,7 @@ export function evaluateDecisionTree(nodes, edges, optimizationMode = 'max') {
 
     const node = nodesMap.get(nodeId);
     if (!node) {
-      return { ev: 0, steps: 0 }; // DODANO steps
+      return { ev: 0, steps: 0 }; 
     }
 
     const childrenEdges = outgoingEdges.get(nodeId) || [];

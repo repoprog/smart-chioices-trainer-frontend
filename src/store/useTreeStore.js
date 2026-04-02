@@ -1,21 +1,38 @@
 import { create } from 'zustand';
 import dagre from 'dagre';
+// ... importy ...
 import {
   collectDescendants,
   computeDepthMap,
-  ensureColumnLabelsLength,
   getTreeMaxDepth,
   nextDomId,
   renumberDecisionAndChanceNodes,
+  findMainPathNodes 
 } from './treeUtils.js';
 import { evaluateDecisionTree } from '../logic/evaluation.js';
 
-function syncColumnLabels(nodes, edges, prevLabels) {
-  const dm = computeDepthMap(nodes, edges);
-  const maxD = getTreeMaxDepth(dm);
-  const len = Math.max(0, maxD);
-  return ensureColumnLabelsLength(prevLabels, len);
+
+function syncColumnLabels(nodes, edges, prevLabels = []) {
+ 
+  const mainPathNodes = findMainPathNodes(nodes, edges);
+  const columnCount = mainPathNodes.length;
+  
+  if (columnCount === 0) return []; 
+
+  let result = [...prevLabels];
+
+  while (result.length < columnCount) {
+    
+     result.push(''); 
+  }
+ 
+  if (result.length > columnCount) {
+    result = result.slice(0, columnCount);
+  }
+
+  return result;
 }
+
 
 export function getLayoutedElements(nodes, edges) {
   const dagreGraph = new dagre.graphlib.Graph();
@@ -115,6 +132,8 @@ export function getLayoutedElements(nodes, edges) {
     };
   });
 }
+
+
 
 const initialNodes = [
   {
@@ -334,6 +353,29 @@ export const useTreeStore = create((set) => ({
   evaluationMode: 'max',
   evaluationMap: {},
   winningPath: new Set(),
+
+  loadScenario: (newNodes, newEdges, newLabels = []) =>
+    set((state) => {
+      // 1. Przepuszczamy nowe dane przez układacz Dagre
+      const layoutedNodes = getLayoutedElements(newNodes, newEdges);
+      
+      // 2. Numerujemy od nowa (D1, C1, itp.)
+      const renumbered = renumberDecisionAndChanceNodes(layoutedNodes, newEdges);
+      
+      // 3. Synchronizujemy etykiety kolumn
+      const stageColumnLabels = syncColumnLabels(renumbered, newEdges, newLabels);
+
+      // 4. Aktualizujemy stan
+      const newState = {
+        ...state,
+        nodes: renumbered,
+        edges: newEdges,
+        stageColumnLabels,
+      };
+      
+      // 5. Zwracamy stan przepuszczony przez ostateczną ewaluację matematyki!
+      return evaluateAndSetWinningPath(newState);
+    }),
 
   setEvaluationMode: (mode) => set((state) => evaluateAndSetWinningPath({ ...state, evaluationMode: mode })),
 
