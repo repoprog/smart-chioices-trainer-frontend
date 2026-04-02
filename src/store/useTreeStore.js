@@ -1,6 +1,6 @@
-import { create } from 'zustand';
+import { create, useStore } from 'zustand';
+import { temporal } from 'zundo';
 import dagre from 'dagre';
-// ... importy ...
 import {
   collectDescendants,
   computeDepthMap,
@@ -11,9 +11,7 @@ import {
 } from './treeUtils.js';
 import { evaluateDecisionTree } from '../logic/evaluation.js';
 
-
 function syncColumnLabels(nodes, edges, prevLabels = []) {
- 
   const mainPathNodes = findMainPathNodes(nodes, edges);
   const columnCount = mainPathNodes.length;
   
@@ -22,7 +20,6 @@ function syncColumnLabels(nodes, edges, prevLabels = []) {
   let result = [...prevLabels];
 
   while (result.length < columnCount) {
-    
      result.push(''); 
   }
  
@@ -32,7 +29,6 @@ function syncColumnLabels(nodes, edges, prevLabels = []) {
 
   return result;
 }
-
 
 export function getLayoutedElements(nodes, edges) {
   const dagreGraph = new dagre.graphlib.Graph();
@@ -132,8 +128,6 @@ export function getLayoutedElements(nodes, edges) {
     };
   });
 }
-
-
 
 const initialNodes = [
   {
@@ -260,7 +254,7 @@ function rebalanceProbabilities(edges, sourceId) {
     return updatedEdges;
 }
 
-// --- ALGORYTM PRAWDOPODOBIEŃSTWA (Przeniesiony wyżej!) ---
+// --- ALGORYTM PRAWDOPODOBIEŃSTWA ---
 function calculatePathProbabilities(nodes, edges) {
   const probMap = {};
   const rootNodes = nodes.filter(n => !edges.some(e => e.target === n.id));
@@ -346,7 +340,8 @@ const evaluateAndSetWinningPath = (state) => {
 };
 
 // --- STORE ---
-export const useTreeStore = create((set) => ({
+export const useTreeStore = create()(
+  temporal((set) => ({
   nodes: numberedInitial,
   edges: initialEdges,
   stageColumnLabels: initialStageLabels,
@@ -356,16 +351,10 @@ export const useTreeStore = create((set) => ({
 
   loadScenario: (newNodes, newEdges, newLabels = []) =>
     set((state) => {
-      // 1. Przepuszczamy nowe dane przez układacz Dagre
       const layoutedNodes = getLayoutedElements(newNodes, newEdges);
-      
-      // 2. Numerujemy od nowa (D1, C1, itp.)
       const renumbered = renumberDecisionAndChanceNodes(layoutedNodes, newEdges);
-      
-      // 3. Synchronizujemy etykiety kolumn
       const stageColumnLabels = syncColumnLabels(renumbered, newEdges, newLabels);
 
-      // 4. Aktualizujemy stan
       const newState = {
         ...state,
         nodes: renumbered,
@@ -373,7 +362,6 @@ export const useTreeStore = create((set) => ({
         stageColumnLabels,
       };
       
-      // 5. Zwracamy stan przepuszczony przez ostateczną ewaluację matematyki!
       return evaluateAndSetWinningPath(newState);
     }),
 
@@ -689,9 +677,24 @@ export const useTreeStore = create((set) => ({
       return evaluateAndSetWinningPath(newState);
     }),
     
-    // Initial evaluation
     init: () => set(state => evaluateAndSetWinningPath(state)),
-}));
+}),
+{
+     limit: 50, 
+      partialize: (state) => ({
+        // WYMAGANE: Eksplicytnie zwracamy TYLKO twarde dane.
+        // Dzięki temu zundo nie nadpisuje funkcji (np. loadScenario) wartością undefined podczas cofania.
+        nodes: state.nodes,
+        edges: state.edges,
+        stageColumnLabels: state.stageColumnLabels,
+        evaluationMode: state.evaluationMode,
+        evaluationMap: state.evaluationMap,
+        winningPath: state.winningPath,
+      }),
+    }
+  )
+);
 
-// Inicjalizacja MUSI być na samym końcu pliku, po załadowaniu wszystkich zależności
+export const useTemporalTreeStore = (selector) => useStore(useTreeStore.temporal, selector);
+
 useTreeStore.getState().init();

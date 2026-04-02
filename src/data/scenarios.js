@@ -13,10 +13,10 @@ export const scenarios = {
   investment: {
     name: "Analiza Inwestycji (Klasyk)",
     nodes: [
-      // ... skopiowane nodes z Twojego obecnego initialNodes ...
+     
     ],
     edges: [
-      // ... skopiowane edges z Twojego obecnego initialEdges ...
+     
     ],
     labels: ["Decyzja biznesowa", "Ryzyko Rynkowe", "Wynik Finansowy"]
   },
@@ -24,16 +24,16 @@ export const scenarios = {
   court: {
     name: "Ugoda czy Proces (Prawny)",
     nodes: [
-      // ... węzły dostosowane pod ugodę/sąd ...
+    
     ],
     edges: [
-      // ... krawędzie z prawdopodobieństwami wygranej w sądzie itp ...
+     
     ],
     labels: ["Strategia", "Wyrok", "Koszty"]
   },
   marketingLaunch: {
     name: "Kampania Marketingowa",
-    // 1. Etykiety nagłówków (Header 1, 2...)
+  
     labels: ["Strategia", "Reakcja Rynku", "Wynik"], 
     
     nodes: [
@@ -50,7 +50,7 @@ export const scenarios = {
       },
       { 
         id: 'e2', source: 'c1', target: 't1', type: 'smartChoices', 
-        // 2. Tu wpisujesz predefiniowane prawdopodobieństwo
+      
         data: { optionLabel: 'Viral', probability: '30.00%', isLocked: true } 
       },
       { 

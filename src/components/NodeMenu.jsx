@@ -87,7 +87,7 @@ export function NodeMenu({ nodeId, nodeType, hasIncoming }) {
             className={`${btnClass} text-emerald-600 hover:bg-emerald-50`} 
             onClick={() => toggleEdgesCost(nodeId)}
           >
-            {/* Warunkowe renderowanie ikony (otwarte / przekreślone oko) */}
+         
             {areCostsVisible ? (
               <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -100,7 +100,6 @@ export function NodeMenu({ nodeId, nodeType, hasIncoming }) {
               </svg>
             )}
             
-            {/* Warunkowy tekst */}
             {areCostsVisible ? 'Ukryj koszty / zysk' : 'Pokaż koszty / zysk'}
           </button>
         </>

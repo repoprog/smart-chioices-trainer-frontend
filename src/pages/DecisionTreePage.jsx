@@ -1,6 +1,7 @@
 import { DecisionTreeCanvas } from '../components/DecisionTreeCanvas.jsx'
 import { useTreeStore } from '../store/useTreeStore.js'
 import { scenarios } from '../data/scenarios.js' // <-- Ścieżka do nowego pliku
+import { UndoRedoControls } from '../components/UndoRedoControls.jsx';
 
 export function DecisionTreePage() {
   // Wyciągamy funkcję ładującą ze store'a
@@ -34,6 +35,7 @@ export function DecisionTreePage() {
             </button>
           ))}
         </div>
+        <UndoRedoControls />
       </header>
       
       <main className="flex flex-1 flex-col p-4 md:p-6">

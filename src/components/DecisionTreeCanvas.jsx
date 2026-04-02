@@ -14,6 +14,7 @@ import { nodeTypes } from '../nodes'
 import { useTreeStore } from '../store/useTreeStore.js'
 import { StageHeadersFlow } from './StageHeadersFlow.jsx'
 
+
 export function DecisionTreeCanvas() {
   const allNodes = useTreeStore((s) => s.nodes)
   const allEdges = useTreeStore((s) => s.edges)
@@ -48,17 +49,41 @@ export function DecisionTreeCanvas() {
     )
   }, [])
 
-  const onNodesChange = useCallback((changes) => {
+ const onNodesChange = useCallback((changes) => {
+
+    const isNoise = changes.every(
+      (c) => c.type === 'dimensions' || c.type === 'select' || c.type === 'position'
+    );
+    
+    if (isNoise) {
+      useTreeStore.temporal.getState().pause();
+    }
+
     useTreeStore.setState((state) => ({
       nodes: applyNodeChanges(changes, state.nodes),
-    }))
-  }, [])
+    }));
+
+    if (isNoise) {
+      useTreeStore.temporal.getState().resume();
+    }
+  }, []);
 
   const onEdgesChange = useCallback((changes) => {
+    
+    const isNoise = changes.every((c) => c.type === 'select');
+
+    if (isNoise) {
+      useTreeStore.temporal.getState().pause();
+    }
+
     useTreeStore.setState((state) => ({
       edges: applyEdgeChanges(changes, state.edges),
-    }))
-  }, [])
+    }));
+
+    if (isNoise) {
+      useTreeStore.temporal.getState().resume();
+    }
+  }, []);
 
   return (
     <div className="relative flex h-full min-h-[560px] w-full flex-1 flex-col rounded-md border border-slate-300 bg-[#fafaf9] shadow-inner dark:border-slate-600 dark:bg-slate-900/40">

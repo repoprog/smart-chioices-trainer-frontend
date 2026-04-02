@@ -288,7 +288,7 @@ export function SmartChoicesEdge({
             className="nodrag nopan group pointer-events-auto"
             style={{
               position: "absolute",
-              transform: `translate(-50%, -50%) translate(${labelX_Center}px, ${labelY}px)`,
+              transform: `translate(-50%, 0) translate(${labelX_Center}px, ${labelY +2}px)`,
               textAlign: "center",
             }}
           >
