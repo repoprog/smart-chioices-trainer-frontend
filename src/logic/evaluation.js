@@ -1,16 +1,15 @@
-
+// Pomocnicze funkcje parseValue i parseProbability zostają bez zmian
 const parseValue = (value) => {
   if (value == null) return 0;
   if (typeof value === 'number') return value;
   if (typeof value !== 'string') return 0;
 
-  // Handles "120 000 zł", "-40 000", "50%", etc.
   const numberString = value
     .replace(/zł/g, '')
     .replace(/%/g, '')
     .replace(/\s/g, '')
     .replace(',', '.')
-    .replace('−', '-'); // Handle different minus characters
+    .replace('−', '-'); 
 
   const parsed = parseFloat(numberString);
   return isNaN(parsed) ? 0 : parsed;
@@ -20,22 +19,12 @@ const parseProbability = (prob, allSiblings, thisEdge) => {
   if (prob != null) {
     return parseValue(prob) / 100;
   }
-  // If probability is missing, assume equal distribution among siblings with missing probs
   const unassignedSiblings = allSiblings.filter(
     (edge) => edge.data?.probability == null
   );
   return 1 / (unassignedSiblings.length || 1);
 };
 
-
-/**
- * Evaluates a decision tree from React Flow nodes and edges.
- *
- * @param {Array<object>} nodes - The nodes of the graph.
- * @param {Array<object>} edges - The edges of the graph.
- * @param {'max' | 'min'} optimizationMode - The optimization goal for the tree.
- * @returns {object} - An object with node IDs as keys and their calculated { ev, optimalEdgeId } as values.
- */
 export function evaluateDecisionTree(nodes, edges, optimizationMode = 'max') {
   if (!nodes || nodes.length === 0) return {};
 
@@ -57,61 +46,73 @@ export function evaluateDecisionTree(nodes, edges, optimizationMode = 'max') {
 
     const node = nodesMap.get(nodeId);
     if (!node) {
-      // This can happen with dummy nodes, treat as a leaf with 0 value.
-      return { ev: 0 };
+      return { ev: 0, steps: 0 }; // DODANO steps
     }
 
     const childrenEdges = outgoingEdges.get(nodeId) || [];
 
     let result;
-    // Base case: leaf node (terminal or a node with no children)
-    if (
-      node.type === 'terminal' ||
-      childrenEdges.length === 0
-    ) {
+    
+    // 1. TERMINAL NODE
+    if (node.type === 'terminal' || childrenEdges.length === 0) {
       const payoff = parseValue(node.data?.payoff);
-      result = { ev: payoff };
-    } else if (node.type === 'chance') {
+      result = { ev: payoff, steps: 0 }; // Liść to 0 kroków dalej
+    } 
+    // 2. CHANCE NODE
+    else if (node.type === 'chance') {
+      let expectedSteps = 0;
       const totalEv = childrenEdges.reduce((sum, edge) => {
         const edgeCost = parseValue(edge.data?.cost);
-        const probability = parseProbability(
-          edge.data?.probability,
-          childrenEdges,
-          edge
-        );
+        const probability = parseProbability(edge.data?.probability, childrenEdges, edge);
         const childResult = calculateEvForNode(edge.target);
+        
+        // Średnia liczba kroków dla tego zdarzenia
+        expectedSteps += (childResult.steps + 1) * probability; 
+        
         return sum + (childResult.ev + edgeCost) * probability;
       }, 0);
-      result = { ev: totalEv };
-    } else if (node.type === 'decision') {
+      result = { ev: totalEv, steps: expectedSteps };
+    } 
+    // 3. DECISION NODE
+    else if (node.type === 'decision') {
       const childValues = childrenEdges.map((edge) => {
         const edgeCost = parseValue(edge.data?.cost);
         const childResult = calculateEvForNode(edge.target);
         return {
           ev: childResult.ev + edgeCost,
+          steps: childResult.steps + 1, // Każda decyzja to +1 krok
           edgeId: edge.id,
         };
       });
 
       if (childValues.length === 0) {
-        result = { ev: 0 };
+        result = { ev: 0, steps: 0 };
       } else if (optimizationMode === 'max') {
         result = childValues.reduce(
-          (max, current) => (current.ev > max.ev ? current : max),
-          { ev: -Infinity, edgeId: null }
+          (best, current) => {
+            // TIE-BREAKER: Jeśli wyższe EV -> bierzemy to
+            if (current.ev > best.ev) return current;
+            // TIE-BREAKER: Jeśli równe EV -> bierzemy krótszą ścieżkę!
+            if (current.ev === best.ev && current.steps < best.steps) return current;
+            return best;
+          },
+          { ev: -Infinity, steps: Infinity, edgeId: null }
         );
       } else {
-        // 'min' mode
         result = childValues.reduce(
-          (min, current) => (current.ev < min.ev ? current : min),
-          { ev: Infinity, edgeId: null }
+          (best, current) => {
+            if (current.ev < best.ev) return current;
+            // TIE-BREAKER: Krótsza ścieżka przy równym EV
+            if (current.ev === best.ev && current.steps < best.steps) return current;
+            return best;
+          },
+          { ev: Infinity, steps: Infinity, edgeId: null }
         );
       }
-      result = { ev: result.ev, optimalEdgeId: result.edgeId };
+      result = { ev: result.ev, steps: result.steps, optimalEdgeId: result.edgeId };
     } else {
-       result = { ev: 0 };
+       result = { ev: 0, steps: 0 };
     }
-
 
     memo.set(nodeId, result);
     return result;
@@ -123,6 +124,5 @@ export function evaluateDecisionTree(nodes, edges, optimizationMode = 'max') {
     }
   }
 
-  // Convert map to a plain object for the final return value
   return Object.fromEntries(memo);
 }

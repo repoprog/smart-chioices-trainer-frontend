@@ -241,24 +241,55 @@ function rebalanceProbabilities(edges, sourceId) {
     return updatedEdges;
 }
 
+// --- ALGORYTM PRAWDOPODOBIEŃSTWA (Przeniesiony wyżej!) ---
+function calculatePathProbabilities(nodes, edges) {
+  const probMap = {};
+  const rootNodes = nodes.filter(n => !edges.some(e => e.target === n.id));
+  const queue = rootNodes.map(r => ({ id: r.id, currentProb: 1.0 }));
+
+  while(queue.length > 0) {
+    const { id, currentProb } = queue.shift();
+    probMap[id] = currentProb;
+
+    const node = nodes.find(n => n.id === id);
+    const outgoingEdges = edges.filter(e => e.source === id);
+
+    outgoingEdges.forEach(edge => {
+      let nextProb = currentProb;
+      if (node?.type === 'chance') {
+        const edgeP = parseProbability(edge.data?.probability) / 100;
+        nextProb = currentProb * edgeP;
+      }
+      queue.push({ id: edge.target, currentProb: nextProb });
+    });
+  }
+  return probMap;
+}
+
+// --- GŁÓWNA FUNKCJA EWALUACJI ---
 const evaluateAndSetWinningPath = (state) => {
   const { nodes, edges, evaluationMode } = state;
   const evaluationMap = evaluateDecisionTree(nodes, edges, evaluationMode);
+  
+  const cumulativeProbs = calculatePathProbabilities(nodes, edges);
 
   const nodesWithEv = nodes.map(node => {
     const evaluationResult = evaluationMap[node.id];
     const newData = { ...node.data };
+    
     delete newData.expectedValue;
     
-    if (evaluationResult && typeof evaluationResult.ev === 'number') {
+    if (evaluationResult && typeof evaluationResult.ev === 'number' && !isNaN(evaluationResult.ev)) {
       newData.expectedValue = evaluationResult.ev;
     }
+    
+    newData.pathProbability = cumulativeProbs[node.id] ?? 0;
+
     return { ...node, data: newData };
   });
-
+  
   const winningPath = new Set();
   
-  // POPRAWKA: szukamy korzenia, który może być 'decision' ALBO 'chance'
   const rootNode = nodesWithEv.find(
     (n) => (n.type === 'decision' || n.type === 'chance') && !edges.some((e) => e.target === n.id)
   );
@@ -295,6 +326,7 @@ const evaluateAndSetWinningPath = (state) => {
   return { ...state, nodes: nodesWithEv, evaluationMap, winningPath };
 };
 
+// --- STORE ---
 export const useTreeStore = create((set) => ({
   nodes: numberedInitial,
   edges: initialEdges,
@@ -325,7 +357,6 @@ export const useTreeStore = create((set) => ({
       return evaluateAndSetWinningPath(newState);
     }),
 
-  // POPRAWKA: resetowanie oka i odświeżanie EV
   toggleEdgesCost: (sourceNodeId) =>
     set((state) => {
       const firstEdge = state.edges.find((e) => e.source === sourceNodeId);
@@ -620,4 +651,5 @@ export const useTreeStore = create((set) => ({
     init: () => set(state => evaluateAndSetWinningPath(state)),
 }));
 
+// Inicjalizacja MUSI być na samym końcu pliku, po załadowaniu wszystkich zależności
 useTreeStore.getState().init();

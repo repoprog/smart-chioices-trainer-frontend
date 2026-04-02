@@ -12,6 +12,11 @@ export function TerminalNode({ id, data }) {
   const handlePayoffChange = (e) => {
     updateNodeData(id, { payoff: e.target.value });
   };
+
+  // --- LOGIKA SZANSY ---
+  const pathProb = data?.pathProbability ?? 0;
+  const probabilityPercent = (pathProb * 100).toFixed(1); 
+  const isImpossible = pathProb === 0;
   
   const polygonClasses = isHighlighted ? 'fill-emerald-50 stroke-emerald-600' : 'fill-white stroke-[#0f172a]';
   const inputClasses = `w-28 rounded border bg-white px-2 py-1.5 font-sans text-xs font-bold tabular-nums outline-none shadow-sm transition-colors focus:ring-1 nodrag nopan pointer-events-auto ${
@@ -20,9 +25,8 @@ export function TerminalNode({ id, data }) {
       : 'border-slate-300 text-slate-900 focus:border-sky-500 focus:ring-sky-500'
   }`;
 
-
   return (
-    // Główny kontener dba o wywindowanie na wierzch przy hoverze:
+    // Przywrócono sztywne 'h-11 items-center', aby input i trójkąt były idealnie w jednej osi
     <div className="group relative z-10 hover:!z-[9999] flex h-11 items-center transition-all">
       <Handle
         type="target"
@@ -42,8 +46,10 @@ export function TerminalNode({ id, data }) {
         </svg>
       </div>
       
-      {/* 2. Aktywne pole Input na wynik (payoff) */}
-      <div className="ml-2 flex items-center">
+      {/* 2. Kontener na Input z absolutnie pozycjonowanym tekstem pod spodem */}
+      <div className="ml-2 relative flex items-center">
+        
+        {/* Aktywne pole Input na wynik (payoff) */}
         <input
           type="text"
           value={data.payoff || ''}
@@ -51,9 +57,14 @@ export function TerminalNode({ id, data }) {
           placeholder="np. 120 000 zł"
           className={inputClasses}
         />
+
+        {/* Prosty, subtelny tekst Szansy POD inputem */}
+        <div className="absolute top-full left-1 mt-0.5 text-[10px] font-medium text-slate-500 whitespace-nowrap pointer-events-none">
+          Szansa: <span className={isImpossible ? 'text-slate-400' : 'text-sky-600 font-bold'}>{probabilityPercent}%</span>
+        </div>
       </div>
 
-      {/* 3. Menu (usunięto stąd zbędne !z-[9999], bo rodzic to ogarnia) */}
+      {/* 3. Menu boczne */}
       <div
         className="absolute left-full top-1/2 pl-1 flex -translate-y-1/2 flex-col opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100 pointer-events-none"
         onPointerDown={(e) => e.stopPropagation()}
