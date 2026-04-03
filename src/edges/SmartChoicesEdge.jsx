@@ -38,8 +38,8 @@ export function SmartChoicesEdge({
   if (numericCost > 0) costColorClass = "text-emerald-400";
   else if (numericCost < 0) costColorClass = "text-red-400"; 
 
-  const baseInputClassName = "nodrag nopan pointer-events-auto block w-[min(5.5rem,15vw)] max-w-[88px] rounded border border-transparent bg-slate-950/75 px-1.5 py-0.5 text-center font-sans text-[11px] font-medium leading-tight shadow-sm outline-none placeholder:text-slate-500 hover:border-slate-600 focus-visible:border-cyan-400 focus-visible:ring-1 focus-visible:ring-cyan-400 transition-colors";
-
+ 
+const baseInputClassName = "nodrag nopan pointer-events-auto block w-[min(5.5rem,15vw)] max-w-[95px] rounded border border-transparent bg-transparent px-1.5 py-0.5 text-left font-sans text-[12px] font-medium leading-tight outline-none placeholder:text-slate-500 hover:border-slate-600 focus-visible:border-cyan-400 focus-visible:ring-1 focus-visible:ring-cyan-400 transition-colors";
   const handleProbChange = (e) => {
     const newProb = parseFloat(e.target.value);
     if (!isNaN(newProb)) setEdgeProbability(id, newProb);
@@ -92,7 +92,8 @@ export function SmartChoicesEdge({
           {/* Grupa optyzmalizowana (group/opt) */}
           <div className="relative flex items-center group/opt">
             <input
-              className={`${baseInputClassName} text-slate-100 ${isHighlighted ? "border-emerald-400/60 !text-emerald-100" : ""}`}
+            
+              className={`${baseInputClassName} text-sky-700 ${isHighlighted ? "border-emerald-400/60 !text-emerald-700" : ""}`}
               value={opt}
               onChange={(e) => updateEdgeData(id, { optionLabel: e.target.value })}
               onPointerDown={(e) => e.stopPropagation()}
@@ -154,7 +155,7 @@ export function SmartChoicesEdge({
                 onClick={(e) => { e.stopPropagation(); setIsInteracting(true); }}
                 onPointerDown={(e) => { e.stopPropagation(); setIsInteracting(true); }}
                 title="Podejrzyj ukryty koszt"
-                className="flex h-6 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-900/80 text-cyan-500 shadow-sm"
+                className="flex h-6 w-8 items-center justify-center rounded-full border border-slate-500 text-cyan-500 shadow-sm"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -178,19 +179,20 @@ export function SmartChoicesEdge({
           >
             {/* Grupa wyizolowana dla samego prawdopodobieństwa */}
             <div className={`relative group/prob ${isHighlighted ? "highlighted" : ""}`}>
-              <div className="flex items-center rounded border border-cyan-500/60 bg-slate-950 px-1 py-0.5 shadow-sm hover:border-cyan-400 transition-colors">
+              {/* ZMIENIONO: bg-slate-950 na bg-transparent, usunięto shadow-sm */}
+              <div className="flex items-center rounded border border-transparent bg-transparent px-1 py-0.5 hover:border-cyan-400 transition-colors">
                 <input
                   type="number"
                   value={isNaN(displayProb) ? "" : displayProb}
                   onChange={handleProbChange}
-                  className="w-9 bg-transparent text-center text-xs font-medium text-slate-100 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-9 bg-transparent text-center text-xs font-medium text-orange-400 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
-                <span className="pr-1 text-xs text-cyan-400">%</span>
+                <span className="text-xs text-slate-400">%</span>
               </div>
 
               {/* SLIDER */}
               <div className="absolute top-full left-1/2 pt-0.5 w-40 -translate-x-1/2 z-50 hidden group-hover/prob:block focus-within:block">
-                <div className="flex items-center justify-between gap-1.5 rounded-md border border-cyan-500/60 bg-slate-900/95 p-1.5 shadow-lg backdrop-blur-sm">
+                <div className="flex items-center justify-between gap-1.5 rounded-md border border-cyan-500/60 p-1.5 shadow-lg backdrop-blur-sm">
                   <button type="button" onClick={(e) => { e.stopPropagation(); stepProbability(-1); }} onPointerDown={(e) => e.stopPropagation()} className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-slate-800 text-lg font-medium leading-none text-cyan-400 hover:bg-slate-700 hover:text-cyan-300 focus:outline-none">-</button>
                   <input type="range" min="0" max="100" step="1" value={isNaN(displayProb) ? "0" : displayProb} onChange={handleProbChange} onPointerDown={(e) => e.stopPropagation()} className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-slate-700 accent-cyan-500" />
                   <button type="button" onClick={(e) => { e.stopPropagation(); stepProbability(1); }} onPointerDown={(e) => e.stopPropagation()} className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-slate-800 text-lg font-medium leading-none text-cyan-400 hover:bg-slate-700 hover:text-cyan-300 focus:outline-none">+</button>
