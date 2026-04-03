@@ -20,7 +20,14 @@ export function TerminalNode({ id, data }) {
   const probabilityPercent = (pathProb * 100).toFixed(1); 
   const isImpossible = pathProb === 0;
   
-  const polygonClasses = isHighlighted ? 'fill-emerald-50 stroke-emerald-600' : 'fill-white stroke-[#0f172a]';
+  // --- REFAKTORYZACJA KOLORÓW DLA SVG (Bez Tailwinda dla fill/stroke) ---
+  // Definiujemy sztywne kolory w HEX, które są pancerne dla html-to-image
+  // Kółko i kwadrat używają border z slate-900 (#0f172a) i tła white (#ffffff)
+  
+  const fillColor = isHighlighted ? '#ecfdf5' : '#ffffff'; // emerald-50 : white
+  const strokeColor = isHighlighted ? '#10b981' : '#0f172a'; // emerald-600 : slate-900
+
+  // ... reszta logiki finansowej i klas inputa bez zmian ...
   
   const rawPayoff = String(data.payoff || '');
   const numericPayoff = parseFloat(rawPayoff.replace(/zł|%|\s/g, '').replace(',', '.').replace('−', '-'));
@@ -40,15 +47,19 @@ export function TerminalNode({ id, data }) {
 
   return (
     // PANCERZ + Wyizolowana grupa głowna (group/node)
-    <div className="group/node relative z-10 hover:!z-[9999] flex h-11 items-center">
+    <div className="group/node relative z-10 hover:!z-[9999] flex h-11 items-center transition-all">
       <Handle type="target" position={Position.Left} className={handleClass} />
       
       <div className={`relative flex h-11 w-11 shrink-0 items-center justify-center drop-shadow-sm ${isHighlighted ? "highlighted" : ""}`}>
         <svg className="h-full w-full" viewBox="0 0 44 44">
           <polygon 
             points="2,2 42,22 2,42" 
-            className={polygonClasses}
-            strokeWidth="1.5" 
+            // --- POPRAWKA TUTAJ ---
+            // Wpisujemy kolory bezpośrednio w atrybuty natywne SVG
+            fill={fillColor}
+            stroke={strokeColor}
+            // Zmieniono strokeWidth z 1.5 na 1, żeby pasowało do Tailwinda 'border'
+            strokeWidth="1" 
             strokeLinejoin="round"
           />
         </svg>
