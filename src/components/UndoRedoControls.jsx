@@ -50,7 +50,6 @@ export function UndoRedoControls() {
       </button>
 
       <button
-        // TUTAJ JEST FIX
         onClick={() => redo()} 
         disabled={!canRedo}
         title="Ponów (Ctrl+Y)"

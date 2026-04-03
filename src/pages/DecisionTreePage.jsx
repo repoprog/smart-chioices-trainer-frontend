@@ -35,7 +35,7 @@ export function DecisionTreePage() {
             </button>
           ))}
         </div>
-        <UndoRedoControls />
+       
       </header>
       
       <main className="flex flex-1 flex-col p-4 md:p-6">
