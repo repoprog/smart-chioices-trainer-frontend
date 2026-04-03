@@ -4,9 +4,7 @@ import { useTreeStore } from '../store/useTreeStore.js'
 import { FloatingToolbar } from '../components/FloatingToolbar.jsx'
 import { useClipboardActions } from '../hooks/useClipboardActions.js'
 
-
-const handleClass =
-  '!h-2 !w-2 !min-h-0 !min-w-0 !border !border-slate-900 !bg-white !opacity-80'
+const handleClass = '!h-2 !w-2 !min-h-0 !min-w-0 !border !border-slate-900 !bg-white !opacity-80'
 
 export function TerminalNode({ id, data }) {
   const updateNodeData = useTreeStore((s) => s.updateNodeData);
@@ -18,14 +16,12 @@ export function TerminalNode({ id, data }) {
 
   const { executeCopy, executePaste, executeDelete } = useClipboardActions(id, false);
 
- 
   const pathProb = data?.pathProbability ?? 0;
   const probabilityPercent = (pathProb * 100).toFixed(1); 
   const isImpossible = pathProb === 0;
   
   const polygonClasses = isHighlighted ? 'fill-emerald-50 stroke-emerald-600' : 'fill-white stroke-[#0f172a]';
   
-
   const rawPayoff = String(data.payoff || '');
   const numericPayoff = parseFloat(rawPayoff.replace(/zł|%|\s/g, '').replace(',', '.').replace('−', '-'));
   
@@ -43,12 +39,9 @@ export function TerminalNode({ id, data }) {
   }`;
 
   return (
-    <div className="group/node relative z-10 hover:!z-[9999] flex h-11 items-center transition-all">
-      <Handle
-        type="target"
-        position={Position.Left}
-        className={handleClass}
-      />
+    // PANCERZ + Wyizolowana grupa głowna (group/node)
+    <div className="group/node relative z-10 hover:!z-[9999] flex h-11 items-center">
+      <Handle type="target" position={Position.Left} className={handleClass} />
       
       <div className={`relative flex h-11 w-11 shrink-0 items-center justify-center drop-shadow-sm ${isHighlighted ? "highlighted" : ""}`}>
         <svg className="h-full w-full" viewBox="0 0 44 44">
@@ -63,8 +56,8 @@ export function TerminalNode({ id, data }) {
       
       <div className="ml-2 relative flex flex-col justify-center">
         
-        {/* GRUPA WEWNĘTRZNA - Obsługuje najechanie myszką na Input */}
-        <div className="relative flex items-center group">
+        {/* GRUPA WEWNĘTRZNA DLA INPUTA (group/input) - zapobiega konfliktom z głównym menu */}
+        <div className="relative flex items-center group/input">
           <input
             type="text"
             value={data.payoff || ''}
@@ -74,14 +67,15 @@ export function TerminalNode({ id, data }) {
             placeholder="np. 120 000 zł"
             className={inputClasses}
           />
-          {/* NASZ NOWY GLOBALNY KOMPONENT */}
-          <FloatingToolbar
-            positionClass="bottom-full pb-1"
-            title="wynik"
-            onCopy={(e) => executeCopy(e, data.payoff)}
-            onPaste={(e) => executePaste(e, "payoff")}
-            onDelete={(e) => executeDelete(e, "payoff")}
-          />
+          <div className="opacity-0 group-hover/input:opacity-100 transition-opacity">
+            <FloatingToolbar
+              positionClass="bottom-full pb-1"
+              title="wynik"
+              onCopy={(e) => executeCopy(e, data.payoff)}
+              onPaste={(e) => executePaste(e, "payoff")}
+              onDelete={(e) => executeDelete(e, "payoff")}
+            />
+          </div>
         </div>
 
         <div className="absolute top-full left-1 mt-0.5 text-[10px] font-medium text-slate-500 whitespace-nowrap pointer-events-none">
@@ -89,8 +83,9 @@ export function TerminalNode({ id, data }) {
         </div>
       </div>
 
+      {/* MENU WĘZŁA: Reaguje na group/node. Bez animacji opacity. */}
       <div
-        className="absolute left-full top-1/2 pl-1 flex -translate-y-1/2 flex-col opacity-0 transition-all duration-200 group-hover/node:pointer-events-auto group-hover/node:opacity-100 pointer-events-none"
+        className="absolute left-full top-1/2 pl-1 flex -translate-y-1/2 flex-col opacity-0 group-hover/node:pointer-events-auto group-hover/node:opacity-100 pointer-events-none z-[1000]"
         onPointerDown={(e) => e.stopPropagation()}
       >
         <NodeMenu nodeId={id} nodeType="terminal" hasIncoming={true} />

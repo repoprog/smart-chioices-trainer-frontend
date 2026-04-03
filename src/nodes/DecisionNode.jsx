@@ -3,8 +3,7 @@ import { Handle, Position } from '@xyflow/react'
 import { useTreeStore } from '../store/useTreeStore.js'
 import { NodeMenu } from '../components/NodeMenu.jsx'
 
-const handleClass =
-  '!h-2 !w-2 !min-h-0 !min-w-0 !border !border-slate-900 !bg-white !opacity-80'
+const handleClass = '!h-2 !w-2 !min-h-0 !min-w-0 !border !border-slate-900 !bg-white !opacity-80'
 
 export function DecisionNode({ id, data }) {
   const [isPinned, setIsPinned] = useState(false); 
@@ -13,10 +12,8 @@ export function DecisionNode({ id, data }) {
   const hasIncoming = edges.some((e) => e.target === id)
   const isHighlighted = data?.isHighlighted;
 
-  const nodeClasses = `flex h-11 w-11 items-center justify-center rounded-sm border shadow-sm ${
-    isHighlighted
-      ? 'border-emerald-500 bg-emerald-50 font-bold ring-4 ring-emerald-500/30'
-      : 'border-slate-900 bg-white'
+  const nodeClasses = `flex h-11 w-11 items-center justify-center rounded-sm border shadow-sm transition-colors ${
+    isHighlighted ? 'border-emerald-500 bg-emerald-50 font-bold ring-4 ring-emerald-500/30' : 'border-slate-900 bg-white'
   }`;
 
   const spanClasses = `font-sans text-sm font-semibold tabular-nums ${
@@ -27,8 +24,6 @@ export function DecisionNode({ id, data }) {
 
   return (
     <div className="relative z-10 hover:!z-[9999]">
-      
-  
       <div className="group/node relative h-11 w-11">
         <div className={nodeClasses}>
           <span className={spanClasses}>
@@ -38,15 +33,15 @@ export function DecisionNode({ id, data }) {
           <Handle type="source" position={Position.Right} className={handleClass} />
         </div>
 
+        {/* MENU WĘZŁA: Bez animacji opacity */}
         <div
-          className="absolute left-full top-1/2 pl-1 flex -translate-y-1/2 flex-col opacity-0 transition-all duration-200 group-hover/node:pointer-events-auto group-hover/node:opacity-100 pointer-events-none"
+          className="absolute left-full top-1/2 pl-1 flex -translate-y-1/2 flex-col opacity-0 group-hover/node:pointer-events-auto group-hover/node:opacity-100 pointer-events-none z-[1000]"
           onPointerDown={(e) => e.stopPropagation()}
         >
           <NodeMenu nodeId={id} nodeType="decision" hasIncoming={hasIncoming} />
         </div>
       </div>
 
-    
       {hasExpectedValue && (
         <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 flex justify-center">
            <div className="relative flex items-center justify-center">
@@ -69,9 +64,7 @@ export function DecisionNode({ id, data }) {
                   </div>
                   
                   <div className={`pointer-events-none absolute top-full left-1/2 z-[10000] mt-0.5 -translate-x-1/2 whitespace-nowrap rounded-md border border-slate-300 bg-white/95 px-2.5 py-1.5 text-[11px] font-medium text-slate-700 shadow-xl transition-all duration-200 ${
-                    isPinned 
-                      ? 'opacity-100 -translate-y-0.5' 
-                      : 'opacity-0 translate-y-0 group-hover/eq:opacity-100 group-hover/eq:-translate-y-0.5'
+                    isPinned ? 'opacity-100 -translate-y-0.5' : 'opacity-0 translate-y-0 group-hover/eq:opacity-100 group-hover/eq:-translate-y-0.5'
                   }`}>
                     <div className="absolute -top-1 left-1/2 -translate-x-1/2 border-l-4 border-r-4 border-b-4 border-transparent border-b-slate-300"></div>
                     <div className="absolute -top-[3px] left-1/2 -translate-x-1/2 border-l-4 border-r-4 border-b-4 border-transparent border-b-white"></div>

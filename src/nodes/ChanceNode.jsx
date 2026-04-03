@@ -3,8 +3,7 @@ import { Handle, Position } from '@xyflow/react'
 import { useTreeStore } from '../store/useTreeStore.js'
 import { NodeMenu } from '../components/NodeMenu.jsx'
 
-const handleClass =
-  '!h-2 !w-2 !min-h-0 !min-w-0 !border !border-slate-900 !bg-white !opacity-80'
+const handleClass = '!h-2 !w-2 !min-h-0 !min-w-0 !border !border-slate-900 !bg-white !opacity-80'
 
 const parseProbability = (p) => {
   if (p == null) return 0;
@@ -37,9 +36,8 @@ export function ChanceNode({ id, data }) {
 
   return (
     <div className="relative z-10 hover:!z-[9999]">
-      
-      {/* 1. GÓRNA STREFA: Ograniczona dokładnie do 44x44 pikseli węzła */}
       <div className="group/node relative h-11 w-11">
+        
         {isError && (
           <div 
             className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 flex h-6 items-center justify-center whitespace-nowrap min-w-max rounded-full bg-red-500 px-2.5 text-[11px] font-bold text-white shadow-md ring-2 ring-white"
@@ -57,16 +55,15 @@ export function ChanceNode({ id, data }) {
           <Handle type="source" position={Position.Right} className={handleClass} />
         </div>
 
-        {/* MENU: Wyświetli się tylko po najechaniu na kółko węzła */}
+        {/* MENU WĘZŁA: Usunięto animację przejścia. Znika natychmiastowo. */}
         <div
-          className="absolute left-full top-1/2 pl-1 flex -translate-y-1/2 flex-col opacity-0 transition-all duration-200 group-hover/node:pointer-events-auto group-hover/node:opacity-100 pointer-events-none"
+          className="absolute left-full top-1/2 pl-1 flex -translate-y-1/2 flex-col opacity-0 group-hover/node:pointer-events-auto group-hover/node:opacity-100 pointer-events-none z-[1000]"
           onPointerDown={(e) => e.stopPropagation()}
         >
           <NodeMenu nodeId={id} nodeType="chance" hasIncoming={hasIncoming} />
         </div>
       </div>
 
-      {/* 2. DOLNA STREFA: Równanie i wynik (Poza zasięgiem menu!) */}
       {hasExpectedValue && (
         <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 flex justify-center">
            <div className="relative flex items-center justify-center">
@@ -88,11 +85,8 @@ export function ChanceNode({ id, data }) {
                     </div>
                   </div>
                   
-                  {/* Animacja dymka oparta w 100% na CSS (isPinned i Hover) */}
                   <div className={`pointer-events-none absolute top-full left-1/2 z-[10000] mt-0.5 -translate-x-1/2 whitespace-nowrap rounded-md border border-slate-300 bg-white/95 px-2.5 py-1.5 text-[11px] font-medium text-slate-700 shadow-xl transition-all duration-200 ${
-                    isPinned
-                      ? 'opacity-100 -translate-y-0.5' 
-                      : 'opacity-0 translate-y-0 group-hover/eq:opacity-100 group-hover/eq:-translate-y-0.5'
+                    isPinned ? 'opacity-100 -translate-y-0.5' : 'opacity-0 translate-y-0 group-hover/eq:opacity-100 group-hover/eq:-translate-y-0.5'
                   }`}>
                     <div className="absolute -top-1 left-1/2 -translate-x-1/2 border-l-4 border-r-4 border-b-4 border-transparent border-b-slate-300"></div>
                     <div className="absolute -top-[3px] left-1/2 -translate-x-1/2 border-l-4 border-r-4 border-b-4 border-transparent border-b-white"></div>
