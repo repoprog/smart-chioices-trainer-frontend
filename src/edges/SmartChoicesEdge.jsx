@@ -221,7 +221,7 @@ export function SmartChoicesEdge({
                 <span className="pr-1 text-xs text-cyan-400">%</span>
               </div>
 
-              <div className="absolute top-full left-1/2 pt-1.5 w-40 -translate-x-1/2 z-50 hidden group-hover:block focus-within:block">
+              <div className="absolute top-full left-1/2 pt-0.5 w-40 -translate-x-1/2 z-50 hidden group-hover:block focus-within:block">
                 <div className="flex items-center justify-between gap-1.5 rounded-md border border-cyan-500/60 bg-slate-900/95 p-1.5 shadow-lg backdrop-blur-sm">
                   <button
                     type="button"

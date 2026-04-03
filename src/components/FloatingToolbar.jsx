@@ -7,7 +7,7 @@ export function FloatingToolbar({
 }) {
   return (
     <div
-      className={`absolute right-0 flex z-50 items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity ${positionClass}`}
+      className={`absolute right-0 flex z-[9999]" items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity ${positionClass} `} 
     >
       <button
         onClick={onCopy}
