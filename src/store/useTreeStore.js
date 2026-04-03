@@ -294,6 +294,7 @@ const evaluateAndSetWinningPath = (state) => {
     
     if (evaluationResult && typeof evaluationResult.ev === 'number' && !isNaN(evaluationResult.ev)) {
       newData.expectedValue = evaluationResult.ev;
+      newData.equation = evaluationResult.equation;
     }
     
     newData.pathProbability = cumulativeProbs[node.id] ?? 0;
@@ -698,3 +699,5 @@ export const useTreeStore = create()(
 export const useTemporalTreeStore = (selector) => useStore(useTreeStore.temporal, selector);
 
 useTreeStore.getState().init();
+useTreeStore.temporal.getState().clear();
+
