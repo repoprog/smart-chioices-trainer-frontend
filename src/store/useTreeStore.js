@@ -460,6 +460,33 @@ export const useTreeStore = create()(
       return evaluateAndSetWinningPath(newState);
     }),
 
+    toggleEdgeAutoBalance: (edgeId) =>
+    set((state) => {
+      let allEdges = [...state.edges];
+      const edgeIndex = allEdges.findIndex((e) => e.id === edgeId);
+      if (edgeIndex === -1) return state;
+
+      const edge = allEdges[edgeIndex];
+      const isCurrentlyLocked = edge.data?.isLocked;
+
+      // Przełączamy stan isLocked na odwrotny
+      allEdges[edgeIndex] = {
+        ...edge,
+        data: {
+          ...edge.data,
+          isLocked: !isCurrentlyLocked,
+        },
+      };
+
+    
+      if (isCurrentlyLocked) {
+        allEdges = rebalanceProbabilities(allEdges, edge.source);
+      }
+
+      const newState = { ...state, edges: allEdges };
+      return evaluateAndSetWinningPath(newState);
+    }),
+
   addBranch: (parentId, childKind) =>
     set((state) => {
       const parent = state.nodes.find((n) => n.id === parentId);

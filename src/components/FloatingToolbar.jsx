@@ -7,14 +7,13 @@ export function FloatingToolbar({
 }) {
   return (
     <div
-    
       className={`absolute right-0 flex items-center gap-1 ${positionClass}`}
     >
       <button
         onClick={onCopy}
         onPointerDown={(e) => e.stopPropagation()}
         title={`Kopiuj ${title}`}
-        className="flex h-5 w-5 items-center justify-center rounded bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-cyan-400 transition-colors shadow-sm pointer-events-auto"
+        className="pointer-events-auto flex h-5 w-5 items-center justify-center rounded bg-slate-100 text-slate-500 shadow-sm transition-colors hover:bg-slate-200 hover:text-cyan-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-cyan-400"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
@@ -26,7 +25,7 @@ export function FloatingToolbar({
         onClick={onPaste}
         onPointerDown={(e) => e.stopPropagation()}
         title={`Wklej ${title}`}
-        className="flex h-5 w-5 items-center justify-center rounded bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-emerald-400 transition-colors shadow-sm pointer-events-auto"
+        className="pointer-events-auto flex h-5 w-5 items-center justify-center rounded bg-slate-100 text-slate-500 shadow-sm transition-colors hover:bg-slate-200 hover:text-emerald-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-emerald-400"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
@@ -38,7 +37,7 @@ export function FloatingToolbar({
         onClick={onDelete}
         onPointerDown={(e) => e.stopPropagation()}
         title={`Usuń ${title}`}
-        className="flex h-5 w-5 items-center justify-center rounded bg-slate-800 text-slate-400 hover:bg-red-900/40 hover:text-red-400 transition-colors shadow-sm pointer-events-auto"
+        className="pointer-events-auto flex h-5 w-5 items-center justify-center rounded bg-slate-100 text-slate-500 shadow-sm transition-colors hover:bg-red-100 hover:text-red-500 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-red-900/40 dark:hover:text-red-400"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="3 6 5 6 21 6" />

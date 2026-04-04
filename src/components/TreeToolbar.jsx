@@ -88,6 +88,7 @@ export function TreeToolbar() {
           if (node?.classList?.contains('tree-toolbar-export')) return false;
           if (node?.classList?.contains('react-flow__controls')) return false;
           if (node?.classList?.contains('react-flow__minimap')) return false;
+          if (node?.classList?.contains('hide-on-export')) return false;
           
           return true;
         }
