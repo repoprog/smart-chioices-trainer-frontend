@@ -303,36 +303,55 @@ const evaluateAndSetWinningPath = (state) => {
   });
   
   const winningPath = new Set();
-  
-  const rootNode = nodesWithEv.find(
-    (n) => (n.type === 'decision' || n.type === 'chance') && !edges.some((e) => e.target === n.id)
-  );
 
-  if (rootNode) {
-    const queue = [rootNode.id];
-    winningPath.add(rootNode.id);
-
-    while (queue.length > 0) {
-      const currentNodeId = queue.shift();
-      const currentNode = nodesWithEv.find((n) => n.id === currentNodeId);
-      const evaluationResult = evaluationMap[currentNodeId];
-
-      if (currentNode?.type === 'decision' && evaluationResult?.optimalEdgeId) {
-        const optimalEdge = edges.find((e) => e.id === evaluationResult.optimalEdgeId);
-        if (optimalEdge) {
-          winningPath.add(optimalEdge.id);
-          winningPath.add(optimalEdge.target);
-          queue.push(optimalEdge.target);
+  //  Sprawdzamy, czy w jakimkolwiek węźle Szansy jest błąd sumy % ---
+  let hasProbabilityError = false;
+  for (const node of nodes) {
+    if (node.type === 'chance') {
+      const outgoingEdges = edges.filter((e) => e.source === node.id);
+      if (outgoingEdges.length > 0) {
+        const sum = outgoingEdges.reduce((acc, e) => acc + parseProbability(e.data?.probability), 0);
+        
+        if (Math.abs(sum - 100) > 0.01) {
+          hasProbabilityError = true;
+          break; 
         }
-      } else {
-        const childEdges = edges.filter((e) => e.source === currentNodeId);
-        childEdges.forEach((edge) => {
-          if(currentNode?.type === 'chance') {
-             winningPath.add(edge.id);
-             winningPath.add(edge.target);
-             queue.push(edge.target);
+      }
+    }
+  }
+  
+  // Budujemy zwycięską ścieżkę TYLKO wtedy, gdy nie ma błędów w prawdopodobieństwach
+  if (!hasProbabilityError) {
+    const rootNode = nodesWithEv.find(
+      (n) => (n.type === 'decision' || n.type === 'chance') && !edges.some((e) => e.target === n.id)
+    );
+
+    if (rootNode) {
+      const queue = [rootNode.id];
+      winningPath.add(rootNode.id);
+
+      while (queue.length > 0) {
+        const currentNodeId = queue.shift();
+        const currentNode = nodesWithEv.find((n) => n.id === currentNodeId);
+        const evaluationResult = evaluationMap[currentNodeId];
+
+        if (currentNode?.type === 'decision' && evaluationResult?.optimalEdgeId) {
+          const optimalEdge = edges.find((e) => e.id === evaluationResult.optimalEdgeId);
+          if (optimalEdge) {
+            winningPath.add(optimalEdge.id);
+            winningPath.add(optimalEdge.target);
+            queue.push(optimalEdge.target);
           }
-        });
+        } else {
+          const childEdges = edges.filter((e) => e.source === currentNodeId);
+          childEdges.forEach((edge) => {
+            if(currentNode?.type === 'chance') {
+               winningPath.add(edge.id);
+               winningPath.add(edge.target);
+               queue.push(edge.target);
+            }
+          });
+        }
       }
     }
   }

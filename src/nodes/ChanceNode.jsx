@@ -97,7 +97,7 @@ export function ChanceNode({ id, data }) {
 
              <div className="px-2 py-0.5 rounded-md bg-slate-900/50 backdrop-blur-sm shadow-inner pointer-events-none">
                <span className="text-yellow-400 text-xs font-bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
-                 {Math.round(data.expectedValue).toLocaleString()}
+                {data.expectedValue.toLocaleString('pl-PL', { maximumFractionDigits: 2 })}
                </span>
              </div>
 
