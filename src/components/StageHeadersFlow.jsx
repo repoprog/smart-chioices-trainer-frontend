@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { ViewportPortal } from '@xyflow/react'
 
 import { useTreeStore } from '../store/useTreeStore.js'
-import { computeStageHeaderRowY, findMainPathNodes } from '../store/treeUtils.js'
+import { computeStageHeaderRowY, getUniqueColumnXs } from '../store/treeUtils.js'
 
 const ArrowUp = () => (
   <svg
@@ -43,27 +43,18 @@ const ArrowDown = () => (
 
 export function StageHeadersFlow() {
   const nodes = useTreeStore((s) => s.nodes)
-  const edges = useTreeStore((s) => s.edges)
+  // edges już tu nie pobieramy, nie są potrzebne do osi X!
   const labels = useTreeStore((s) => s.stageColumnLabels)
   const setStageColumnLabel = useTreeStore((s) => s.setStageColumnLabel)
   const evaluationMode = useTreeStore((s) => s.evaluationMode);
   const setEvaluationMode = useTreeStore((s) => s.setEvaluationMode);
 
-
   const rowY = useMemo(() => computeStageHeaderRowY(nodes), [nodes])
 
-  // Znajdujemy faktyczne osie pionowe wszystkich kolumn
+  // CZYŚCIUTKA LOGIKA:
   const columnXs = useMemo(() => {
-    const mainPathNodes = findMainPathNodes(nodes, edges); // Get the main path
-    const xs = mainPathNodes.map(n => n.position.x + 22); // środek węzła 44px
-    const unique = [];
-    xs.forEach(x => {
-      if (!unique.some(ux => Math.abs(ux - x) < 5)) {
-        unique.push(x);
-      }
-    });
-    return unique.sort((a, b) => a - b);
-  }, [nodes, edges]);
+    return getUniqueColumnXs(nodes).map(x => x + 22);
+  }, [nodes]);
 
   if (!columnXs.length) return null
 

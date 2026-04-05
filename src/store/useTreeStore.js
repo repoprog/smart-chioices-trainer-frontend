@@ -7,13 +7,12 @@ import {
   getTreeMaxDepth,
   nextDomId,
   renumberDecisionAndChanceNodes,
-  findMainPathNodes 
+  getUniqueColumnXs 
 } from './treeUtils.js';
 import { evaluateDecisionTree } from '../logic/evaluation.js';
 
 function syncColumnLabels(nodes, edges, prevLabels = []) {
-  const mainPathNodes = findMainPathNodes(nodes, edges);
-  const columnCount = mainPathNodes.length;
+  const columnCount = getUniqueColumnXs(nodes).length;
   
   if (columnCount === 0) return []; 
 
