@@ -108,7 +108,31 @@ export function TreeToolbar() {
         zoom: 1 
       });
 
-      await new Promise((resolve) => setTimeout(resolve, 150));
+      // --- OPCJA ATOMOWA: Wstrzykujemy tymczasowy, bezwzględny CSS ---
+      const exportStyles = document.createElement('style');
+      exportStyles.innerHTML = `
+        
+        .react-flow * {
+          transition: none !important;
+        }
+       
+        input[placeholder^="Etap"], input[placeholder="Konsekwencje"] {
+          color: #1e293b !important;
+        }
+        
+        button[title^="Zmień na poszukiwanie"] {
+          background-color: #ecfdf5 !important;
+          border-color: #34d399 !important;
+          color: #065f46 !important;
+        }
+        button[title^="Zmień na poszukiwanie"] span {
+          color: #059669 !important;
+        }
+      `;
+      document.head.appendChild(exportStyles);
+
+     
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       const dataUrl = await toPng(flowWrapper, {
         backgroundColor: '#ffffff', 
@@ -123,6 +147,10 @@ export function TreeToolbar() {
           return true;
         }
       });
+
+      document.head.removeChild(exportStyles);
+
+      
 
       flowWrapper.style.width = origWidth;
       flowWrapper.style.height = origHeight;

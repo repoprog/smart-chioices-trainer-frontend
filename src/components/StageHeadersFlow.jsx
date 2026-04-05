@@ -88,7 +88,7 @@ export function StageHeadersFlow() {
     value={text}
     onChange={(e) => setStageColumnLabel(i, e.target.value)}
     placeholder={isLast ? "Konsekwencje" : `Etap ${i + 1}`}
-    className="box-border h-8 w-full rounded border border-slate-400 bg-white/95 px-1.5 text-center text-[11px] font-semibold text-slate-800 shadow-sm outline-none backdrop-blur-sm placeholder:text-slate-400 focus-visible:border-slate-900 dark:border-slate-500 dark:bg-slate-900/90 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus-visible:border-slate-300"
+    className="box-border h-8 w-full rounded border backdrop-blur-sm border-slate-400 bg-transparent px-1.5 text-center text-[11px] font-semibold text-slate-800 shadow-sm outline-none backdrop-blur-sm placeholder:text-slate-400  focus-visible:border-slate-900 dark:border-slate-500 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus-visible:border-slate-300"
   />
   {isLast && (
     <button

@@ -130,7 +130,7 @@ export function DecisionTreeCanvas() {
             }}
           />
           <TreeToolbar />
-         < Panel position="bottom-left" className="pointer-events-none  m-4 mb-[4.5rem]">
+         < Panel position="bottom-left" className="pointer-events-none  m-4 mb-[4.5rem] hide-on-export">
       <div className=" ml-16 flex items-center gap-4 rounded border border-slate-300 bg-white/95 px-3 py-2 font-sans text-[10px] text-slate-700 shadow-sm backdrop-blur-sm dark:border-slate-600 dark:bg-slate-900/95 dark:text-slate-300">
         <span className="flex items-center gap-1.5">
           <span

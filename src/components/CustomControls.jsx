@@ -6,8 +6,8 @@ export function CustomControls() {
 
   return (
     
-    <Panel position="bottom-left" className="m-4">
-      <div className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white/90 p-1.5 shadow-lg backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/90">
+    <Panel position="bottom-left" className="m-4 hide-on-export">
+      <div className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white/90 p-1.5 shadow-lg backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/90" >
         
         {/* Przycisk Zoom In */}
         <button

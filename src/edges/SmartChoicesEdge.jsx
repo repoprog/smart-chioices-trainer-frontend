@@ -34,9 +34,9 @@ export function SmartChoicesEdge({
   const rawCost = String(cost);
   const numericCost = parseFloat(rawCost.replace(/zł|%|\s/g, '').replace(',', '.').replace('−', '-'));
   
-  let costColorClass = "text-slate-100"; 
-  if (numericCost > 0) costColorClass = "text-emerald-400";
-  else if (numericCost < 0) costColorClass = "text-red-400"; 
+  let costColorClass = "text-slate-100 dark:text-slate-200"; // neutralny, np. gdy wartość to 0
+  if (numericCost > 0) costColorClass = "text-emerald-600 dark:text-emerald-400"; // Zyski (ciemniejszy zielony na jasnym)
+  else if (numericCost < 0) costColorClass = "text-red-600 dark:text-red-400"; // Koszty (ciemniejszy czerwony na jasnym)
 
  
 const baseInputClassName = "nodrag nopan pointer-events-auto block w-[min(5.5rem,15vw)] max-w-[95px] rounded border border-transparent bg-transparent px-1.5 py-0.5 text-left font-sans text-[12px] font-medium leading-tight outline-none placeholder:text-slate-400 hover:border-slate-600 focus-visible:border-cyan-400 focus-visible:ring-1 focus-visible:ring-cyan-400 transition-colors";
