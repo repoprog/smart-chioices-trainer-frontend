@@ -671,6 +671,44 @@ export const useTreeStore = create()(
       const newState = { ...state, nodes: renumbered, edges: remainingEdges, stageColumnLabels };
       return evaluateAndSetWinningPath(newState);
     }),
+
+    
+  exportJson: () => {
+    const state = useTreeStore.getState();
+    const data = {
+      nodes: state.nodes,
+      edges: state.edges,
+      stageColumnLabels: state.stageColumnLabels,
+    };
+    return JSON.stringify(data, null, 2);
+  },
+
+  importJson: (jsonString) =>
+    set((state) => {
+      try {
+        const parsed = JSON.parse(jsonString);
+        if (parsed.nodes && parsed.edges) {
+          const layoutedNodes = getLayoutedElements(parsed.nodes, parsed.edges);
+          const renumbered = renumberDecisionAndChanceNodes(layoutedNodes, parsed.edges);
+          const stageColumnLabels = syncColumnLabels(
+            renumbered, 
+            parsed.edges, 
+            parsed.stageColumnLabels || []
+          );
+
+          const newState = {
+            ...state,
+            nodes: renumbered,
+            edges: parsed.edges,
+            stageColumnLabels,
+          };
+          return evaluateAndSetWinningPath(newState);
+        }
+      } catch (e) {
+        console.error("Błąd podczas wczytywania pliku JSON", e);
+      }
+      return state;
+    }),
     
   removeBranch: (parentId) =>
     set((state) => {

@@ -110,7 +110,7 @@ export function StageHeadersFlow() {
         {evaluationMode === 'max' ? '⭡' : '⭣'}
       </span>
       <span>
-        {evaluationMode === 'max' ? 'Better [Max]' : 'Better [Min]'}
+        {evaluationMode === 'max' ? 'Lepiej [Max]' : 'Lepiej [Min]'}
       </span>
     </button>
   )}

@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useReactFlow, getNodesBounds } from '@xyflow/react';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
-import { useTemporalTreeStore } from '../store/useTreeStore.js';
+import { useTreeStore, useTemporalTreeStore } from '../store/useTreeStore.js';
 
 export function TreeToolbar() {
   const undo = useTemporalTreeStore((state) => state.undo);
@@ -10,9 +10,13 @@ export function TreeToolbar() {
   const pastStates = useTemporalTreeStore((state) => state.pastStates);
   const futureStates = useTemporalTreeStore((state) => state.futureStates);
 
-  const { getNodes, setViewport, getViewport } = useReactFlow();
+  // Dodane akcje do obsługi JSON
+  const exportJson = useTreeStore((state) => state.exportJson);
+  const importJson = useTreeStore((state) => state.importJson);
 
+  const { getNodes, setViewport, getViewport } = useReactFlow();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const fileInputRef = useRef(null);
 
   const canUndo = pastStates.length > 0;
   const canRedo = futureStates.length > 0;
@@ -36,6 +40,37 @@ export function TreeToolbar() {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
+  const handleExportJson = () => {
+    const data = exportJson();
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'drzewo-decyzyjne.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result;
+      if (typeof content === 'string') {
+        importJson(content);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   const exportGraph = async (format) => {
     const nodes = getNodes();
     if (nodes.length === 0) {
@@ -43,10 +78,9 @@ export function TreeToolbar() {
       return;
     }
 
-    // --- ZMIANA 1: Asymetryczne marginesy ---
-    const paddingX = 100;      // Margines po bokach
-    const paddingTop = 180;    // Dużo miejsca na górze na nagłówki! (Zepchnie drzewo w dół)
-    const paddingBottom = 100; // Margines na dole
+    const paddingX = 100;      
+    const paddingTop = 180;    
+    const paddingBottom = 100; 
 
     const nodesBounds = getNodesBounds(nodes);
     
@@ -68,14 +102,12 @@ export function TreeToolbar() {
       flowWrapper.style.width = `${imageWidth}px`;
       flowWrapper.style.height = `${imageHeight}px`;
 
-      // --- ZMIANA 2: Uwzględnienie paddingTop w kamerze ---
       setViewport({ 
         x: -nodesBounds.x + paddingX, 
         y: -nodesBounds.y + paddingTop, 
         zoom: 1 
       });
 
-      // Zwiększyłem czas oczekiwania do 150ms, żeby mieć pewność, że DOM przerysuje nagłówki
       await new Promise((resolve) => setTimeout(resolve, 150));
 
       const dataUrl = await toPng(flowWrapper, {
@@ -84,12 +116,10 @@ export function TreeToolbar() {
         height: imageHeight,
         pixelRatio: 2, 
         filter: (node) => {
-         
           if (node?.classList?.contains('tree-toolbar-export')) return false;
           if (node?.classList?.contains('react-flow__controls')) return false;
           if (node?.classList?.contains('react-flow__minimap')) return false;
           if (node?.classList?.contains('hide-on-export')) return false;
-          
           return true;
         }
       });
@@ -145,8 +175,38 @@ export function TreeToolbar() {
 
       <div className="mx-1 h-5 w-px bg-slate-300 dark:bg-slate-700" />
 
+      {/* Ukryty input do ładowania pliku JSON */}
+      <input 
+        type="file" 
+        accept=".json" 
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        className="hidden" 
+      />
+
+      <button onClick={handleImportClick} title="Wczytaj projekt z pliku (JSON)" className={btnClass}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="m6 14 1.5-3A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.5 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" />
+        </svg>
+        <span className="absolute -top-1 -right-1 text-[8px] font-bold text-emerald-600">IN</span>
+      </button>
+
+      <button onClick={handleExportJson} title="Zapisz projekt jako plik (JSON)" className={btnClass}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+          <polyline points="17 21 17 13 7 13 7 21" />
+          <polyline points="7 3 7 8 15 8" />
+        </svg>
+        <span className="absolute -top-1 -right-1 text-[8px] font-bold text-amber-500">JSON</span>
+      </button>
+      <div className="mx-1 h-5 w-px bg-slate-300 dark:bg-slate-700" />
+
       <button onClick={() => exportGraph('png')} title="Pobierz jako obraz (PNG)" className={btnClass}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+          <circle cx="9" cy="9" r="2" />
+          <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+        </svg>
         <span className="absolute -top-1 -right-1 text-[8px] font-bold text-sky-600">PNG</span>
       </button>
       

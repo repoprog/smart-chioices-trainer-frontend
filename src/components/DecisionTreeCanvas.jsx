@@ -1,8 +1,9 @@
 import { useCallback, useMemo } from 'react'
+import { CustomControls } from './CustomControls.jsx'
+import { Panel } from '@xyflow/react'
 import {
   ReactFlow,
   Background,
-  Controls,
   MiniMap,
   applyEdgeChanges,
   applyNodeChanges,
@@ -116,10 +117,7 @@ export function DecisionTreeCanvas() {
             color="#d4d4d8"
             className="dark:!bg-slate-900/30"
           />
-          <Controls
-            showInteractive={false}
-            className="!rounded-md !border-slate-300 !bg-white !shadow-sm dark:!border-slate-600 dark:!bg-slate-800"
-          />
+         <CustomControls />
           <MiniMap
             className="!rounded-md !border-slate-300 !bg-stone-100 dark:!border-slate-600 dark:!bg-slate-800"
             maskColor="rgb(15 23 42 / 0.12)"
@@ -132,10 +130,8 @@ export function DecisionTreeCanvas() {
             }}
           />
           <TreeToolbar />
-        </ReactFlow>
-      </div>
-
-      <div className="pointer-events-none absolute bottom-3 left-10 z-10 flex items-center gap-4 rounded border border-slate-300 bg-white/95 px-3 py-2 font-sans text-[10px] text-slate-700 shadow-sm backdrop-blur-sm dark:border-slate-600 dark:bg-slate-900/95 dark:text-slate-300">
+         < Panel position="bottom-left" className="pointer-events-none  m-4 mb-[4.5rem]">
+      <div className=" ml-16 flex items-center gap-4 rounded border border-slate-300 bg-white/95 px-3 py-2 font-sans text-[10px] text-slate-700 shadow-sm backdrop-blur-sm dark:border-slate-600 dark:bg-slate-900/95 dark:text-slate-300">
         <span className="flex items-center gap-1.5">
           <span
             className="inline-block h-2.5 w-2.5 border border-slate-900 bg-white"
@@ -165,6 +161,9 @@ export function DecisionTreeCanvas() {
           </svg>
           Konsekwencja
         </span>
+      </div>
+      </Panel>
+        </ReactFlow>
       </div>
     </div>
   )
