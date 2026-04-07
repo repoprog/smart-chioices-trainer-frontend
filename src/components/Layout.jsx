@@ -20,14 +20,15 @@ export function Layout() {
             Portal decyzyjny
           </p>
         </div>
-        <nav className="flex flex-col gap-1 p-3" aria-label="Moduły">
-          <NavLink to="/tabela" className={navLinkClass}>
-            Tabela Decyzyjna
-          </NavLink>
-          <NavLink to="/drzewo" className={navLinkClass}>
-            Drzewo Decyzyjne
-          </NavLink>
-        </nav>
+    
+<nav className="flex flex-col gap-1 p-3" aria-label="Moduły">
+  <NavLink to="/app/tabela" className={navLinkClass}>
+    Tabela Decyzyjna
+  </NavLink>
+  <NavLink to="/app/drzewo" className={navLinkClass}>
+    Drzewo Decyzyjne
+  </NavLink>
+</nav>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <Outlet />
