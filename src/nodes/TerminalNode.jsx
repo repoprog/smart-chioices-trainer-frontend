@@ -20,9 +20,6 @@ export function TerminalNode({ id, data }) {
   const probabilityPercent = (pathProb * 100).toFixed(1); 
   const isImpossible = pathProb === 0;
   
-  // --- REFAKTORYZACJA KOLORÓW DLA SVG (Bez Tailwinda dla fill/stroke) ---
-  // Definiujemy sztywne kolory w HEX, które są pancerne dla html-to-image
-  // Kółko i kwadrat używają border z slate-900 (#0f172a) i tła white (#ffffff)
   
   const fillColor = isHighlighted ? '#ecfdf5' : '#ffffff'; // emerald-50 : white
   const strokeColor = isHighlighted ? '#10b981' : '#0f172a'; // emerald-600 : slate-900

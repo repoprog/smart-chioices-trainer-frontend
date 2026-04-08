@@ -13,22 +13,25 @@ export function TradeoffModule() {
   };
 
   return (
-    <div className="w-full h-full min-h-screen bg-gray-100 p-4 md:p-10 text-gray-900 font-sans text-[16px] leading-normal">
-      <div className="max-w-[1200px] w-full mx-auto bg-white rounded-xl shadow-md p-8 overflow-auto max-h-[85vh]">
-      <TradeoffHeader />
-      <TradeoffGrid />
-      <TradeoffSettings />
+    <div className="w-full h-full flex flex-col font-sans">
+      <div className="w-full mx-auto bg-card rounded-xl border border-border shadow-sm p-6 overflow-hidden flex flex-col">
+        <TradeoffHeader />
+        
+        <div className="flex-1 overflow-auto custom-scrollbar mt-4">
+            <TradeoffGrid />
+        </div>
+        
+        <TradeoffSettings />
       
-      <div className="mt-3 flex justify-between items-center">
-        <div></div>
-        <button 
-          className="bg-transparent border-none text-red-500 text-xs font-semibold cursor-pointer underline mt-2.5 hover:text-red-700"
-          onClick={handleReset}
-        >
-          Resetuj wszystko
-        </button>
+        <div className="mt-4 flex justify-end">
+          <button 
+            className="bg-transparent border-none text-destructive/80 text-xs font-semibold cursor-pointer hover:text-destructive hover:underline transition-colors"
+            onClick={handleReset}
+          >
+            Resetuj wszystko
+          </button>
+        </div>
       </div>
-    </div>
     </div>
   );
 }

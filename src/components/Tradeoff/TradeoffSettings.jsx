@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useTradeoffStore } from '../../store/useTradeOffStore';
+import { Settings2, ChevronDown, ChevronUp, X, Plus, Trash2 } from 'lucide-react';
 
-
-// Lista nazw pakietów, żebyśmy mogli wygenerować przyciski (sama logika jest w store)
 const PRESET_KEYS = [
     'Jakość / Standard', 
     'Priorytet', 
@@ -42,99 +41,123 @@ export function TradeoffSettings() {
     };
 
     return (
-        <div className="mt-8 border-t border-gray-200 pt-5 flex justify-between items-start">
-            <div className="w-full max-w-[600px]">
-                <button 
-                    onClick={() => setShowScalesSettings(!showScalesSettings)}
-                    className="bg-transparent border border-gray-200 rounded-lg px-4 py-2.5 cursor-pointer inline-flex items-center gap-2 text-sm font-medium text-gray-400 transition-all font-sans hover:bg-gray-50 hover:text-gray-600 hover:border-gray-300"
-                >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                    Ustawienia ocen
-                    <span className={`text-[10px] ml-1 transition-transform duration-200 ${showScalesSettings ? 'rotate-180' : 'rotate-0'}`}>▼</span>
-                </button>
-                
-                {showScalesSettings && (
-                    <div className="mt-4 p-6 bg-gray-50 border border-gray-200 rounded-lg">
-                        <div className="mb-6">
-                            <span className="text-xs font-semibold text-gray-600 block mb-2">Gotowe pakiety ocen:</span>
-                            <div className="flex flex-wrap gap-2">
-                                {PRESET_KEYS.map(presetKey => (
-                                    <button 
-                                        key={presetKey} 
-                                        className={`px-3 py-1 text-xs font-medium rounded-full cursor-pointer transition-all border font-sans ${activePreset === presetKey ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-100 hover:text-gray-900'}`} 
-                                        onClick={() => handleLoadPreset(presetKey)}
-                                    >
-                                        {presetKey}
-                                    </button>
-                                ))}
-                                
+        <div className="mt-8 border-t border-border pt-6">
+            
+            {/* Przycisk otwierający ustawienia */}
+            <button 
+                onClick={() => setShowScalesSettings(!showScalesSettings)}
+                className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors text-sm font-medium"
+            >
+                <Settings2 className="w-4 h-4 text-muted-foreground" />
+                Ustawienia ocen tekstowych
+                {showScalesSettings ? (
+                    <ChevronUp className="w-4 h-4 ml-1 text-muted-foreground" />
+                ) : (
+                    <ChevronDown className="w-4 h-4 ml-1 text-muted-foreground" />
+                )}
+            </button>
+            
+            {showScalesSettings && (
+                <div className="mt-4 p-5 bg-card border border-border rounded-xl shadow-sm space-y-6 max-w-[800px] animate-in fade-in slide-in-from-top-2">
+                    
+                    {/* SEKCJ 1: Pakiety */}
+                    <div>
+                        <h3 className="text-sm font-medium text-foreground mb-3">Gotowe pakiety ocen</h3>
+                        <div className="flex flex-wrap items-center gap-2">
+                            {PRESET_KEYS.map(presetKey => (
                                 <button 
-                                    className="px-3 py-1 text-xs font-medium rounded-full cursor-pointer transition-all border border-gray-200 bg-transparent text-gray-400 font-sans hover:bg-red-50 hover:text-red-500 hover:border-red-300" 
-                                    onClick={() => { 
-                                        if(window.confirm("Wyczyścić wszystkie oceny?")) {
-                                            clearScales();
-                                        }
-                                    }}
+                                    key={presetKey} 
+                                    className={`px-3 py-1.5 text-xs font-medium rounded-full cursor-pointer transition-colors ${
+                                        activePreset === presetKey 
+                                            ? 'bg-primary text-primary-foreground' 
+                                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                    }`} 
+                                    onClick={() => handleLoadPreset(presetKey)}
                                 >
-                                    Wyczyść listę
+                                    {presetKey}
                                 </button>
-                            </div>
-                        </div>
+                            ))}
+                            
+                            <div className="w-px h-5 bg-border mx-1"></div> {/* Separator */}
 
+                            <button 
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full cursor-pointer transition-colors text-destructive hover:bg-destructive/10" 
+                                onClick={() => { 
+                                    if(window.confirm("Wyczyścić wszystkie oceny?")) {
+                                        clearScales();
+                                    }
+                                }}
+                            >
+                                <Trash2 className="w-3 h-3" />
+                                Wyczyść listę
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* SEKCJA 2: Aktywne Tagi Ocen */}
+                    <div>
+                        <h3 className="text-sm font-medium text-foreground mb-3">Twoje aktywne oceny</h3>
                         {customScales.length > 0 ? (
-                            <div className="mb-6">
-                                <ul className="list-none p-0 m-0 flex flex-wrap gap-1.5">
-                                    {customScales.map((scale, index) => (
-                                        <li key={index} className="inline-flex items-stretch bg-white border border-gray-300 rounded text-[11px] text-gray-700 overflow-hidden shadow-sm transition-colors hover:border-gray-400">
-                                            <div className="px-2 py-1 flex items-center gap-1">
-                                                <strong className="font-bold">{scale.word}</strong> 
-                                                <span className="text-gray-400">→</span> 
-                                                {scale.rank}
-                                                {scale.isAdded && <span className="inline-block ml-1 px-1 py-0.5 bg-blue-100 text-blue-700 rounded-sm text-[8px] font-bold uppercase tracking-wider">dodane</span>}
-                                            </div>
-                                            <button className="flex items-center justify-center px-2 bg-transparent border-none border-l border-gray-200 text-gray-400 text-sm cursor-pointer transition-colors hover:bg-red-50 hover:text-red-500" onClick={() => removeScale(index)} title="Usuń">
-                                                &times;
-                                            </button>
-                                        </li>
-                                    ))}
-                                </ul>
+                            <div className="flex flex-wrap gap-2">
+                                {customScales.map((scale, index) => (
+                                    <span 
+                                        key={index} 
+                                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-sm font-medium shadow-sm transition-all"
+                                    >
+                                        <span>
+                                            {scale.word} 
+                                            <span className="opacity-50 ml-1 font-normal tracking-tight">→ {scale.rank}</span>
+                                        </span>
+                                        <button 
+                                            className="hover:bg-primary/20 rounded-full p-0.5 ml-0.5 transition-colors focus:outline-none" 
+                                            onClick={() => removeScale(index)} 
+                                            title="Usuń"
+                                        >
+                                            <X className="w-3 h-3" />
+                                        </button>
+                                    </span>
+                                ))}
                             </div>
                         ) : (
-                            <div className="mb-6 text-[13px] text-gray-500 italic">
-                                Brak aktywnych ocen tekstowych.
-                            </div>
+                            <p className="text-sm text-muted-foreground italic">Brak aktywnych ocen tekstowych. Dodaj je poniżej lub wybierz pakiet.</p>
                         )}
+                    </div>
 
-                        <div className="flex gap-4 items-end mt-6 pt-5 border-t border-dashed border-gray-200">
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-gray-600">Dodaj własną ocenę tekstową</label>
+                    {/* SEKCJA 3: Dodawanie nowej (w stylu Tagów) */}
+                    <div className="pt-5 border-t border-border border-dashed">
+                        <div className="flex items-end gap-3 flex-wrap sm:flex-nowrap">
+                            <div className="flex-1 min-w-[200px]">
+                                <label className="block text-xs font-medium text-muted-foreground mb-1.5 ml-1">Nazwa oceny</label>
                                 <input 
-                                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm font-sans bg-gray-50 text-gray-900 transition-all focus:outline-none focus:bg-white focus:border-gray-900 focus:ring-[3px] focus:ring-gray-900/10"
+                                    className="w-full px-4 py-2 bg-background border border-border rounded-full text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                                     placeholder="np. premium" 
                                     value={newScaleWord}
                                     onChange={(e) => setNewScaleWord(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleAddScale()}
                                 />
                             </div>
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-gray-600">Waga w rankingu</label>
+                            <div className="w-[120px]">
+                                <label className="block text-xs font-medium text-muted-foreground mb-1.5 ml-1">Waga (punkty)</label>
                                 <input 
-                                    className="w-[150px] px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm font-sans bg-gray-50 text-gray-900 transition-all focus:outline-none focus:bg-white focus:border-gray-900 focus:ring-[3px] focus:ring-gray-900/10"
-                                    placeholder="np. 4" 
+                                    className="w-full px-4 py-2 bg-background border border-border rounded-full text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                                    placeholder="np. 5" 
                                     type="number"
                                     value={newScaleRank}
                                     onChange={(e) => setNewScaleRank(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleAddScale()}
                                 />
                             </div>
-                            <button className="px-5 py-2.5 cursor-pointer font-semibold font-sans text-sm bg-gray-900 text-white border-none rounded-lg h-[41px] transition-colors flex items-center justify-center hover:bg-gray-700" onClick={handleAddScale}>
+                            <button 
+                                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm mb-px" 
+                                onClick={handleAddScale}
+                            >
+                                <Plus className="w-4 h-4" />
                                 Dodaj
                             </button>
                         </div>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
 }

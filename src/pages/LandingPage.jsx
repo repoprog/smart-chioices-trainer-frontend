@@ -44,8 +44,8 @@ export default function LandingPage() {
             {/* 1. SEKCJA HERO */}
             <section className="pt-40 pb-20 px-6 text-center max-w-[1200px] mx-auto">
                 <h1 className="m-0 text-7xl font-extrabold tracking-[-3.5px] leading-[1] text-white">
-                    Podejmuj Trafne Decyzje <br />
-                    Bez Zgadywania
+                    Podejmuj Lepsze,  <br />
+                    Racjonalne Decyzje
                 </h1>
                 <p className="mt-6 mb-10 max-w-[600px] mx-auto text-white/70 text-lg leading-relaxed">
                     Analizuj opcje i wybieraj najlepszą szybciej.
@@ -54,10 +54,10 @@ Metoda oparta na nauce, która eliminuje niepewność.
                 </p>
                 <div className="flex gap-4 justify-center">
                     <a href="/app/tabela" className="px-5 py-2.5 cursor-pointer font-semibold text-sm bg-cyan-400 text-black border-none rounded-md transition-all hover:shadow-[0_0_30px_0_rgba(34,211,238,0.2)] hover:bg-cyan-500">
-                        Przeanalizuj Decyzję w Tabeli
+                        Porównaj Opcje
                     </a>
                     <a href="/app/drzewo" className="px-5 py-2.5 cursor-pointer font-semibold text-sm bg-purple-500 text-white border-none rounded-md transition-all hover:shadow-[0_0_30px_0_rgba(139,92,246,0.2)] hover:bg-purple-600">
-                        Zobacz Przykład Drzewa
+                        Zbuduj Drzewo Decyzji
                     </a>
                 </div>
                 
@@ -96,7 +96,7 @@ Metoda oparta na nauce, która eliminuje niepewność.
                         <IconChart />
                         <h3 className="m-0 text-xl font-bold text-white/90">Tabela decyzyjna (Smart Choices)</h3>
                         <p className="m-0 text-[13px] text-white/60 leading-relaxed max-w-[500px]">
-                            Multi-criteria decision analysis (MCDA) oparta na Smart Choices. Ważone kryteria prowadzą do jednoznacznego rankingu opcji.
+                            Porównuj opcje według wielu kryteriów. Nadaj im wagi i zobacz, która wygrywa w rankingu.
                         </p>
                     </div>
 
@@ -105,27 +105,28 @@ Metoda oparta na nauce, która eliminuje niepewność.
                         <div className="mb-auto mt-2">
                              <IconTree />
                         </div>
-                        <h3 className="m-0 text-xl font-bold text-white/90">Decision Tree</h3>
+                        <h3 className="m-0 text-xl font-bold text-white/90">Drzewo decyzyjne</h3>
                         <p className="m-0 text-[13px] text-white/60 leading-relaxed">
-                            Klasyczne drzewo decyzyjne z obliczaniem wartości oczekiwanej (EV). Uwzględnia prawdopodobieństwa i wyniki dla każdego scenariusza.
+                           Rozpisz scenariusze i ich prawdopodobieństwa. System pokaże najlepszą decyzję na podstawie wartości oczekiwanej (EV).
                         </p>
                     </div>
 
                     {/* Feature 3: Dominance Filtering - ZWYKŁY KAFELEK (lewy dół) */}
                     <div className="p-6 flex flex-col justify-end gap-2 rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-colors shadow-[inset_0_1px_0_0_rgba(255,255,255,0.01)] hover:border-red-500/20">
                         <IconFilter />
-                        <h3 className="m-0 text-lg font-bold text-white/90">Dominance Filtering</h3>
+                        <h3 className="m-0 text-lg font-bold text-white/90">Filtrowanie dominacji (Pareto)</h3>
                         <p className="m-0 text-[12px] text-white/60 leading-relaxed">
-                            Eliminuj zdominowane (Pareto) alternatywy. Skup się tylko na opcjach, które mają realny sens.
+                           Automatycznie usuwa opcje, które są wyraźnie gorsze. 
+Zostają tylko te, które warto rozważyć.
                         </p>
                     </div>
 
                     {/* Feature 4: What-if Analysis - ZWYKŁY KAFELEK (środkowy dół) */}
                     <div className="p-6 flex flex-col justify-end gap-2 rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-colors shadow-[inset_0_1px_0_0_rgba(255,255,255,0.01)] hover:border-emerald-500/20">
                         <IconSliders />
-                        <h3 className="m-0 text-lg font-bold text-white/90">What-if Analysis</h3>
+                        <h3 className="m-0 text-lg font-bold text-white/90">Symulacje (What-if)</h3>
                         <p className="m-0 text-[12px] text-white/60 leading-relaxed">
-                            Zmianiaj wagi i prawdopodobieństwa w czasie rzeczywistym. Natychmiast zobacz wpływ na wynik końcowy.
+                            Zmieniaj wagi i prawdopodobieństwa i od razu zobacz wpływ na wynik — bez ręcznego przeliczania.
                         </p>
                     </div>
                 </div>
@@ -189,7 +190,7 @@ Metoda oparta na nauce, która eliminuje niepewność.
 </section>
             {/* 3. SEKCJA USE CASES (Krótko) */}
             <section id="cases" className="py-20 px-6 max-w-[1200px] mx-auto text-center">
-                <h2 className="m-0 text-3xl font-bold text-white/90">Gdzie to ma zastosowanie</h2>
+                <h2 className="m-0 text-3xl font-bold text-white/90">Gdzie to się sprawdza</h2>
                 <div className="mt-10 flex flex-wrap gap-3 justify-center">
                     {['Kupno Mieszkania', 'Wybór Stacku Technicznego', 'Planowanie Kariery', 'Wybór Samochodu', 'Priorytetyzacja Zadania'].map(item => (
                         <div key={item} className="px-4 py-1.5 border border-white/10 bg-black rounded-full text-[12px] font-medium text-white/70 transition-colors hover:text-white hover:border-white/30">
