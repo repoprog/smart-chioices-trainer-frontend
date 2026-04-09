@@ -19,7 +19,7 @@ export function Layout() {
 
           <nav className="flex gap-1">
             <Link
-              to="/app/tabela"
+              to="/app/table"
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
                 isActive("/app/tabela")
                   ? "bg-primary text-primary-foreground shadow-sm"
@@ -31,7 +31,7 @@ export function Layout() {
             </Link>
 
             <Link
-              to="/app/drzewo"
+              to="/app/tree"
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
                 isActive("/app/drzewo")
                   ? "bg-primary text-primary-foreground shadow-sm"
@@ -55,7 +55,7 @@ export function Layout() {
             </Link>
 
             <Link
-              to="/app/ustawienia"
+              to="/app/settings"
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
                 isActive("/app/ustawienia")
                   ? "bg-primary text-primary-foreground shadow-sm"

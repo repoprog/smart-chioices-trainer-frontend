@@ -87,7 +87,7 @@ export function DecisionTreeCanvas() {
   return (
     <div 
       id="tree-canvas-container" 
-      className="relative flex h-full min-h-[560px] w-full flex-1 flex-col rounded-md border border-slate-300 bg-[#fafaf9] shadow-inner dark:border-slate-600 dark:bg-slate-900"
+      className="relative flex h-full min-h-[560px] w-full flex-1 flex-col rounded-xl border border-border bg-background shadow-sm transition-colors"
     >
       <div className="relative min-h-0 flex-1 [&_.react-flow__node:hover]:!z-[10000] [&_.react-flow__node.selected]:!z-[9999] [&_.react-flow__node]:z-10">
         <ReactFlow
@@ -113,56 +113,56 @@ export function DecisionTreeCanvas() {
           <Background
             id="tree-bg"
             gap={20}
-            size={0.75}
-            color="#d4d4d8"
-            className="dark:!bg-slate-900/30"
+            size={1}
+            color="var(--border)"
+            className="dark:opacity-30 transition-opacity"
           />
-         <CustomControls />
+          <CustomControls />
           <MiniMap
-            className="!rounded-md !border-slate-300 !bg-stone-100 dark:!border-slate-600 dark:!bg-slate-800"
-            maskColor="rgb(15 23 42 / 0.12)"
+            className="!rounded-md !border-border !bg-muted/50"
+            maskColor="var(--muted)"
             nodeStrokeWidth={1}
             nodeColor={(n) => {
-              if (n.type === 'decision') return '#ffffff'
-              if (n.type === 'chance') return '#ffffff'
-              if (n.type === 'terminal') return '#f5f5f4'
-              return '#e7e5e4'
+              if (n.type === 'decision') return 'var(--card)'
+              if (n.type === 'chance') return 'var(--card)'
+              if (n.type === 'terminal') return 'var(--card)'
+              return 'var(--muted)'
             }}
           />
           <TreeToolbar />
-         < Panel position="bottom-left" className="pointer-events-none  m-4 mb-[4.5rem] hide-on-export">
-      <div className=" ml-16 flex items-center gap-4 rounded border border-slate-300 bg-white/95 px-3 py-2 font-sans text-[10px] text-slate-700 shadow-sm backdrop-blur-sm dark:border-slate-600 dark:bg-slate-900/95 dark:text-slate-300">
-        <span className="flex items-center gap-1.5">
-          <span
-            className="inline-block h-2.5 w-2.5 border border-slate-900 bg-white"
-            aria-hidden
-          />
-          Decyzja
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span
-            className="inline-block h-2.5 w-2.5 rounded-full border border-slate-900 bg-white"
-            aria-hidden
-          />
-          Niepewność
-        </span>
-        <span className="flex items-center gap-1.5">
-          <svg 
-            className="h-2.5 w-2.5 overflow-visible" 
-            viewBox="0 0 44 44" 
-            aria-hidden
-          >
-            <polygon 
-              points="2,2 42,22 2,42" 
-              className="fill-white stroke-slate-900" 
-              strokeWidth="4" 
-              strokeLinejoin="round" 
-            />
-          </svg>
-          Konsekwencja
-        </span>
-      </div>
-      </Panel>
+          <Panel position="bottom-left" className="pointer-events-none m-4 mb-[4.5rem] hide-on-export">
+            <div className=" ml-16 flex items-center gap-4 rounded border border-border bg-card/95 px-3 py-2 font-sans text-[10px] text-muted-foreground shadow-sm backdrop-blur-sm transition-colors leading-none">
+              <span className="flex items-center gap-1.5">
+                <span
+                  className="inline-block h-2.5 w-2.5 border border-foreground bg-card transition-colors"
+                  aria-hidden
+                />
+                Decyzja
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span
+                  className="inline-block h-2.5 w-2.5 rounded-full border border-foreground bg-card transition-colors"
+                  aria-hidden
+                />
+                Niepewność
+              </span>
+              <span className="flex items-center gap-1.5">
+                <svg 
+                  className="h-2.5 w-2.5 overflow-visible" 
+                  viewBox="0 0 44 44" 
+                  aria-hidden
+                >
+                  <polygon 
+                    points="2,2 42,22 2,42" 
+                    className="fill-card stroke-foreground transition-colors" 
+                    strokeWidth="4" 
+                    strokeLinejoin="round" 
+                  />
+                </svg>
+                Konsekwencja
+              </span>
+            </div>
+          </Panel>
         </ReactFlow>
       </div>
     </div>

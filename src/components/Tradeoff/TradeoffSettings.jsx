@@ -1,16 +1,10 @@
 import { useState } from 'react';
 import { useTradeoffStore } from '../../store/useTradeOffStore';
 import { Settings2, ChevronDown, ChevronUp, X, Plus, Trash2 } from 'lucide-react';
-
-const PRESET_KEYS = [
-    'Jakość / Standard', 
-    'Priorytet', 
-    'Szkolny (1-6)', 
-    'Klasa energetyczna', 
-    'Tak / Nie'
-];
+import { scalePresets } from '../../data/scalePresets';
 
 export function TradeoffSettings() {
+    const presetKeys = Object.keys(scalePresets);
     const [showScalesSettings, setShowScalesSettings] = useState(false);
     const [newScaleWord, setNewScaleWord] = useState('');
     const [newScaleRank, setNewScaleRank] = useState('');
@@ -49,7 +43,7 @@ export function TradeoffSettings() {
                 className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors text-sm font-medium"
             >
                 <Settings2 className="w-4 h-4 text-muted-foreground" />
-                Ustawienia ocen tekstowych
+                Ustawienia ocen
                 {showScalesSettings ? (
                     <ChevronUp className="w-4 h-4 ml-1 text-muted-foreground" />
                 ) : (
@@ -58,13 +52,13 @@ export function TradeoffSettings() {
             </button>
             
             {showScalesSettings && (
-                <div className="mt-4 p-5 bg-card border border-border rounded-xl shadow-sm space-y-6 max-w-[800px] animate-in fade-in slide-in-from-top-2">
+                <div className="mt-4 p-5 bg-card border border-border rounded-xl shadow-sm space-y-6 max-w-[900px] animate-in fade-in slide-in-from-top-2">
                     
                     {/* SEKCJ 1: Pakiety */}
                     <div>
                         <h3 className="text-sm font-medium text-foreground mb-3">Gotowe pakiety ocen</h3>
                         <div className="flex flex-wrap items-center gap-2">
-                            {PRESET_KEYS.map(presetKey => (
+                            {presetKeys.map(presetKey => (
                                 <button 
                                     key={presetKey} 
                                     className={`px-3 py-1.5 text-xs font-medium rounded-full cursor-pointer transition-colors ${

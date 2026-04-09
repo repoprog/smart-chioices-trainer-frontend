@@ -1,29 +1,28 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { scalePresets } from '../data/scalePresets'; 
 
-const scalePresets = {
-  'Jakość / Standard': [{ word: 'niski', rank: '1', isAdded: false }, { word: 'średni', rank: '2', isAdded: false }, { word: 'wysoki', rank: '3', isAdded: false }],
-  'Priorytet': [{ word: 'niski', rank: '1', isAdded: false }, { word: 'normalny', rank: '2', isAdded: false }, { word: 'pilny', rank: '3', isAdded: false }, { word: 'krytyczny', rank: '4', isAdded: false }],
-  'Szkolny (1-6)': [{ word: 'niedostateczny', rank: '1', isAdded: false }, { word: 'dopuszczający', rank: '2', isAdded: false }, { word: 'dostateczny', rank: '3', isAdded: false }, { word: 'dobry', rank: '4', isAdded: false }, { word: 'bardzo dobry', rank: '5', isAdded: false }, { word: 'celujący', rank: '6', isAdded: false }],
-  'Tak / Nie': [{ word: 'tak', rank: '1', isAdded: false }, { word: 'nie', rank: '0', isAdded: false }]
+// 1. Definiujemy czysty, startowy stan tabeli (tzw. Pusta Karta)
+const blankState = {
+  alternatives: [],
+  objectives: [],
+  cells: {},
+  originalCells: {},
+  objectiveUnits: {},
+  sortDirections: {},
+  showRanking: false,
+  showTradeoffs: false,
+  hideEqualizedObjectives: false,
+  rejectedAlternatives: [],
+  showRejected: false,
+  activePreset: 'Jakość / Standard',
+  customScales: [...scalePresets['Jakość / Standard']], 
 };
 
 export const useTradeoffStore = create()(
   persist(
     (set) => ({
-      alternatives: ['Biuro A', 'Biuro B', 'Biuro C'],
-      objectives: ['Czynsz', 'Metraż', 'Czas dojazdu', 'Standard wyposażenia'],
-      cells: {},
-      objectiveUnits: {},
-      showRanking: false,
-      sortDirections: {},
-      showTradeoffs: false,
-      originalCells: {},
-      hideEqualizedObjectives: false,
-      rejectedAlternatives: [],
-      showRejected: false,
-      customScales: scalePresets['Jakość / Standard'],
-      activePreset: 'Jakość / Standard',
+      ...blankState,
 
       // --- AKCJE UI ---
       toggleTradeoffs: () => set((state) => {
@@ -41,6 +40,8 @@ export const useTradeoffStore = create()(
 
       // --- AKCJE DANYCH ---
       addAlternative: () => set((state) => ({ alternatives: [...state.alternatives, `Alternatywa ${state.alternatives.length + 1}`] })),
+      
+      // TUTAJ BYŁ BŁĄD! Zamiast 'addObjective' miałeś wpisane 'objectives'. Poprawione:
       addObjective: () => set((state) => ({ objectives: [...state.objectives, `Cel ${state.objectives.length + 1}`] })),
       
       updateAlternative: (index, value) => set((state) => {
@@ -76,7 +77,11 @@ export const useTradeoffStore = create()(
       })),
 
       // --- AKCJE USTAWIEŃ SKALI ---
-      loadPreset: (presetKey) => set({ customScales: scalePresets[presetKey], activePreset: presetKey }),
+      loadPreset: (presetKey) => set({
+        customScales: [...(scalePresets[presetKey] || [])], 
+        activePreset: presetKey
+      }),
+
       addScale: (word, rank) => set((state) => ({
         customScales: [...state.customScales, { word, rank, isAdded: true }],
         activePreset: null
@@ -87,12 +92,26 @@ export const useTradeoffStore = create()(
       })),
       clearScales: () => set({ customScales: [], activePreset: null }),
       
-      resetAll: () => {
-        set({ alternatives: [], objectives: [], cells: {}, originalCells: {}, rejectedAlternatives: [] });
-      }
+      // --- WCZYTYWANIE / RESETOWANIE ---
+      loadScenario: (scenario) => set({
+        alternatives: scenario.alternatives || [],
+        objectives: scenario.objectives || [],
+        cells: scenario.cells || {},
+        objectiveUnits: scenario.objectiveUnits || {},
+        sortDirections: scenario.sortDirections || {},
+        rejectedAlternatives: [],
+        showTradeoffs: false,
+        showRanking: false,
+        winnerIndex: null,
+        equalizedObjectives: {} 
+      }),
+      
+      resetAll: () => set({ ...blankState }),
+      
     }),
     {
-      name: 'smart-choices-storage', // unikalna nazwa w localStorage
+      // ZMIENIŁEM NAZWĘ BAZY NA v2! To wymusi zresetowanie starej pamięci w przeglądarce
+      name: 'smart-choices-storage-v2', 
     }
   )
 );

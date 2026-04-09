@@ -1,101 +1,129 @@
-// plik: scenarios.js
+// plik: src/data/scenarios.js
 
 export const scenarios = {
   blank: {
     name: "Pusta karta (od nowa)",
+    description: "Czyste płótno. Zbuduj własne drzewo decyzyjne od podstaw, dodając węzły i określając prawdopodobieństwa.",
+    labels: ["Wybór początkowy"],
     nodes: [
       { id: 'd1', type: 'decision', position: { x: 0, y: 0 }, data: { nodeNumber: 1 } },
     ],
-    edges: [],
-    labels: ["Wybór początkowy"]
+    edges: []
   },
   
   investment: {
-    name: "Analiza Inwestycji (Klasyk)",
+    name: "Analiza Inwestycji ",
+    description: "Czy warto inwestować duże środki w nowy produkt?",
+    labels: ["Decyzja biznesowa", "Ryzyko Rynkowe", "Wynik Finansowy"],
     nodes: [
-     
+      // 1. Decyzja początkowa
+      { id: 'd1', type: 'decision', position: { x: 0, y: 0 }, zIndex: 100, data: { nodeNumber: 1 } },
+      
+      // 2. Ryzyko Rynkowe (Niepewność)
+      { id: 'c1', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 2 } }, 
+      
+      // 3. Wynik Finansowy (Terminal)
+      { id: 't1', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '200 000' } }, // Sukces
+      { id: 't2', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '20 000' } },  // Porażka
+      { id: 't3', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '5 000' } },   // Brak inwestycji (lokata)
     ],
     edges: [
-     
-    ],
-    labels: ["Decyzja biznesowa", "Ryzyko Rynkowe", "Wynik Finansowy"]
+      // Opcje decyzji (tu dodajemy KOSZTY)
+      { id: 'e1', source: 'd1', target: 'c1', type: 'smartChoices', data: { optionLabel: 'Inwestuj w produkt', cost: '50 000', probability: null } },
+      { id: 'e2', source: 'd1', target: 't3', type: 'smartChoices', data: { optionLabel: 'Zostaw kasę na lokacie', cost: '0', probability: null } },
+      
+      // Szanse rynkowe po inwestycji
+      { id: 'e3', source: 'c1', target: 't1', type: 'smartChoices', data: { optionLabel: 'Wysoki popyt', probability: '60.00%', isLocked: true } },
+      { id: 'e4', source: 'c1', target: 't2', type: 'smartChoices', data: { optionLabel: 'Niski popyt (Kryzys)', probability: '40.00%', isLocked: true } },
+    ]
   },
 
   court: {
     name: "Ugoda czy Proces (Prawny)",
+    description: "Zgodzić się na pewną, ale bolesną ugodę, czy zaryzykować proces sądowy (z kosztami adwokackimi) i walczyć o uniewinnienie?",
+    labels: ["Strategia Prawna", "Wyrok Sądu", "Koszty i Kary"],
     nodes: [
-    
-    ],
-    edges: [
-     
-    ],
-    labels: ["Strategia", "Wyrok", "Koszty"]
-  },
-  marketingLaunch: {
-    name: "Kampania Marketingowa",
-  
-    labels: ["Strategia", "Reakcja Rynku", "Wynik"], 
-    
-    nodes: [
-      { id: 'd1', type: 'decision', position: { x: 0, y: 0 }, data: { nodeNumber: 1 } },
-      { id: 'c1', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 2 } },
-      { id: 't1', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '50 000 zł' } },
-      { id: 't2', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '-10 000 zł' } },
-    ],
-
-    edges: [
-      { 
-        id: 'e1', source: 'd1', target: 'c1', type: 'smartChoices', 
-        data: { optionLabel: 'Social Media' } 
-      },
-      { 
-        id: 'e2', source: 'c1', target: 't1', type: 'smartChoices', 
-      
-        data: { optionLabel: 'Viral', probability: '30.00%', isLocked: true } 
-      },
-      { 
-        id: 'e3', source: 'c1', target: 't2', type: 'smartChoices', 
-        data: { optionLabel: 'Brak echa', probability: '70.00%', isLocked: true } 
-      },
-    ]
-  }, basketball: {
-    name: "Rzut w Ostatniej Sekundzie (Koszykówka)",
-    labels: ["Wybór Rzutu", "Skuteczność Rzutu", "Dogrywka (OT)", "Wynik Meczu"],
-    nodes: [
-      // 1. Decyzja początkowa (Wybór rzutu)
+      // 1. Decyzja początkowa
       { id: 'd1', type: 'decision', position: { x: 0, y: 0 }, zIndex: 100, data: { nodeNumber: 1 } },
       
-      // 2. Etap Skuteczności (Niepewność)
-      { id: 'c1', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 2 } }, // Niepewność przy rzucie za 2
-      { id: 'c2', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 3 } }, // Niepewność przy rzucie za 3
+      // 2. Ryzyko wyroku (Niepewność)
+      { id: 'c1', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 2 } }, 
       
-      // 3. Etap Dogrywki (Tylko dla rzutu za 2)
-      { id: 'c3', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 4 } },
-      
-      // 4. Konsekwencje (Terminal Nodes)
-      { id: 't1', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0 (Porażka)' } }, // Pudło za 2
-      { id: 't2', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '100 (Wygrana)' } }, // Wygrana w OT
-      { id: 't3', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0 (Porażka)' } }, // Porażka w OT
-      { id: 't4', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '100 (Wygrana)' } }, // Trafiony za 3
-      { id: 't5', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0 (Porażka)' } }, // Pudło za 3
+      // 3. Konsekwencje (Terminal) - tu wszystkie payoff są ujemne lub zerowe (bo to straty)
+      { id: 't1', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '-50 000' } }, // Ugoda
+      { id: 't2', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0' } },       // Wygrana w sądzie (brak kary)
+      { id: 't3', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '-150 000' } },// Przegrana w sądzie
     ],
     edges: [
-      // Opcje decyzji
-      { id: 'e1', source: 'd1', target: 'c1', type: 'smartChoices', data: { optionLabel: 'Za 2 punkty', probability: null } },
-      { id: 'e2', source: 'd1', target: 'c2', type: 'smartChoices', data: { optionLabel: 'Za 3 punkty', probability: null } },
+      // Opcje decyzji (Koszty podjęcia akcji)
+      { id: 'e1', source: 'd1', target: 't1', type: 'smartChoices', data: { optionLabel: 'Przyjmij ugodę', cost: '0', probability: null } },
+      { id: 'e2', source: 'd1', target: 'c1', type: 'smartChoices', data: { optionLabel: 'Idź do sądu', cost: '20 000', probability: null } }, // 20k to koszt prawników
       
-      // RZUT ZA 2 PUNKTY
+      // Wyrok
+      { id: 'e3', source: 'c1', target: 't2', type: 'smartChoices', data: { optionLabel: 'Wygrana (Uniewinnienie)', probability: '70.00%', isLocked: true } },
+      { id: 'e4', source: 'c1', target: 't3', type: 'smartChoices', data: { optionLabel: 'Przegrana (Maksymalna kara)', probability: '30.00%', isLocked: true } },
+    ]
+  },
+
+  marketingLaunch: {
+    name: "Kampania Marketingowa",
+    description: "Ryzykowny i drogi viral w Social Mediach czy stabilne, tańsze pozycjonowanie SEO?",
+    labels: ["Wybór Kanału", "Reakcja Rynku", "Wynik Finansowy"], 
+    nodes: [
+      { id: 'd1', type: 'decision', position: { x: 0, y: 0 }, zIndex: 100, data: { nodeNumber: 1 } },
+      { id: 'c1', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 2 } }, // Niepewność SM
+      { id: 'c2', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 3 } }, // Niepewność SEO
+      
+      { id: 't1', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '120 000' } }, // Viral
+      { id: 't2', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '5 000' } },   // Brak echa SM
+      { id: 't3', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '40 000' } },  // TOP 3 SEO
+      { id: 't4', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '10 000' } },  // Słabe SEO
+    ],
+    edges: [
+      // KOSZTY KAMPANII
+      { id: 'e1', source: 'd1', target: 'c1', type: 'smartChoices', data: { optionLabel: 'Kampania Influencer/SM', cost: '-15 000', probability: null } },
+      { id: 'e2', source: 'd1', target: 'c2', type: 'smartChoices', data: { optionLabel: 'Pozycjonowanie SEO', cost: '-4 000', probability: null } },
+      
+      // REAKCJA NA SOCIAL MEDIA
+      { id: 'e3', source: 'c1', target: 't1', type: 'smartChoices', data: { optionLabel: 'Efekt Viralowy', probability: '25.00%', isLocked: true } },
+      { id: 'e4', source: 'c1', target: 't2', type: 'smartChoices', data: { optionLabel: 'Brak odzewu', probability: '75.00%', isLocked: true } },
+      
+      // REAKCJA NA SEO
+      { id: 'e5', source: 'c2', target: 't3', type: 'smartChoices', data: { optionLabel: 'Top 3 w Google', probability: '80.00%', isLocked: true } },
+      { id: 'e6', source: 'c2', target: 't4', type: 'smartChoices', data: { optionLabel: 'Spadek w rankingach', probability: '20.00%', isLocked: true } },
+    ]
+  }, 
+  
+  basketball: {
+    name: "Rzut w Ostatniej Sekundzie",
+    description: "Finałowy mecz, tracisz 2 punkty. Rzucać bezpieczniej za 2 punkty (i liczyć na wygraną w dogrywce), czy zaryzykować rzut za 3 punkty po natychmiastowe zwycięstwo?",
+    labels: ["Wybór Rzutu", "Skuteczność Rzutu", "Dogrywka (OT)", "Punkty Mocy"], // "Punkty Mocy" zamiast pieniędzy
+    nodes: [
+      { id: 'd1', type: 'decision', position: { x: 0, y: 0 }, zIndex: 100, data: { nodeNumber: 1 } },
+      { id: 'c1', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 2 } }, 
+      { id: 'c2', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 3 } }, 
+      { id: 'c3', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 4 } },
+      
+      // Tutaj używam wartości punktowej 100 (wygrana) i 0 (przegrana)
+      { id: 't1', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0' } }, 
+      { id: 't2', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '100' } }, 
+      { id: 't3', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0' } }, 
+      { id: 't4', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '100' } }, 
+      { id: 't5', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0' } }, 
+    ],
+    edges: [
+      // Brak "kosztów" finansowych w rzucie piłką, koszt = 0
+      { id: 'e1', source: 'd1', target: 'c1', type: 'smartChoices', data: { optionLabel: 'Za 2 punkty', cost: '0', probability: null } },
+      { id: 'e2', source: 'd1', target: 'c2', type: 'smartChoices', data: { optionLabel: 'Za 3 punkty', cost: '0', probability: null } },
+      
       { id: 'e3', source: 'c1', target: 'c3', type: 'smartChoices', data: { optionLabel: 'Trafiony', probability: '55.00%', isLocked: true } },
       { id: 'e4', source: 'c1', target: 't1', type: 'smartChoices', data: { optionLabel: 'Pudło', probability: '45.00%', isLocked: true } },
       
-      // DOGRYWKA (Po trafieniu za 2)
       { id: 'e5', source: 'c3', target: 't2', type: 'smartChoices', data: { optionLabel: 'Wygrana w OT', probability: '50.00%', isLocked: true } },
       { id: 'e6', source: 'c3', target: 't3', type: 'smartChoices', data: { optionLabel: 'Porażka w OT', probability: '50.00%', isLocked: true } },
 
-      // RZUT ZA 3 PUNKTY
-      { id: 'e7', source: 'c2', target: 't4', type: 'smartChoices', data: { optionLabel: 'Trafiony', probability: '38.00%', isLocked: true } },
+      { id: 'e7', source: 'c2', target: 't4', type: 'smartChoices', data: { optionLabel: 'Trafiony (Wygrana!)', probability: '38.00%', isLocked: true } },
       { id: 'e8', source: 'c2', target: 't5', type: 'smartChoices', data: { optionLabel: 'Pudło', probability: '62.00%', isLocked: true } },
     ]
   }
-
 };

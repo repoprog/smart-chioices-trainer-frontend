@@ -12,7 +12,6 @@ export function UndoRedoControls() {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Ignoruj, jeśli użytkownik pisze tekst w inputach (żeby nie cofać planszy podczas pisania nagłówków)
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
@@ -35,13 +34,12 @@ export function UndoRedoControls() {
   }, [undo, redo, canUndo, canRedo]);
 
   return (
-    <div className="flex items-center gap-1 border-l border-slate-300 pl-4 ml-4 dark:border-slate-700">
+    <div className="flex items-center gap-1 border-l border-border pl-4 ml-4">
       <button
-        // TUTAJ JEST FIX: pusta funkcja strzałkowa blokuje przesyłanie Eventu Myszki!
         onClick={() => undo()} 
         disabled={!canUndo}
         title="Cofnij (Ctrl+Z)"
-        className="flex h-8 w-8 items-center justify-center rounded text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
+        className="flex h-8 w-8 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M3 7v6h6" />
@@ -53,7 +51,7 @@ export function UndoRedoControls() {
         onClick={() => redo()} 
         disabled={!canRedo}
         title="Ponów (Ctrl+Y)"
-        className="flex h-8 w-8 items-center justify-center rounded text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
+        className="flex h-8 w-8 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 7v6h-6" />

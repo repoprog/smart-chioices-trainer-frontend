@@ -1,9 +1,13 @@
+import React, { useState } from 'react';
 import { useTradeoffStore } from '../../store/useTradeOffStore';
 import { getTradeoffResults, getRowRanks } from '../../logic/tradeoffLogic';
 import { Eye, EyeOff, Crown } from 'lucide-react';
 
 export function TradeoffGrid() {
     const store = useTradeoffStore();
+    
+    // Nowy stan śledzący, która komórka jest aktualnie edytowana
+    const [focusedCell, setFocusedCell] = useState(null);
     
     const { 
         alternatives, objectives, cells, objectiveUnits, showRanking, sortDirections, 
@@ -119,7 +123,6 @@ export function TradeoffGrid() {
                                 else if (domType === 'strict') headerColor = 'text-red-600 dark:text-red-400';
                                 else if (domType === 'practical') headerColor = 'text-amber-600 dark:text-amber-400';
 
-                                // PROSTE ZIELONE TŁO ZWYCIĘZCY (jak było dawniej)
                                 const winnerClasses = isWinner ? 'bg-green-50 dark:bg-green-900/10' : 'bg-muted/50';
 
                                 return (
@@ -189,21 +192,37 @@ export function TradeoffGrid() {
                                                 list="unit-suggestions"
                                             />
 
-                                           <button 
-    className="shrink-0 w-[60px] h-[24px] flex justify-center items-center cursor-pointer px-1 border-none rounded bg-green-100 text-[11px] leading-none font-bold text-green-800 whitespace-nowrap transition-all enabled:hover:bg-green-200 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted disabled:text-muted-foreground font-sans dark:bg-green-900/30 dark:text-green-400"
-    onClick={() => toggleSortDirection(rowIndex)}
-    title="Kliknij, aby odwrócić ranking dla tego celu"
-    disabled={showRanking}
->
-    {isLowerBetter ? '↓ lepiej' : '↑ lepiej'}
-</button>
+                                            <button 
+                                                className="shrink-0 w-[60px] h-[24px] flex justify-center items-center cursor-pointer px-1 border-none rounded bg-green-100 text-[11px] leading-none font-bold text-green-800 whitespace-nowrap transition-all enabled:hover:bg-green-200 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted disabled:text-muted-foreground font-sans dark:bg-green-900/30 dark:text-green-400"
+                                                onClick={() => toggleSortDirection(rowIndex)}
+                                                title="Kliknij, aby odwrócić ranking dla tego celu"
+                                                disabled={showRanking}
+                                            >
+                                                {isLowerBetter ? '↓ lepiej' : '↑ lepiej'}
+                                            </button>
                                         </div>
                                     </td>
 
                                     {alternatives.map((_, colIndex) => {
-                                        const currentVal = cells[`${rowIndex}-${colIndex}`] || '';
-                                        const displayValue = showRanking ? (rowRanks[colIndex] ? `${rowRanks[colIndex]}` : '') : currentVal;
+                                        const cellKey = `${rowIndex}-${colIndex}`;
+                                        const currentVal = cells[cellKey] || '';
+                                        const isFocused = focusedCell === cellKey;
                                         
+                                        // ZAKTUALIZOWANA LOGIKA DOKLEJANIA JEDNOSTEK 
+                                        let displayValue = currentVal;
+                                        const unit = objectiveUnits[rowIndex] || '';
+
+                                        if (showRanking) {
+                                            displayValue = rowRanks[colIndex] ? `${rowRanks[colIndex]}` : '';
+                                        } 
+                                        // Doklej jednostkę tylko wtedy, gdy komórka NIE JEST ZAZNACZONA (isFocused == false)
+                                        else if (!isFocused && currentVal !== '' && unit) {
+                                            // Sprawdzamy czy już przypadkiem jej tam nie ma 
+                                            if (!currentVal.toString().includes(unit)) {
+                                                displayValue = `${currentVal} ${unit}`;
+                                            }
+                                        }
+
                                         const rankVal = rowRanks[colIndex];
                                         const allRanks = Object.values(rowRanks);
                                         const maxRank = allRanks.length > 0 ? Math.max(...allRanks) : null;
@@ -215,7 +234,6 @@ export function TradeoffGrid() {
                                         const isRejected = rejectedAlternatives.includes(colIndex);
                                         const isWinner = winnerIndex === colIndex;
 
-                                        // ZMIANA 2: PROSTE KOLOROWANIE ZWYCIĘZCY W WIERSZACH
                                         let bgStyle = 'bg-card';
                                         if (isWinner) bgStyle = 'bg-green-50 dark:bg-green-900/10';
                                         else if (domType === 'strict') bgStyle = 'bg-red-50 dark:bg-red-950/30';
@@ -225,10 +243,10 @@ export function TradeoffGrid() {
                                         if (isRejected && !showRejected) tdClass = "hidden";
                                         else if (isRejected && showRejected) tdClass = "opacity-30";
 
-                                        const originalVal = originalCells[`${rowIndex}-${colIndex}`] || '';
+                                        const originalVal = originalCells[cellKey] || '';
                                         const hasChangedInTradeoff = showTradeoffs && !showRanking && originalVal !== '' && originalVal !== currentVal;
 
-                                        const hasValidValue = cells[`${rowIndex}-${colIndex}`] !== undefined && cells[`${rowIndex}-${colIndex}`].toString().trim() !== '';
+                                        const hasValidValue = cells[cellKey] !== undefined && cells[cellKey].toString().trim() !== '';
                                         const showGreenDot = !showRanking && isFirst && maxRank > 1 && hasValidValue && !isRowEqual;
 
                                         const inputColor = showRanking ? (isFirst ? 'text-green-600 dark:text-green-400' : (isLast ? 'text-red-600 dark:text-red-400' : 'text-foreground')) : 'text-foreground';
@@ -251,22 +269,37 @@ export function TradeoffGrid() {
                                                         placeholder={showRanking ? "-" : "wartość"}
                                                         readOnly={showRanking}
                                                         list={!showRanking ? "scale-suggestions" : undefined}
+                                                        
+                                                        // MAGIA DZIEJE SIĘ TUTAJ (onFocus i onBlur)
+                                                        onFocus={() => {
+                                                            if (!showRanking) {
+                                                                setFocusedCell(cellKey);
+                                                                // Jeśli jednostka już jest wpisana w komórce, ukryj ją na czas wpisywania!
+                                                                if (unit && currentVal.toString().includes(unit)) {
+                                                                    const cleanVal = currentVal.toString().replace(unit, '').trim();
+                                                                    updateCell(rowIndex, colIndex, cleanVal);
+                                                                }
+                                                            }
+                                                        }}
                                                         onBlur={(e) => {
+                                                            setFocusedCell(null); // Zdejmujemy focus
                                                             if (showRanking) return; 
+                                                            
                                                             const val = e.target.value;
                                                             if (!val) return;
-                                                            const unit = objectiveUnits[rowIndex] || '';
+                                                            const unitToFormat = objectiveUnits[rowIndex] || '';
                                                             
                                                             let cleanStr = val.replace(/\s/g, '');
-                                                            if (unit) {
-                                                                cleanStr = cleanStr.split(unit.replace(/\s/g, '')).join(''); 
+                                                            if (unitToFormat) {
+                                                                cleanStr = cleanStr.split(unitToFormat.replace(/\s/g, '')).join(''); 
                                                             }
                                                             cleanStr = cleanStr.replace(',', '.');
                                                             
+                                                            // Formatujemy ułamki, dodajemy spacje i doklejamy jednostkę twardo do bazy (Zustand)
                                                             if (!isNaN(cleanStr) && cleanStr !== '') {
                                                                 const num = Number(cleanStr);
                                                                 let formatted = num.toLocaleString('pl-PL', { maximumFractionDigits: 4 });
-                                                                if (unit) formatted += ` ${unit}`;
+                                                                if (unitToFormat) formatted += ` ${unitToFormat}`;
                                                                 
                                                                 if (formatted !== val) {
                                                                     updateCell(rowIndex, colIndex, formatted);
@@ -282,7 +315,6 @@ export function TradeoffGrid() {
                             );
                         })}
                         
-                        {/* ZMIANA 3: PROSTE PODSUMOWANIE W STOPCE BEZ ZAOKRĄGLEŃ */}
                         {showRanking && (Object.keys(dominationResults).length > 0 || winnerIndex !== null || rejectedAlternatives.length > 0 || completeAlts.length < alternatives.length) && (
                             <tr>
                                 <td className="bg-card text-right text-[11px] text-muted-foreground uppercase font-bold pr-5 whitespace-nowrap border-b border-r border-border py-4">
@@ -293,6 +325,12 @@ export function TradeoffGrid() {
                                     const isWinner = winnerIndex === colIndex;
                                     const isComplete = completeAlts.includes(colIndex);
                                     const dom = dominationResults[colIndex];
+
+                                    // Sprawdzamy czy ta konkretna alternatywa jest CALKOWICIE pusta w każdym celu
+                                    const isEmptyAlt = !objectives.some((_, rowIndex) => {
+                                        const val = cells[`${rowIndex}-${colIndex}`];
+                                        return val !== undefined && val.toString().trim() !== '';
+                                    });
                                     
                                     if (isRejected) {
                                         return (
@@ -308,6 +346,11 @@ export function TradeoffGrid() {
                                     }
 
                                     if (!isComplete) {
+                                        // Cichy cien: gdy opcja jest calkowicie pusta, ignoruj powiadomienie
+                                        if (isEmptyAlt) {
+                                            return <td key={`dom-${colIndex}`} className="p-1.5 align-middle border-b border-r border-border bg-card"></td>;
+                                        }
+
                                         return (
                                             <td key={`dom-${colIndex}`} className="p-3 align-middle border-b border-r border-border text-center bg-muted/20 text-[11px] text-muted-foreground">
                                                 <span className="font-semibold block mb-1">NIEKOMPLETNA</span>
@@ -344,8 +387,8 @@ export function TradeoffGrid() {
                                         return (
                                             <td key={`dom-${colIndex}`} className="p-3 align-middle border-b border-r border-border bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 text-[11px] font-medium leading-relaxed text-center">
                                                 <span className="text-xs block mb-1 font-bold uppercase">Rozważ odrzucenie</span>
-                                                <span className="block mb-2 opacity-80">Gorsza tylko w <b>"{dom.objective}"</b> od <b>{dom.by}</b>.</span>
-                                                <button 
+<span className="block mb-2 opacity-80">Lepsza od <b>{dom.by}</b> tylko w <b>"{dom.objective}"</b>.</span>                                       
+        <button 
                                                     className="block mx-auto px-3 py-1.5 text-[11px] font-semibold bg-transparent border border-amber-500 rounded-md cursor-pointer w-full transition-all hover:bg-amber-100 dark:hover:bg-amber-900"
                                                     onClick={() => rejectAlternative(colIndex)} 
                                                 >

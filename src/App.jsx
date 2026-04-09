@@ -14,14 +14,14 @@ function App() {
         <Route path="/" element={<LandingPage />} />
 
         <Route path="/app" element={<Layout />}>
-          <Route index element={<Navigate to="tabela" replace />} />
+          <Route index element={<Navigate to="table" replace />} />
           {/* Używamy starej, prawdziwej tabeli */}
-          <Route path="tabela" element={<TradeoffModule />} /> 
+          <Route path="table" element={<TradeoffModule />} /> 
           {/* Używamy starego, prawdziwego drzewa */}
-          <Route path="drzewo" element={<DecisionTreePage />} />
+          <Route path="tree" element={<DecisionTreePage />} />
           {/* Nowe strony z UI */}
           <Route path="panel" element={<UserPanel />} />
-          <Route path="ustawienia" element={<Settings />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

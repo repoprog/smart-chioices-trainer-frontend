@@ -1,3 +1,6 @@
+import { scalePresets } from '../data/scalePresets'; 
+
+
 // 1. Sprawdzanie, czy wiersz jest wyrównany (kompromisy)
 export const checkIsRowEqualized = (rowIndex, state) => {
   const { showTradeoffs, showRanking, alternatives, rejectedAlternatives, cells } = state;
@@ -27,60 +30,56 @@ export const getRowRanks = (rowIndex, state) => {
   const { alternatives, rejectedAlternatives, cells, customScales, sortDirections } = state;
   const activeAlts = alternatives.map((_, i) => i).filter(i => !rejectedAlternatives.includes(i));
 
-  const rowData = activeAlts.map(colIndex => {
-    const val = cells[`${rowIndex}-${colIndex}`];
-    return { colIndex, value: val !== undefined ? val.trim() : '' };
+  // 1. Słownik AKTYWNYCH ocen użytkownika (ma najwyższy priorytet)
+  const activeScaleMap = Object.fromEntries(
+    customScales.map(s => [s.word.trim().toLowerCase(), parseFloat(s.rank.replace(',', '.'))])
+  );
+
+  // 2. Słownik GLOBALNY (zbudowany w locie ze wszystkich Twoich predefiniowanych paczek)
+  const globalScaleMap = {};
+  Object.values(scalePresets).forEach(presetArray => {
+    presetArray.forEach(item => {
+      globalScaleMap[item.word.trim().toLowerCase()] = parseFloat(item.rank.replace(',', '.'));
+    });
   });
 
-  const nonEmpty = rowData.filter(item => item.value !== '');
-  const scaleMap = {};
-  customScales.forEach(s => {
-    scaleMap[s.word.trim().toLowerCase()] = parseFloat(s.rank.replace(',', '.'));
-  });
-
- const getMappedValue = (str) => {
-    const lowerStr = str.trim().toLowerCase();
+  // 3. Inteligentny Parser
+  const getMappedValue = (str) => {
+    if (!str) return NaN;
+    const lower = str.toString().trim().toLowerCase();
     
-    // ZAMIAST hasOwnProperty używamy bezpiecznego operatora "in":
-    if (lowerStr in scaleMap) return scaleMap[lowerStr];
+    // a) Szukamy w aktywnych (własnych) ocenach
+    if (lower in activeScaleMap) return activeScaleMap[lower];
     
-    const match = str.replace(/\s/g, '').match(/-?[\d]+(?:[.,][\d]+)?/);
-    if (match) return parseFloat(match[0].replace(',', '.'));
+    // b) Szukamy w paczkach globalnych (np. "tak", "nie", "A", "B", "celujący")
+    if (lower in globalScaleMap) return globalScaleMap[lower];
     
-    return NaN;
+    // c) Wyciągamy liczby
+    const match = lower.replace(/\s/g, '').match(/-?[\d]+(?:[.,][\d]+)?/);
+    return match ? parseFloat(match[0].replace(',', '.')) : NaN;
   };
 
-  const isNumericOrScale = nonEmpty.length > 0 && nonEmpty.every(item => !isNaN(getMappedValue(item.value)));
+  // 4. Czysta matematyka: wyciągamy, parsujemy, wyrzucamy błędy (NaN) i sortujemy
   const isLowerBetter = sortDirections[rowIndex] === 'lower';
+  const validItems = activeAlts
+    .map(colIndex => ({ colIndex, mapped: getMappedValue(cells[`${rowIndex}-${colIndex}`]) }))
+    .filter(item => !isNaN(item.mapped))
+    .sort((a, b) => isLowerBetter ? a.mapped - b.mapped : b.mapped - a.mapped);
 
-  if (isNumericOrScale) {
-    nonEmpty.sort((a, b) => {
-      const valA = getMappedValue(a.value);
-      const valB = getMappedValue(b.value);
-      return isLowerBetter ? valA - valB : valB - valA;
-    });
-  } else {
-    nonEmpty.sort((a, b) => isLowerBetter ? a.value.localeCompare(b.value) : b.value.localeCompare(a.value));
-  }
-
+  // 5. Rozdajemy miejsca na podium (1, 2, 3...)
   const ranks = {};
   let currentRank = 1;
-  nonEmpty.forEach((item, index) => {
-    if (index > 0) {
-      const prevItem = nonEmpty[index - 1];
-      const isSame = isNumericOrScale 
-        ? getMappedValue(prevItem.value) === getMappedValue(item.value) 
-        : prevItem.value.toLowerCase() === item.value.toLowerCase();
-      if (!isSame) currentRank++;
-    }
+  validItems.forEach((item, index) => {
+    if (index > 0 && validItems[index - 1].mapped !== item.mapped) currentRank++;
     ranks[item.colIndex] = currentRank;
   });
+
   return ranks;
 };
-
-// 4. Analiza Dominacji (kto z kim wygrywa)
-export const analyzeDomination = (state, equalizedRowsIndexes) => {
-  const { objectives, alternatives, rejectedAlternatives, cells } = state;
+// 4. Analiza Dominacji (kto z kim wygrywa) - ZREFAKTORYZOWANA
+// Teraz funkcja przyjmuje gotową listę completeAlts od Głównej Funkcji
+export const analyzeDomination = (state, equalizedRowsIndexes, completeAlts, activeObjForCheck) => {
+  const { objectives, alternatives, rejectedAlternatives } = state;
   const matrix = {};
   
   objectives.forEach((_, r) => {
@@ -88,24 +87,18 @@ export const analyzeDomination = (state, equalizedRowsIndexes) => {
   });
 
   const results = {};
-  const activeObjectives = objectives.map((_, r) => r).filter(r => {
-    if (equalizedRowsIndexes.includes(r)) return false; 
-    
-    const activeAlts = alternatives.map((_, i) => i).filter(i => !rejectedAlternatives.includes(i));
-    return activeAlts.some(c => cells[`${r}-${c}`] && cells[`${r}-${c}`].toString().trim() !== ''); 
-  });
-
-  const isColComplete = (c) => activeObjectives.every(r => cells[`${r}-${c}`] && cells[`${r}-${c}`].toString().trim() !== '');
 
   for (let a = 0; a < alternatives.length; a++) {
-    if (rejectedAlternatives.includes(a) || !isColComplete(a)) continue;
+    // BRAMKARZ 1: Sprawdzamy czy Opcja 'A' uczestniczy w grze
+    if (rejectedAlternatives.includes(a) || !completeAlts.includes(a)) continue;
 
     let strictlyBy = null;
     let practicallyBy = null;
     let practicalObjName = null;
 
     for (let b = 0; b < alternatives.length; b++) {
-      if (a === b || rejectedAlternatives.includes(b) || !isColComplete(b)) continue;
+      // BRAMKARZ 2: Opcja 'B' też musi być kompletna i nieodrzucona
+      if (a === b || rejectedAlternatives.includes(b) || !completeAlts.includes(b)) continue;
 
       let bIsAlwaysBetterOrEqual = true;
       let bIsStrictlyBetterAtLeastOnce = false;
@@ -113,7 +106,8 @@ export const analyzeDomination = (state, equalizedRowsIndexes) => {
       let aExceptionRow = -1;
       let aExceptionRankDiff = 0;
 
-      for (let r of activeObjectives) {
+      // Pętla leci TYLKO po celach, które mają sens (nie są puste i nie są wyrównane)
+      for (let r of activeObjForCheck) {
         const rankA = matrix[r][a];
         const rankB = matrix[r][b];
 
@@ -153,20 +147,33 @@ export const getTradeoffResults = (state) => {
   const equalizedRowsIndexes = getEqualizedRowsIndexes(state);
   const equalizedCount = equalizedRowsIndexes.length;
 
-  const { results: dominationResults, matrix: currentMatrix } = showRanking 
-    ? analyzeDomination(state, equalizedRowsIndexes)
-    : { results: {}, matrix: {} };
-
   const activeAlts = alternatives.map((_, i) => i).filter(i => !rejectedAlternatives.includes(i));
-  const activeObjForCheck = objectives.map((_, r) => r).filter(r => !equalizedRowsIndexes.includes(r));
   
+  // POPRAWKA: Inteligentne ignorowanie pustych celów ("Duchów")
+  const activeObjForCheck = objectives.map((_, r) => r).filter(r => {
+    // Odpadają cele wykreślone przez kompromis
+    if (equalizedRowsIndexes.includes(r)) return false; 
+    
+    // Odpadają cele całkowicie puste (jeśli żadna opcja nic w nich nie ma, ignorujemy je)
+    const hasAnyValue = activeAlts.some(c => cells[`${r}-${c}`] !== undefined && cells[`${r}-${c}`].toString().trim() !== '');
+    return hasAnyValue;
+  });
+  
+  // Wspólna prawda: Wyliczamy raz, kto jest w pełni gotowy do walki
   const completeAlts = activeAlts.filter(c => {
     return activeObjForCheck.every(r => cells[`${r}-${c}`] !== undefined && cells[`${r}-${c}`].toString().trim() !== '');
   });
 
-  let winnerIndex = null;
+  // Przekazujemy completeAlts do analizy dominacji, by korzystała z tych samych danych
+  const { results: dominationResults, matrix: currentMatrix } = showRanking 
+    ? analyzeDomination(state, equalizedRowsIndexes, completeAlts, activeObjForCheck)
+    : { results: {}, matrix: {} };
+let winnerIndex = null;
   
-  if (showRanking && completeAlts.length > 0) {
+  // TARCZA ANTY-WALKOWEROWA: Zwycięzcę można ogłosić tylko, gdy wszyscy grający są gotowi
+  const isRaceFinished = completeAlts.length === activeAlts.length;
+  
+  if (showRanking && completeAlts.length > 0 && isRaceFinished) {
     if (completeAlts.length === 1) {
       winnerIndex = completeAlts[0];
     } else if (activeObjForCheck.length > 0) {

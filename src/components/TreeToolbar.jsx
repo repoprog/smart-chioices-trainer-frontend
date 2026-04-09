@@ -10,7 +10,6 @@ export function TreeToolbar() {
   const pastStates = useTemporalTreeStore((state) => state.pastStates);
   const futureStates = useTemporalTreeStore((state) => state.futureStates);
 
-  // Dodane akcje do obsługi JSON
   const exportJson = useTreeStore((state) => state.exportJson);
   const importJson = useTreeStore((state) => state.importJson);
 
@@ -21,7 +20,8 @@ export function TreeToolbar() {
   const canUndo = pastStates.length > 0;
   const canRedo = futureStates.length > 0;
 
-  const btnClass = "flex h-8 w-8 relative items-center justify-center rounded text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30 disabled:hover:bg-transparent dark:text-slate-400 dark:hover:bg-slate-800 transition-colors";
+  // Zaktualizowana klasa bazowa przycisku
+  const btnClass = "flex h-8 w-8 relative items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent transition-colors";
 
   const toggleFullscreen = () => {
     const canvasContainer = document.getElementById('tree-canvas-container');
@@ -108,18 +108,14 @@ export function TreeToolbar() {
         zoom: 1 
       });
 
-      // --- OPCJA ATOMOWA: Wstrzykujemy tymczasowy, bezwzględny CSS ---
       const exportStyles = document.createElement('style');
       exportStyles.innerHTML = `
-        
         .react-flow * {
           transition: none !important;
         }
-       
         input[placeholder^="Etap"], input[placeholder="Konsekwencje"] {
           color: #1e293b !important;
         }
-        
         button[title^="Zmień na poszukiwanie"] {
           background-color: #ecfdf5 !important;
           border-color: #34d399 !important;
@@ -131,7 +127,6 @@ export function TreeToolbar() {
       `;
       document.head.appendChild(exportStyles);
 
-     
       await new Promise((resolve) => setTimeout(resolve, 50));
 
       const dataUrl = await toPng(flowWrapper, {
@@ -149,8 +144,6 @@ export function TreeToolbar() {
       });
 
       document.head.removeChild(exportStyles);
-
-      
 
       flowWrapper.style.width = origWidth;
       flowWrapper.style.height = origHeight;
@@ -181,7 +174,7 @@ export function TreeToolbar() {
   };
 
   return (
-    <div className="tree-toolbar-export absolute top-3 left-3 z-10 flex items-center gap-1 rounded border border-slate-300 bg-white/95 p-1 shadow-sm backdrop-blur-sm dark:border-slate-600 dark:bg-slate-900/95">
+    <div className="tree-toolbar-export absolute top-3 left-3 z-10 flex items-center gap-1 rounded-lg border border-border bg-card/95 p-1 shadow-sm backdrop-blur-sm">
       
       <button onClick={() => undo()} disabled={!canUndo} title="Cofnij (Ctrl+Z)" className={btnClass}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7v6h6" /><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" /></svg>
@@ -191,7 +184,7 @@ export function TreeToolbar() {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 7v6h-6" /><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7" /></svg>
       </button>
 
-      <div className="mx-1 h-5 w-px bg-slate-300 dark:bg-slate-700" />
+      <div className="mx-1 h-5 w-px bg-border" />
 
       <button onClick={toggleFullscreen} title={isFullscreen ? "Zamknij pełny ekran" : "Pełny ekran (F11)"} className={btnClass}>
         {isFullscreen ? (
@@ -201,9 +194,8 @@ export function TreeToolbar() {
         )}
       </button>
 
-      <div className="mx-1 h-5 w-px bg-slate-300 dark:bg-slate-700" />
+      <div className="mx-1 h-5 w-px bg-border" />
 
-      {/* Ukryty input do ładowania pliku JSON */}
       <input 
         type="file" 
         accept=".json" 
@@ -216,7 +208,7 @@ export function TreeToolbar() {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="m6 14 1.5-3A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.5 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" />
         </svg>
-        <span className="absolute -top-1 -right-1 text-[8px] font-bold text-emerald-600">IN</span>
+        <span className="absolute -top-1 -right-1 text-[8px] font-bold text-emerald-600 dark:text-emerald-400">IN</span>
       </button>
 
       <button onClick={handleExportJson} title="Zapisz projekt jako plik (JSON)" className={btnClass}>
@@ -225,9 +217,10 @@ export function TreeToolbar() {
           <polyline points="17 21 17 13 7 13 7 21" />
           <polyline points="7 3 7 8 15 8" />
         </svg>
-        <span className="absolute -top-1 -right-1 text-[8px] font-bold text-amber-500">JSON</span>
+        <span className="absolute -top-1 -right-1 text-[8px] font-bold text-amber-600 dark:text-amber-500">JSON</span>
       </button>
-      <div className="mx-1 h-5 w-px bg-slate-300 dark:bg-slate-700" />
+      
+      <div className="mx-1 h-5 w-px bg-border" />
 
       <button onClick={() => exportGraph('png')} title="Pobierz jako obraz (PNG)" className={btnClass}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -235,12 +228,12 @@ export function TreeToolbar() {
           <circle cx="9" cy="9" r="2" />
           <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
         </svg>
-        <span className="absolute -top-1 -right-1 text-[8px] font-bold text-sky-600">PNG</span>
+        <span className="absolute -top-1 -right-1 text-[8px] font-bold text-sky-600 dark:text-sky-400">PNG</span>
       </button>
       
       <button onClick={() => exportGraph('pdf')} title="Pobierz jako dokument (PDF)" className={btnClass}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>
-        <span className="absolute -top-1 -right-1 text-[8px] font-bold text-red-500">PDF</span>
+        <span className="absolute -top-1 -right-1 text-[8px] font-bold text-red-600 dark:text-red-500">PDF</span>
       </button>
     </div>
   );
