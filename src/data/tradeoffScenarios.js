@@ -39,9 +39,9 @@ export const tradeoffScenarios = {
   developerHiring: {
     name: "Rekrutacja Full-Stack (Java + React)",
     description: "Wybór kandydata. Znajdź i odrzuć słabe opcje, a potem zrób kompromis między resztą.",
-    alternatives: ["Jan", "Piotr", "Anna ", "Kamil"],
+    alternatives: ["Jan", "Piotr", "Anna", "Kamil"],
     objectives: ["Oczekiwania finansowe", "Znajomość Java/Spring", "Znajomość React", "Doświadczenie z AWS", "Praktyka w CI/CD", "Język Angielski"],
-    objectiveUnits: { 0: "zł", 1: "Jakość / Standard", 2: "Jakość / Standard", 3: "Tak / Nie", 4: "Tak / Nie", 5: "Jakość / Standard" },
+    objectiveUnits: { 0: "zł" }, // Usunięte etykiety skali, zostawiamy tylko walutę
     // Pensja: im mniej tym lepiej (lower). Reszta skilli: im więcej tym lepiej (higher)
     sortDirections: { 0: "lower", 1: "higher", 2: "higher", 3: "higher", 4: "higher", 5: "higher" },
     cells: {

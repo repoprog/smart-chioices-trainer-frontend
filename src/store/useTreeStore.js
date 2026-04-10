@@ -7,11 +7,13 @@ import {
   getTreeMaxDepth,
   nextDomId,
   renumberDecisionAndChanceNodes,
-  getUniqueColumnXs 
+  getUniqueColumnXs // <--- UŻYWAMY NOWEJ LOGIKI
 } from './treeUtils.js';
 import { evaluateDecisionTree } from '../logic/evaluation.js';
 
+// --- ZSYNCHRONIZOWANA LOGIKA NAGŁÓWKÓW ---
 function syncColumnLabels(nodes, edges, prevLabels = []) {
+  // Idealna synchronizacja z StageHeadersFlow!
   const columnCount = getUniqueColumnXs(nodes).length;
   
   if (columnCount === 0) return []; 
@@ -129,80 +131,22 @@ export function getLayoutedElements(nodes, edges) {
 }
 
 const initialNodes = [
-  {
-    id: 'd1',
-    type: 'decision',
-    position: { x: 32, y: 220 },
-    zIndex: 100,
-    data: { nodeNumber: 1 },
-  },
-  {
-    id: 'c1',
-    type: 'chance',
-    position: { x: 300, y: 140 },
-    data: { nodeNumber: 2 },
-  },
-  {
-    id: 't-no',
-    type: 'terminal',
-    position: { x: 300, y: 400 },
-    data: { payoff: '0 zł' },
-  },
-  {
-    id: 't-up',
-    type: 'terminal',
-    position: { x: 620, y: 60 },
-    data: { payoff: '120 000 zł' },
-  },
-  {
-    id: 't-down',
-    type: 'terminal',
-    position: { x: 620, y: 220 },
-    data: { payoff: '−40 000 zł' },
-  },
+  { id: 'd1', type: 'decision', position: { x: 32, y: 220 }, zIndex: 100, data: { nodeNumber: 1 } },
+  { id: 'c1', type: 'chance', position: { x: 300, y: 140 }, data: { nodeNumber: 2 } },
+  { id: 't-no', type: 'terminal', position: { x: 300, y: 400 }, data: { payoff: '0 zł' } },
+  { id: 't-up', type: 'terminal', position: { x: 620, y: 60 }, data: { payoff: '120 000 zł' } },
+  { id: 't-down', type: 'terminal', position: { x: 620, y: 220 }, data: { payoff: '−40 000 zł' } },
 ];
 
 const initialEdges = [
-  {
-    id: 'e-d1-c1',
-    source: 'd1',
-    target: 'c1',
-    type: 'smartChoices',
-    data: { optionLabel: 'Tak', probability: null },
-  },
-  {
-    id: 'e-d1-tno',
-    source: 'd1',
-    target: 't-no',
-    type: 'smartChoices',
-    data: { optionLabel: 'Nie', probability: null },
-  },
-  {
-    id: 'e-c1-tup',
-    source: 'c1',
-    target: 't-up',
-    type: 'smartChoices',
-    data: { optionLabel: 'Sukces', probability: '60.00%', isLocked: false },
-  },
-  {
-    id: 'e-c1-tdown',
-    source: 'c1',
-    target: 't-down',
-    type: 'smartChoices',
-    data: { optionLabel: 'Porażka', probability: '40.00%', isLocked: false },
-  },
+  { id: 'e-d1-c1', source: 'd1', target: 'c1', type: 'smartChoices', data: { optionLabel: 'Tak', probability: null } },
+  { id: 'e-d1-tno', source: 'd1', target: 't-no', type: 'smartChoices', data: { optionLabel: 'Nie', probability: null } },
+  { id: 'e-c1-tup', source: 'c1', target: 't-up', type: 'smartChoices', data: { optionLabel: 'Sukces', probability: '60.00%', isLocked: false } },
+  { id: 'e-c1-tdown', source: 'c1', target: 't-down', type: 'smartChoices', data: { optionLabel: 'Porażka', probability: '40.00%', isLocked: false } },
 ];
 
-const numberedInitial = renumberDecisionAndChanceNodes(
-  initialNodes,
-  initialEdges,
-);
-
-const initialStageLabels = syncColumnLabels(
-  numberedInitial,
-  initialEdges,
-  [],
-);
+const numberedInitial = renumberDecisionAndChanceNodes(initialNodes, initialEdges);
+const initialStageLabels = syncColumnLabels(numberedInitial, initialEdges, []);
 
 const parseProbability = (p) => {
   if (p == null) return 0;
@@ -219,7 +163,6 @@ function rebalanceProbabilities(edges, sourceId) {
     const unlockedEdges = childEdges.filter(e => !e.data.isLocked);
 
     const lockedTotal = lockedEdges.reduce((sum, e) => sum + parseProbability(e.data.probability), 0);
-    
     const remainder = Math.max(0, 100 - lockedTotal);
 
     let updatedEdges = [...edges];
@@ -241,19 +184,14 @@ function rebalanceProbabilities(edges, sourceId) {
             if (edgeIndex !== -1) {
                 updatedEdges[edgeIndex] = {
                     ...updatedEdges[edgeIndex],
-                    data: {
-                        ...updatedEdges[edgeIndex].data,
-                        probability: formatProbability(newProb),
-                    },
+                    data: { ...updatedEdges[edgeIndex].data, probability: formatProbability(newProb) },
                 };
             }
         });
     }
-
     return updatedEdges;
 }
 
-// --- ALGORYTM PRAWDOPODOBIEŃSTWA ---
 function calculatePathProbabilities(nodes, edges) {
   const probMap = {};
   const rootNodes = nodes.filter(n => !edges.some(e => e.target === n.id));
@@ -278,7 +216,6 @@ function calculatePathProbabilities(nodes, edges) {
   return probMap;
 }
 
-// --- GŁÓWNA FUNKCJA EWALUACJI ---
 const evaluateAndSetWinningPath = (state) => {
   const { nodes, edges, evaluationMode } = state;
   const evaluationMap = evaluateDecisionTree(nodes, edges, evaluationMode);
@@ -297,20 +234,17 @@ const evaluateAndSetWinningPath = (state) => {
     }
     
     newData.pathProbability = cumulativeProbs[node.id] ?? 0;
-
     return { ...node, data: newData };
   });
   
   const winningPath = new Set();
-
-  //  Sprawdzamy, czy w jakimkolwiek węźle Szansy jest błąd sumy % ---
   let hasProbabilityError = false;
+  
   for (const node of nodes) {
     if (node.type === 'chance') {
       const outgoingEdges = edges.filter((e) => e.source === node.id);
       if (outgoingEdges.length > 0) {
         const sum = outgoingEdges.reduce((acc, e) => acc + parseProbability(e.data?.probability), 0);
-        
         if (Math.abs(sum - 100) > 0.01) {
           hasProbabilityError = true;
           break; 
@@ -319,12 +253,8 @@ const evaluateAndSetWinningPath = (state) => {
     }
   }
   
-  // Budujemy zwycięską ścieżkę TYLKO wtedy, gdy nie ma błędów w prawdopodobieństwach
   if (!hasProbabilityError) {
-    const rootNode = nodesWithEv.find(
-      (n) => (n.type === 'decision' || n.type === 'chance') && !edges.some((e) => e.target === n.id)
-    );
-
+    const rootNode = nodesWithEv.find((n) => (n.type === 'decision' || n.type === 'chance') && !edges.some((e) => e.target === n.id));
     if (rootNode) {
       const queue = [rootNode.id];
       winningPath.add(rootNode.id);
@@ -354,11 +284,10 @@ const evaluateAndSetWinningPath = (state) => {
       }
     }
   }
-
   return { ...state, nodes: nodesWithEv, evaluationMap, winningPath };
 };
 
-// --- STORE ---
+// --- GŁÓWNY STORE ---
 export const useTreeStore = create()(
   temporal((set) => ({
   nodes: numberedInitial,
@@ -367,7 +296,10 @@ export const useTreeStore = create()(
   evaluationMode: 'max',
   evaluationMap: {},
   winningPath: new Set(),
+  isDirty: false, // <--- Flaga zapobiegająca utracie danych (F5)
 
+
+  // WCZYTYWANIE I RESET (Czyszczą stan)
   loadScenario: (newNodes, newEdges, newLabels = []) =>
     set((state) => {
       const layoutedNodes = getLayoutedElements(newNodes, newEdges);
@@ -379,12 +311,19 @@ export const useTreeStore = create()(
         nodes: renumbered,
         edges: newEdges,
         stageColumnLabels,
+        isDirty: false
       };
       
       return evaluateAndSetWinningPath(newState);
     }),
 
-  setEvaluationMode: (mode) => set((state) => evaluateAndSetWinningPath({ ...state, evaluationMode: mode })),
+  resetTree: () => set((state) => {
+      const newState = { ...state, nodes: [], edges: [], stageColumnLabels: [], isDirty: false };
+      return evaluateAndSetWinningPath(newState);
+  }),
+
+  // POZOSTAŁE AKCJE UŻYTKOWNIKA (Brudzą stan)
+  setEvaluationMode: (mode) => set((state) => evaluateAndSetWinningPath({ ...state, evaluationMode: mode, isDirty: true })),
 
   setStageColumnLabel: (index, text) =>
     set((state) => {
@@ -392,16 +331,15 @@ export const useTreeStore = create()(
       if (index < 0) return state;
       while (next.length <= index) next.push('');
       next[index] = text;
-      return { stageColumnLabels: next };
+      return { stageColumnLabels: next, isDirty: true };
     }),
 
   updateEdgeData: (edgeId, patch) =>
     set((state) => {
       const newState = {
         ...state,
-        edges: state.edges.map((e) =>
-          e.id === edgeId ? { ...e, data: { ...e.data, ...patch } } : e
-        ),
+        edges: state.edges.map((e) => e.id === edgeId ? { ...e, data: { ...e.data, ...patch } } : e),
+        isDirty: true
       };
       return evaluateAndSetWinningPath(newState);
     }),
@@ -414,10 +352,9 @@ export const useTreeStore = create()(
       const newState = {
         ...state,
         edges: state.edges.map((e) =>
-          e.source === sourceNodeId
-            ? { ...e, data: { ...e.data, showCost: willShow, localShowCost: false } }
-            : e
+          e.source === sourceNodeId ? { ...e, data: { ...e.data, showCost: willShow, localShowCost: false } } : e
         ),
+        isDirty: true
       };
       return evaluateAndSetWinningPath(newState);
     }),
@@ -426,9 +363,8 @@ export const useTreeStore = create()(
     set((state) => {
        const newState = {
         ...state,
-        nodes: state.nodes.map((n) =>
-          n.id === nodeId ? { ...n, data: { ...n.data, ...patch } } : n
-        ),
+        nodes: state.nodes.map((n) => n.id === nodeId ? { ...n, data: { ...n.data, ...patch } } : n),
+        isDirty: true
       };
       return evaluateAndSetWinningPath(newState);
     }),
@@ -446,20 +382,15 @@ export const useTreeStore = create()(
 
       allEdges[editedEdgeIndex] = {
         ...editedEdge,
-        data: {
-          ...editedEdge.data,
-          probability: formatProbability(newProb),
-          isLocked: true,
-        },
+        data: { ...editedEdge.data, probability: formatProbability(newProb), isLocked: true },
       };
       
       const updatedEdges = rebalanceProbabilities(allEdges, sourceNodeId);
-
-      const newState = { ...state, edges: updatedEdges };
+      const newState = { ...state, edges: updatedEdges, isDirty: true };
       return evaluateAndSetWinningPath(newState);
     }),
 
-    toggleEdgeAutoBalance: (edgeId) =>
+  toggleEdgeAutoBalance: (edgeId) =>
     set((state) => {
       let allEdges = [...state.edges];
       const edgeIndex = allEdges.findIndex((e) => e.id === edgeId);
@@ -468,71 +399,41 @@ export const useTreeStore = create()(
       const edge = allEdges[edgeIndex];
       const isCurrentlyLocked = edge.data?.isLocked;
 
-      // Przełączamy stan isLocked na odwrotny
       allEdges[edgeIndex] = {
         ...edge,
-        data: {
-          ...edge.data,
-          isLocked: !isCurrentlyLocked,
-        },
+        data: { ...edge.data, isLocked: !isCurrentlyLocked },
       };
 
-    
       if (isCurrentlyLocked) {
         allEdges = rebalanceProbabilities(allEdges, edge.source);
       }
 
-      const newState = { ...state, edges: allEdges };
+      const newState = { ...state, edges: allEdges, isDirty: true };
       return evaluateAndSetWinningPath(newState);
     }),
 
   addBranch: (parentId, childKind) =>
     set((state) => {
       const parent = state.nodes.find((n) => n.id === parentId);
-      if (
-        !parent ||
-        (parent.type !== 'decision' && parent.type !== 'chance')
-      ) {
-        return state;
-      }
+      if (!parent || (parent.type !== 'decision' && parent.type !== 'chance')) return state;
 
       const newNodeId = nextDomId(childKind === 'chance' ? 'c' : 't');
-      
-      const existingOutgoing = state.edges.filter(
-        (e) => e.source === parentId
-      );
-
+      const existingOutgoing = state.edges.filter((e) => e.source === parentId);
       const isFromChance = parent.type === 'chance';
-      let edgeData;
-
-      if (isFromChance) {
-        edgeData = {
-          optionLabel: `Zdarzenie ${existingOutgoing.length + 1}`,
-          probability: '0%',
-          isLocked: false,
-        };
-      } else {
-        edgeData = {
-          optionLabel: `Opcja ${existingOutgoing.length + 1}`,
-          probability: null,
-        };
-      }
+      let edgeData = isFromChance 
+        ? { optionLabel: `Zdarzenie ${existingOutgoing.length + 1}`, probability: '0%', isLocked: false }
+        : { optionLabel: `Opcja ${existingOutgoing.length + 1}`, probability: null };
 
       const newNode = {
         id: newNodeId,
         type: childKind,
         position: { x: 0, y: 0 }, 
         zIndex: 100,
-        data: childKind === 'chance' ? { nodeNumber: 0 } : { payoff: '0 zł' },
+        // --- POPRAWKA: Prawidłowe ładowanie danych ---
+        data: childKind === 'terminal' ? { payoff: '0 zł' } : { nodeNumber: 0 },
       };
 
-      const newEdge = {
-        id: nextDomId('e'),
-        source: parentId,
-        target: newNodeId,
-        type: 'smartChoices',
-        data: edgeData,
-      };
+      const newEdge = { id: nextDomId('e'), source: parentId, target: newNodeId, type: 'smartChoices', data: edgeData };
 
       let edgesWithNew = [...state.edges, newEdge];
       if (isFromChance) {
@@ -540,21 +441,16 @@ export const useTreeStore = create()(
       }
 
       const nodesWithNew = [...state.nodes, newNode];
-      
       const layoutedNodes = getLayoutedElements(nodesWithNew, edgesWithNew);
-
       const renumbered = renumberDecisionAndChanceNodes(layoutedNodes, edgesWithNew);
-      const stageColumnLabels = syncColumnLabels(
-        renumbered,
-        edgesWithNew,
-        state.stageColumnLabels
-      );
+      const stageColumnLabels = syncColumnLabels(renumbered, edgesWithNew, state.stageColumnLabels);
 
       const newState = {
         ...state,
         nodes: renumbered,
         edges: edgesWithNew,
         stageColumnLabels,
+        isDirty: true
       };
       return evaluateAndSetWinningPath(newState);
     }),
@@ -563,15 +459,11 @@ export const useTreeStore = create()(
     set((state) => {
       const incomingEdge = state.edges.find((e) => e.target === nodeId);
       if (!incomingEdge) return state; 
-
       const removeSet = collectDescendants(nodeId, state.edges);
       removeSet.add(nodeId); 
 
       const parentId = incomingEdge.source;
-
-      let remainingEdges = state.edges.filter(
-        (e) => !removeSet.has(e.source) && !removeSet.has(e.target)
-      );
+      let remainingEdges = state.edges.filter((e) => !removeSet.has(e.source) && !removeSet.has(e.target));
 
       const parent = state.nodes.find((n) => n.id === parentId);
       if (parent && parent.type === 'chance') {
@@ -579,24 +471,16 @@ export const useTreeStore = create()(
       }
       
       const remainingNodes = state.nodes.filter((n) => !removeSet.has(n.id));
-
       const layoutedNodes = getLayoutedElements(remainingNodes, remainingEdges);
-
-      const renumbered = renumberDecisionAndChanceNodes(
-        layoutedNodes,
-        remainingEdges
-      );
-      const stageColumnLabels = syncColumnLabels(
-        renumbered,
-        remainingEdges,
-        state.stageColumnLabels
-      );
+      const renumbered = renumberDecisionAndChanceNodes(layoutedNodes, remainingEdges);
+      const stageColumnLabels = syncColumnLabels(renumbered, remainingEdges, state.stageColumnLabels);
       
       const newState = {
         ...state,
         nodes: renumbered,
         edges: remainingEdges,
         stageColumnLabels,
+        isDirty: true
       };
 
       return evaluateAndSetWinningPath(newState);
@@ -606,7 +490,6 @@ export const useTreeStore = create()(
     set((state) => {
       const nodeIndex = state.nodes.findIndex((n) => n.id === nodeId);
       if (nodeIndex === -1) return state;
-
       const node = state.nodes[nodeIndex];
       if (node.type === newType) return state;
 
@@ -615,21 +498,15 @@ export const useTreeStore = create()(
 
       if (newType === 'terminal') {
         const removeSet = collectDescendants(nodeId, state.edges);
-        
         removeSet.delete(nodeId); 
-        
         remainingNodes = remainingNodes.filter((n) => !removeSet.has(n.id));
-        remainingEdges = remainingEdges.filter(
-          (e) => !removeSet.has(e.source) && !removeSet.has(e.target) && e.source !== nodeId
-        );
+        remainingEdges = remainingEdges.filter((e) => !removeSet.has(e.source) && !removeSet.has(e.target) && e.source !== nodeId);
       }
 
       const targetIndex = remainingNodes.findIndex((n) => n.id === nodeId);
-      
       if (targetIndex === -1) return state; 
       
       const oldData = remainingNodes[targetIndex].data;
-      
       let newData = { ...oldData };
       if (newType === 'terminal') {
         newData = { payoff: oldData.payoff || '0 zł' };
@@ -639,21 +516,13 @@ export const useTreeStore = create()(
         delete newData.payoff;
       }
 
-      remainingNodes[targetIndex] = {
-        ...remainingNodes[targetIndex],
-        type: newType,
-        data: newData,
-      };
+      remainingNodes[targetIndex] = { ...remainingNodes[targetIndex], type: newType, data: newData };
 
       if (newType !== 'terminal') {
         remainingEdges = remainingEdges.map((e) => {
           if (e.source === nodeId) {
-            if (newType === 'decision') {
-              return { ...e, data: { ...e.data, probability: null, isLocked: false } };
-            }
-            if (newType === 'chance') {
-              return { ...e, data: { ...e.data, probability: '0%', isLocked: false } };
-            }
+            if (newType === 'decision') return { ...e, data: { ...e.data, probability: null, isLocked: false } };
+            if (newType === 'chance') return { ...e, data: { ...e.data, probability: '0%', isLocked: false } };
           }
           return e;
         });
@@ -667,20 +536,9 @@ export const useTreeStore = create()(
       const renumbered = renumberDecisionAndChanceNodes(layoutedNodes, remainingEdges);
       const stageColumnLabels = syncColumnLabels(renumbered, remainingEdges, state.stageColumnLabels);
 
-      const newState = { ...state, nodes: renumbered, edges: remainingEdges, stageColumnLabels };
+      const newState = { ...state, nodes: renumbered, edges: remainingEdges, stageColumnLabels, isDirty: true };
       return evaluateAndSetWinningPath(newState);
     }),
-
-    
-  exportJson: () => {
-    const state = useTreeStore.getState();
-    const data = {
-      nodes: state.nodes,
-      edges: state.edges,
-      stageColumnLabels: state.stageColumnLabels,
-    };
-    return JSON.stringify(data, null, 2);
-  },
 
   importJson: (jsonString) =>
     set((state) => {
@@ -689,17 +547,14 @@ export const useTreeStore = create()(
         if (parsed.nodes && parsed.edges) {
           const layoutedNodes = getLayoutedElements(parsed.nodes, parsed.edges);
           const renumbered = renumberDecisionAndChanceNodes(layoutedNodes, parsed.edges);
-          const stageColumnLabels = syncColumnLabels(
-            renumbered, 
-            parsed.edges, 
-            parsed.stageColumnLabels || []
-          );
+          const stageColumnLabels = syncColumnLabels(renumbered, parsed.edges, parsed.stageColumnLabels || []);
 
           const newState = {
             ...state,
             nodes: renumbered,
             edges: parsed.edges,
             stageColumnLabels,
+            isDirty: false
           };
           return evaluateAndSetWinningPath(newState);
         }
@@ -726,37 +581,23 @@ export const useTreeStore = create()(
       const victimEdge = sorted[0];
       const removeSet = collectDescendants(victimEdge.target, state.edges);
 
-      let remainingEdges = state.edges.filter(
-        (e) =>
-          e.id !== victimEdge.id &&
-          !removeSet.has(e.source) &&
-          !removeSet.has(e.target)
-      );
+      let remainingEdges = state.edges.filter((e) => e.id !== victimEdge.id && !removeSet.has(e.source) && !removeSet.has(e.target));
 
-      const isFromChance = parent.type === 'chance';
-      if (isFromChance) {
+      if (parent.type === 'chance') {
         remainingEdges = rebalanceProbabilities(remainingEdges, parentId);
       }
       
       const remainingNodes = state.nodes.filter((n) => !removeSet.has(n.id));
-      
       const layoutedNodes = getLayoutedElements(remainingNodes, remainingEdges);
-
-      const renumbered = renumberDecisionAndChanceNodes(
-        layoutedNodes,
-        remainingEdges
-      );
-      const stageColumnLabels = syncColumnLabels(
-        renumbered,
-        remainingEdges,
-        state.stageColumnLabels
-      );
+      const renumbered = renumberDecisionAndChanceNodes(layoutedNodes, remainingEdges);
+      const stageColumnLabels = syncColumnLabels(renumbered, remainingEdges, state.stageColumnLabels);
       
       const newState = {
         ...state,
         nodes: renumbered,
         edges: remainingEdges,
         stageColumnLabels,
+        isDirty: true
       };
       return evaluateAndSetWinningPath(newState);
     }),
@@ -765,22 +606,19 @@ export const useTreeStore = create()(
 }),
 {
      limit: 50, 
-      partialize: (state) => ({
-        // WYMAGANE: Eksplicytnie zwracamy TYLKO twarde dane.
-        // Dzięki temu zundo nie nadpisuje funkcji (np. loadScenario) wartością undefined podczas cofania.
-        nodes: state.nodes,
-        edges: state.edges,
-        stageColumnLabels: state.stageColumnLabels,
-        evaluationMode: state.evaluationMode,
-        evaluationMap: state.evaluationMap,
-        winningPath: state.winningPath,
-      }),
-    }
-  )
+     partialize: (state) => ({
+       nodes: state.nodes,
+       edges: state.edges,
+       stageColumnLabels: state.stageColumnLabels,
+       evaluationMode: state.evaluationMode,
+       evaluationMap: state.evaluationMap,
+       winningPath: state.winningPath,
+       // Omijamy isDirty, zundo nie powinno tego cofać
+     }),
+   }
+ )
 );
 
 export const useTemporalTreeStore = (selector) => useStore(useTreeStore.temporal, selector);
-
 useTreeStore.getState().init();
 useTreeStore.temporal.getState().clear();
-

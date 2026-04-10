@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { Link } from 'react-router-dom';
 
 const IconChart = () => <span className="text-xl"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
   <path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 0 1-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125m-9.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-7.5A1.125 1.125 0 0 1 12 18.375m9.75-12.75c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125m19.5 0v1.5c0 .621-.504 1.125-1.125 1.125M2.25 5.625v1.5c0 .621.504 1.125 1.125 1.125m0 0h17.25m-17.25 0h7.5c.621 0 1.125.504 1.125 1.125M3.375 8.25c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125m17.25-3.75h-7.5c-.621 0-1.125.504-1.125 1.125m8.625-1.125c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h7.5m-7.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125M12 10.875v-1.5m0 1.5c0 .621-.504 1.125-1.125 1.125M12 10.875c0 .621.504 1.125 1.125 1.125m-2.25 0c.621 0 1.125.504 1.125 1.125M13.125 12h7.5m-7.5 0c-.621 0-1.125.504-1.125 1.125M20.625 12c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h7.5M12 14.625v-1.5m0 1.5c0 .621-.504 1.125-1.125 1.125M12 14.625c0 .621.504 1.125 1.125 1.125m-2.25 0c.621 0 1.125.504 1.125 1.125m0 1.5v-1.5m0 0c0-.621.504-1.125 1.125-1.125m0 0h7.5" />
@@ -35,32 +35,30 @@ export default function LandingPage() {
                     <a href="#features" className="text-white/70 text-[12px] font-medium px-2.5 py-1 hover:text-white transition-colors">Cechy</a>
                     <a href="#how-it-works" className="text-white/70 text-[12px] font-medium px-2.5 py-1 hover:text-white transition-colors">Jak to Działa?</a>
                     <a href="#cases" className="text-white/70 text-[12px] font-medium px-2.5 py-1 hover:text-white transition-colors">Przykłady</a>
-                    <a href="/app" className="inline-flex items-center gap-1.5 ml-4 px-3.5 py-1.5 border-none rounded-full bg-purple-500 text-white text-[12px] font-semibold cursor-pointer transition-all hover:bg-purple-600 hover:shadow-[0_0_20px_0_rgba(139,92,246,0.2)]">
+                    <Link to="/app" className="inline-flex items-center gap-1.5 ml-4 px-3.5 py-1.5 border-none rounded-full bg-purple-500 text-white text-[12px] font-semibold cursor-pointer transition-all hover:bg-purple-600 hover:shadow-[0_0_20px_0_rgba(139,92,246,0.2)]">
                         Rozpocznij (Free)
-                    </a>
+                    </Link>
                 </nav>
             </header>
 
             {/* 1. SEKCJA HERO */}
             <section className="pt-40 pb-20 px-6 text-center max-w-[1200px] mx-auto">
-                <h1 className="m-0 text-7xl font-extrabold tracking-[-3.5px] leading-[1] text-white">
-                    Podejmuj Lepsze,  <br />
-                    Racjonalne Decyzje
+                <h1 className="m-0 text-5xl md:text-7xl font-extrabold tracking-[-2px] md:tracking-[-3.5px] leading-[1.1] md:leading-[1] text-white">
+                   Podejmuj decyzje w oparciu <br />
+                    o dane, nie przeczucie
                 </h1>
                 <p className="mt-6 mb-10 max-w-[600px] mx-auto text-white/70 text-lg leading-relaxed">
-                    Analizuj opcje i wybieraj najlepszą szybciej.
-Wizualizuj scenariusze w tabeli lub drzewie decyzyjnym.
-Metoda oparta na nauce, która eliminuje niepewność.
+                    Decidely zamienia niepewność w liczby. Tabela decyzyjna lub drzewo scenariuszy — metodologia prosto z Harvard Business School.
                 </p>
-                <div className="flex gap-4 justify-center">
-                    <a href="/app/table?scenario=developerHiring" className="px-5 py-2.5 cursor-pointer font-semibold text-sm bg-purple-500 text-white border-none rounded-md transition-all hover:shadow-[0_0_30px_0_rgba(139,92,246,0.2)] hover:bg-purple-600">
+                <div className="flex flex-col md:flex-row gap-4 justify-center">
+                    <Link to="/app/table?scenario=developerHiring" className="px-5 py-2.5 cursor-pointer font-semibold text-sm bg-purple-500 text-white border-none rounded-md transition-all hover:shadow-[0_0_30px_0_rgba(139,92,246,0.2)] hover:bg-purple-600">
                       Porównaj Opcje
-                    </a>
-                    <a href="/app/tree" className="px-5 py-2.5 cursor-pointer font-semibold text-sm bg-cyan-400 text-black border-none rounded-md transition-all hover:shadow-[0_0_30px_0_rgba(34,211,238,0.2)] hover:bg-cyan-500">
+                    </Link>
+                    <Link to="/app/tree" className="px-5 py-2.5 cursor-pointer font-semibold text-sm bg-cyan-400 text-black border-none rounded-md transition-all hover:shadow-[0_0_30px_0_rgba(34,211,238,0.2)] hover:bg-cyan-500">
                       
                                                 Zbuduj Drzewo Decyzji
 
-                    </a>
+                    </Link>
                     
                 </div>
                 
@@ -84,11 +82,11 @@ Metoda oparta na nauce, która eliminuje niepewność.
             {/* 2. SEKCJA FEATURES (Bento Grid) */}
            <section id="features" className="py-20 px-6 max-w-[1200px] mx-auto">
                <h2 className="text-center m-0 text-4xl font-extrabold tracking-[-1.5px] text-white">
-    Ustrukturyzowane podejmowanie decyzji oparte na danych.
+   Koniec z wyborem na czucie.
 </h2>
 
 <p className="text-center mt-4 text-sm text-white/60 max-w-[600px] mx-auto">
-    Aplikacja modeluje proces decyzyjny przy użyciu wag i scenariuszy.
+    Zbudowane w oparciu o metodologię Smart Choices (Harvard Business School Press) — stosowaną przy decyzjach, gdzie stawką jest coś ważnego.
 </p>
                 
                 {/* Siatka Bento: 3 kolumny na dużych ekranach, wysokość wiersza 250px */}
@@ -195,7 +193,7 @@ Zostają tylko te, które warto rozważyć.
             <section id="cases" className="py-20 px-6 max-w-[1200px] mx-auto text-center">
                 <h2 className="m-0 text-3xl font-bold text-white/90">Gdzie to się sprawdza</h2>
                 <div className="mt-10 flex flex-wrap gap-3 justify-center">
-                    {['Kupno Mieszkania', 'Wybór Stacku Technicznego', 'Planowanie Kariery', 'Wybór Samochodu', 'Priorytetyzacja Zadania'].map(item => (
+                    {['Zatrudnienie Kandydata', 'Wybór  Frameworka', 'Planowanie Kariery', "Wybór Oferty Pracy", 'Kupno Samochodu' ].map(item => (
                         <div key={item} className="px-4 py-1.5 border border-white/10 bg-black rounded-full text-[12px] font-medium text-white/70 transition-colors hover:text-white hover:border-white/30">
                             {item}
                         </div>

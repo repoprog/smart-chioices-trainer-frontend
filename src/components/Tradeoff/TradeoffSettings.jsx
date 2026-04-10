@@ -2,12 +2,16 @@ import { useState } from 'react';
 import { useTradeoffStore } from '../../store/useTradeOffStore';
 import { Settings2, ChevronDown, ChevronUp, X, Plus, Trash2 } from 'lucide-react';
 import { scalePresets } from '../../data/scalePresets';
+import ConfirmModal from '../ConfirmModal'; // Upewnij się, że ścieżka jest dobra!
 
 export function TradeoffSettings() {
     const presetKeys = Object.keys(scalePresets);
     const [showScalesSettings, setShowScalesSettings] = useState(false);
     const [newScaleWord, setNewScaleWord] = useState('');
     const [newScaleRank, setNewScaleRank] = useState('');
+    
+    // Stan dla modala usuwania
+    const [isClearModalOpen, setIsClearModalOpen] = useState(false);
 
     const {
         customScales,
@@ -19,10 +23,7 @@ export function TradeoffSettings() {
     } = useTradeoffStore();
 
     const handleLoadPreset = (presetKey) => {
-        if (customScales.length > 0 && activePreset !== presetKey) {
-            const confirm = window.confirm(`Czy chcesz zastąpić obecną listę pakietem "${presetKey}"?`);
-            if (!confirm) return;
-        }
+        // Po prostu ładujemy nowy preset bez pytania!
         loadPreset(presetKey);
     };
 
@@ -34,8 +35,13 @@ export function TradeoffSettings() {
         }
     };
 
+    const executeClearScales = () => {
+        clearScales();
+        setIsClearModalOpen(false);
+    };
+
     return (
-        <div className="mt-8 border-t border-border pt-6">
+        <div className="mt-8 border-t border-border pt-6 relative">
             
             {/* Przycisk otwierający ustawienia */}
             <button 
@@ -54,7 +60,7 @@ export function TradeoffSettings() {
             {showScalesSettings && (
                 <div className="mt-4 p-5 bg-card border border-border rounded-xl shadow-sm space-y-6 max-w-[900px] animate-in fade-in slide-in-from-top-2">
                     
-                    {/* SEKCJ 1: Pakiety */}
+                    {/* SEKCJA 1: Pakiety */}
                     <div>
                         <h3 className="text-sm font-medium text-foreground mb-3">Gotowe pakiety ocen</h3>
                         <div className="flex flex-wrap items-center gap-2">
@@ -76,11 +82,7 @@ export function TradeoffSettings() {
 
                             <button 
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full cursor-pointer transition-colors text-destructive hover:bg-destructive/10" 
-                                onClick={() => { 
-                                    if(window.confirm("Wyczyścić wszystkie oceny?")) {
-                                        clearScales();
-                                    }
-                                }}
+                                onClick={() => setIsClearModalOpen(true)}
                             >
                                 <Trash2 className="w-3 h-3" />
                                 Wyczyść listę
@@ -152,6 +154,17 @@ export function TradeoffSettings() {
                     </div>
                 </div>
             )}
+
+            {/* NASZ MODAL DLA CZYSZCZENIA SKALI */}
+            <ConfirmModal
+                isOpen={isClearModalOpen}
+                onClose={() => setIsClearModalOpen(false)}
+                onConfirm={executeClearScales}
+                title="Czyszczenie listy ocen"
+                message="Czy na pewno chcesz wyczyścić listę słów dla tej oceny? Własne oceny zostaną bezporwotnie usunięte."
+                variant="danger"
+                confirmText="Wyczyść"
+            />
         </div>
     );
 }

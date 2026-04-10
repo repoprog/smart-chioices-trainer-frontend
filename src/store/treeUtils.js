@@ -271,7 +271,7 @@ export function getUniqueColumnXs(nodes) {
   const uniqueXs = [];
   
   xs.forEach(x => {
-    if (!uniqueXs.some(ux => Math.abs(ux - x) < 5)) {
+    if (!uniqueXs.some(ux => Math.abs(ux - x) < 150)) {
       uniqueXs.push(x);
     }
   });

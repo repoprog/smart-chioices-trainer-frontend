@@ -2,12 +2,21 @@ import React, { useState } from 'react';
 import { useTradeoffStore } from '../../store/useTradeOffStore';
 import { getTradeoffResults, getRowRanks } from '../../logic/tradeoffLogic';
 import { Eye, EyeOff, Crown } from 'lucide-react';
+// ZMIEŃ ŚCIEŻKĘ PONIŻEJ NA TAKĄ, GDZIE ZAPISAŁEŚ PLIK MODALA:
+import ConfirmModal from '.././ConfirmModal'; 
 
 export function TradeoffGrid() {
     const store = useTradeoffStore();
     
-    // Nowy stan śledzący, która komórka jest aktualnie edytowana
     const [focusedCell, setFocusedCell] = useState(null);
+    
+    // NOWY STAN DLA UNIWERSALNEGO MODALA POTWIERDZENIA
+    const [modalConfig, setModalConfig] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: null,
+    });
     
     const { 
         alternatives, objectives, cells, objectiveUnits, showRanking, sortDirections, 
@@ -22,12 +31,10 @@ export function TradeoffGrid() {
         winnerIndex, completeAlts
     } = getTradeoffResults(store);
 
-    const handleRemoveAlternative = (indexToRemove) => {
-        const hasData = objectives.some((_, r) => cells[`${r}-${indexToRemove}`] && cells[`${r}-${indexToRemove}`].toString().trim() !== '');
-        if (hasData) {
-            if (!window.confirm(`Alternatywa "${alternatives[indexToRemove]}" zawiera wpisane dane. Czy na pewno chcesz ją usunąć?`)) return;
-        }
+    const closeConfirmModal = () => setModalConfig({ ...modalConfig, isOpen: false });
 
+    // WYCIĄGNIĘTA LOGIKA USUWANIA ALTERNATYWY
+    const executeRemoveAlt = (indexToRemove) => {
         useTradeoffStore.setState((state) => {
             const newAlternatives = state.alternatives.filter((_, index) => index !== indexToRemove);
             const newCells = {};
@@ -46,12 +53,23 @@ export function TradeoffGrid() {
         });
     };
 
-    const handleRemoveObjective = (indexToRemove) => {
-        const hasData = alternatives.some((_, c) => cells[`${indexToRemove}-${c}`] && cells[`${indexToRemove}-${c}`].toString().trim() !== '');
+    const handleRemoveAlternative = (indexToRemove) => {
+        const hasData = objectives.some((_, r) => cells[`${r}-${indexToRemove}`] && cells[`${r}-${indexToRemove}`].toString().trim() !== '');
+        
         if (hasData) {
-            if (!window.confirm(`Cel "${objectives[indexToRemove]}" zawiera wpisane dane. Czy na pewno chcesz go usunąć?`)) return;
+            setModalConfig({
+                isOpen: true,
+                title: "Usuwanie alternatywy",
+                message: `Alternatywa "${alternatives[indexToRemove]}" zawiera wpisane dane. Czy na pewno chcesz ją usunąć?`,
+                onConfirm: () => executeRemoveAlt(indexToRemove)
+            });
+        } else {
+            executeRemoveAlt(indexToRemove);
         }
+    };
 
+    // WYCIĄGNIĘTA LOGIKA USUWANIA CELU
+    const executeRemoveObj = (indexToRemove) => {
         useTradeoffStore.setState((state) => {
             const newObjectives = state.objectives.filter((_, index) => index !== indexToRemove);
             const newCells = {};
@@ -81,6 +99,21 @@ export function TradeoffGrid() {
 
             return { objectives: newObjectives, cells: newCells, sortDirections: newSortDirections, objectiveUnits: newObjectiveUnits };
         });
+    };
+
+    const handleRemoveObjective = (indexToRemove) => {
+        const hasData = alternatives.some((_, c) => cells[`${indexToRemove}-${c}`] && cells[`${indexToRemove}-${c}`].toString().trim() !== '');
+        
+        if (hasData) {
+            setModalConfig({
+                isOpen: true,
+                title: "Usuwanie celu",
+                message: `Cel "${objectives[indexToRemove]}" zawiera wpisane dane. Czy na pewno chcesz go usunąć?`,
+                onConfirm: () => executeRemoveObj(indexToRemove)
+            });
+        } else {
+            executeRemoveObj(indexToRemove);
+        }
     };
 
     return (
@@ -208,16 +241,13 @@ export function TradeoffGrid() {
                                         const currentVal = cells[cellKey] || '';
                                         const isFocused = focusedCell === cellKey;
                                         
-                                        // ZAKTUALIZOWANA LOGIKA DOKLEJANIA JEDNOSTEK 
                                         let displayValue = currentVal;
                                         const unit = objectiveUnits[rowIndex] || '';
 
                                         if (showRanking) {
                                             displayValue = rowRanks[colIndex] ? `${rowRanks[colIndex]}` : '';
                                         } 
-                                        // Doklej jednostkę tylko wtedy, gdy komórka NIE JEST ZAZNACZONA (isFocused == false)
                                         else if (!isFocused && currentVal !== '' && unit) {
-                                            // Sprawdzamy czy już przypadkiem jej tam nie ma 
                                             if (!currentVal.toString().includes(unit)) {
                                                 displayValue = `${currentVal} ${unit}`;
                                             }
@@ -269,12 +299,9 @@ export function TradeoffGrid() {
                                                         placeholder={showRanking ? "-" : "wartość"}
                                                         readOnly={showRanking}
                                                         list={!showRanking ? "scale-suggestions" : undefined}
-                                                        
-                                                        // MAGIA DZIEJE SIĘ TUTAJ (onFocus i onBlur)
                                                         onFocus={() => {
                                                             if (!showRanking) {
                                                                 setFocusedCell(cellKey);
-                                                                // Jeśli jednostka już jest wpisana w komórce, ukryj ją na czas wpisywania!
                                                                 if (unit && currentVal.toString().includes(unit)) {
                                                                     const cleanVal = currentVal.toString().replace(unit, '').trim();
                                                                     updateCell(rowIndex, colIndex, cleanVal);
@@ -282,7 +309,7 @@ export function TradeoffGrid() {
                                                             }
                                                         }}
                                                         onBlur={(e) => {
-                                                            setFocusedCell(null); // Zdejmujemy focus
+                                                            setFocusedCell(null);
                                                             if (showRanking) return; 
                                                             
                                                             const val = e.target.value;
@@ -295,7 +322,6 @@ export function TradeoffGrid() {
                                                             }
                                                             cleanStr = cleanStr.replace(',', '.');
                                                             
-                                                            // Formatujemy ułamki, dodajemy spacje i doklejamy jednostkę twardo do bazy (Zustand)
                                                             if (!isNaN(cleanStr) && cleanStr !== '') {
                                                                 const num = Number(cleanStr);
                                                                 let formatted = num.toLocaleString('pl-PL', { maximumFractionDigits: 4 });
@@ -326,7 +352,6 @@ export function TradeoffGrid() {
                                     const isComplete = completeAlts.includes(colIndex);
                                     const dom = dominationResults[colIndex];
 
-                                    // Sprawdzamy czy ta konkretna alternatywa jest CALKOWICIE pusta w każdym celu
                                     const isEmptyAlt = !objectives.some((_, rowIndex) => {
                                         const val = cells[`${rowIndex}-${colIndex}`];
                                         return val !== undefined && val.toString().trim() !== '';
@@ -346,7 +371,6 @@ export function TradeoffGrid() {
                                     }
 
                                     if (!isComplete) {
-                                        // Cichy cien: gdy opcja jest calkowicie pusta, ignoruj powiadomienie
                                         if (isEmptyAlt) {
                                             return <td key={`dom-${colIndex}`} className="p-1.5 align-middle border-b border-r border-border bg-card"></td>;
                                         }
@@ -387,8 +411,8 @@ export function TradeoffGrid() {
                                         return (
                                             <td key={`dom-${colIndex}`} className="p-3 align-middle border-b border-r border-border bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 text-[11px] font-medium leading-relaxed text-center">
                                                 <span className="text-xs block mb-1 font-bold uppercase">Rozważ odrzucenie</span>
-<span className="block mb-2 opacity-80">Lepsza od <b>{dom.by}</b> tylko w <b>"{dom.objective}"</b>.</span>                                       
-        <button 
+                                                <span className="block mb-2 opacity-80">Lepsza od <b>{dom.by}</b> tylko w <b>"{dom.objective}"</b>.</span>                                       
+                                                <button 
                                                     className="block mx-auto px-3 py-1.5 text-[11px] font-semibold bg-transparent border border-amber-500 rounded-md cursor-pointer w-full transition-all hover:bg-amber-100 dark:hover:bg-amber-900"
                                                     onClick={() => rejectAlternative(colIndex)} 
                                                 >
@@ -432,6 +456,19 @@ export function TradeoffGrid() {
             <datalist id="unit-suggestions">
                 <option value="zł" /><option value="$" /><option value="€" /><option value="m²" /><option value="m" /><option value="km" /><option value="kg" /><option value="min" /><option value="h" /><option value="%" /><option value="szt." />
             </datalist>
+
+            {/* NASZ NOWY MODAL FIGMA */}
+            <ConfirmModal
+                isOpen={modalConfig.isOpen}
+                onClose={closeConfirmModal}
+                onConfirm={() => {
+                    if (modalConfig.onConfirm) modalConfig.onConfirm();
+                }}
+                title={modalConfig.title}
+                message={modalConfig.message}
+                variant="danger"
+                confirmText="Usuń"
+            />
         </div>
     );
 }
