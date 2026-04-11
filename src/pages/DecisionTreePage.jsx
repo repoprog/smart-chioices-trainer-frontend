@@ -3,12 +3,17 @@ import { DecisionTreeCanvas } from '../components/DecisionTreeCanvas.jsx';
 import { useTreeStore } from '../store/useTreeStore.js';
 import { scenarios } from '../data/scenarios.js'; 
 import { DecisionTreeToolbar } from './DecisionTreeToolbar.jsx';
-import ConfirmModal from '../components/ConfirmModal'; // UPEWNIJ SIĘ, ŻE ŚCIEŻKA JEST POPRAWNA!
+import ConfirmModal from '../components/ConfirmModal'; 
+// POTRZEBUJEMY TYLKO LOCK DO ŚRODKA TOOLTIPA
+import { Lock } from 'lucide-react'; 
 
 export function DecisionTreePage() {
   const { loadScenario, resetTree, isDirty } = useTreeStore();
   const [showTemplates, setShowTemplates] = useState(false);
   
+  // Stan dla Tooltipa What-if
+  const [showWhatIfTooltip, setShowWhatIfTooltip] = useState(false);
+
   // Stany dla Modali Ostrzegawczych
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [pendingTemplate, setPendingTemplate] = useState(null);
@@ -69,9 +74,69 @@ export function DecisionTreePage() {
       <div className="flex flex-wrap md:flex-nowrap items-start md:items-center justify-between gap-4 relative z-50">
         <div className="flex-1">
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">Drzewo decyzyjne</h2>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Kwadrat = decyzja, koło = niepewność. Najedź na węzeł, aby dodać gałąź. Symulacja What-if - odblokuj autobalans prawdopodobieństwa w konkurencyjnych gałęziach (wyżej lub niżej) by sprawdzić jak płynna zmiana prawdopodobieństwa wpływa na wynik opłacalności.
-          </p>
+          
+          {/* TEKST Z WPLECIONYM PRZYCISKIEM */}
+          <div className="text-muted-foreground mt-1 text-sm flex flex-wrap items-center gap-1.5 leading-relaxed">
+            <span>Najedź na węzeł, aby dodać gałąź. Zmieniaj prawdopodobieństwa by przeprowadzić symulację What-if -</span>
+            
+            <div className="relative inline-flex items-center">
+              <button 
+                onClick={() => setShowWhatIfTooltip(!showWhatIfTooltip)}
+                className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-full border border-border bg-muted text-muted-foreground text-[11px] font-bold transition-all hover:bg-background hover:text-primary hover:border-primary focus:outline-none"
+                title="Jak używać symulacji What-If?"
+              >
+                ?
+              </button>
+
+              {/* WŁAŚCIWY TOOLTIP */}
+              {showWhatIfTooltip && (
+                <div className="absolute top-full left-0 mt-2 w-[360px] bg-card border border-border p-5 rounded-xl shadow-xl z-50 text-sm leading-relaxed text-left cursor-default font-normal text-foreground animate-in fade-in zoom-in-95 duration-200">
+                  <button 
+                    className="absolute top-3 right-3 bg-transparent border-none text-muted-foreground w-7 h-7 flex items-center justify-center cursor-pointer rounded-md transition-colors hover:text-foreground hover:bg-muted leading-none text-lg" 
+                    onClick={(e) => { e.stopPropagation(); setShowWhatIfTooltip(false); }} 
+                    aria-label="Zamknij"
+                  >
+                    &times;
+                  </button>
+                  
+                  <h3 className="text-base font-bold text-foreground mb-4 pr-6 leading-tight">
+                    Symulacja „What-if” <br/>
+                    <span className="text-primary text-sm font-semibold">(Auto-balans)</span>
+                  </h3>
+                  
+                  <div className="mb-4">
+                      <h4 className="mb-1.5 text-foreground text-[13px] font-semibold flex items-center gap-1.5">
+                          <Lock className="w-3.5 h-3.5 text-muted-foreground" /> Ręczna kontrola
+                      </h4>
+                      <p className="text-muted-foreground text-xs m-0">
+                        Wpisane prawdopodobieństwa są domyślnie blokowane. Jeśli ich suma przekroczy 100%, aplikacja Cię ostrzeże.
+                      </p>
+                  </div>
+
+                  <div className="mb-5">
+                      <h4 className="mb-1.5 text-foreground text-[13px] font-semibold flex items-center gap-1.5">
+                         
+                          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded text-cyan-400 text-[14px] font-bold">
+                            A
+                          </span>
+                          Auto-balansowanie
+                      </h4>
+                      <p className="text-muted-foreground text-xs m-0">
+                        Odblokuj kłódki przy gałęziach, aby system przeliczał wartości automatycznie. Zwiększenie jednej szansy proporcjonalnie pomniejszy pozostałe.
+                      </p>
+                  </div>
+
+                  {/* UJEDNOLICONA ŻARÓWKA */}
+                  <div className="bg-muted/50 p-3 rounded-lg border border-border/50 flex gap-2.5 items-start mt-2">
+                      <span className="text-base leading-none">💡</span>
+                      <p className="m-0 text-xs text-muted-foreground italic">
+                        Zmieniaj wartości i obserwuj na żywo, jak wpływa to na wynik oraz która opcja staje się nowym zwycięzcą.
+                      </p>
+                  </div>
+                </div> 
+              )}
+            </div>
+          </div>
         </div>
         
         <DecisionTreeToolbar 

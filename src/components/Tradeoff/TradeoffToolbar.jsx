@@ -139,21 +139,43 @@ export function TradeoffToolbar({ showTemplates, setShowTemplates }) {
         </button>
         
         {/* Tooltip */}
-        {showHelpTooltip && (
-          <div className="absolute top-full right-0 mt-3 w-[380px] bg-gray-800 text-gray-50 p-5 rounded-xl shadow-xl z-50 text-sm leading-relaxed text-left cursor-default font-normal">
-            <button className="absolute top-3 right-3 bg-transparent border-none text-gray-400 text-xl cursor-pointer px-2 py-1 rounded transition-colors hover:text-gray-50 hover:bg-white/10 leading-none" onClick={() => setShowHelpTooltip(false)} aria-label="Zamknij">&times;</button>
-            <p className="mb-3"><strong>Kompromisy</strong> polegają na "eliminacji celów" przez równą wymianę. Jeżeli w jednym z celów wartości są takie same dla każdej alternatywy, ten cel można pominąć - nie wpływa już na decyzję.</p>
-            <h4 className="mt-4 mb-2 text-purple-400 text-sm uppercase tracking-wide font-semibold">Równa wymiana</h4>
-            <p className="mb-3">Wybierz łatwy cel, np. czas dojazdu. Znajdź w tabeli alternatywę z najlepszym czasem i zastanów się, o ile musiałbyś zwiększyć inny cel (np. czynsz) w pozostałych alternatywach, aby wyrównać w nich czas do tego poziomu. Np. każde 10 min mniej dojazdu zwiększa czynsz o 300zł.</p>
-            <p className="mb-3">Wprowadź zmiany, cel zostanie przekreślony — skoro jest równy, nie ma już znaczenia.</p>
-            <p className="mb-3">Postępuj tak dla kolejnych, łatwych celów, aż:</p>
-            <ul className="m-0 pl-5 mb-3 list-disc">
-                <li className="mb-1">wyłonisz zwycięzcę, albo</li>
-                <li className="mb-1">zostanie tylko jeden cel do porównania.</li>
-            </ul>
-            <p className="m-0">💡<i className="text-gray-300">Najprościej zrównywać atrybuty (np. czas, standard, kolor), a zwiększać kwoty.</i></p>
-          </div> 
-        )} 
+        {/* Tooltip Kompromisy */}
+{showHelpTooltip && (
+  <div className="absolute top-full right-0 mt-3 w-[380px] bg-card border border-border p-5 rounded-xl shadow-xl z-50 text-sm leading-relaxed text-left cursor-default font-normal text-foreground animate-in fade-in zoom-in-95 duration-200">
+    <button 
+      className="absolute top-3 right-3 bg-transparent border-none text-muted-foreground w-7 h-7 flex items-center justify-center cursor-pointer rounded-md transition-colors hover:text-foreground hover:bg-muted leading-none text-lg" 
+      onClick={(e) => { e.stopPropagation(); setShowHelpTooltip(false); }} 
+      aria-label="Zamknij"
+    > 
+     
+    </button>
+    
+    <p className="mb-3">
+      <strong className="font-semibold text-foreground ">Kompromisy</strong> polegają na "eliminacji celów" przez równą wymianę. Jeżeli w jednym z celów wartości są takie same dla każdej alternatywy, ten cel można pominąć - nie wpływa już na decyzję.
+    </p>
+    
+    <h4 className="mt-4 mb-2 text-primary text-xs uppercase tracking-wider font-bold">Równa wymiana</h4>
+    <p className="mb-3 text-muted-foreground text-[13px]">
+      Wybierz łatwy cel, np. czas dojazdu. Znajdź w tabeli alternatywę z najlepszym czasem i zastanów się, o ile musiałbyś zwiększyć inny cel (np. czynsz) w pozostałych alternatywach, aby wyrównać w nich czas do tego poziomu. Np. każde 10 min mniej dojazdu zwiększa czynsz o 300zł.
+    </p>
+    <p className="mb-3 text-muted-foreground text-[13px]">
+      Wprowadź zmiany, cel zostanie przekreślony — skoro jest równy, nie ma już znaczenia.
+    </p>
+    
+    <p className="mb-2 font-medium text-foreground text-[13px]">Postępuj tak dla kolejnych, łatwych celów, aż:</p>
+    <ul className="m-0 pl-5 mb-4 list-disc text-muted-foreground text-[13px] marker:text-primary">
+        <li className="mb-1">wyłonisz zwycięzcę, albo</li>
+        <li className="mb-1">zostanie tylko jeden cel do porównania.</li>
+    </ul>
+
+    <div className="bg-muted/50 p-3 rounded-lg border border-border/50 flex gap-2.5 items-start mt-2">
+        <span className="text-base leading-none">💡</span>
+        <p className="m-0 text-xs text-muted-foreground italic">
+          Najprościej zrównywać atrybuty (np. czas, standard, kolor), a zwiększać kwoty.
+        </p>
+    </div>
+  </div> 
+)}
       </div>
 
       {/* RANKING */}
