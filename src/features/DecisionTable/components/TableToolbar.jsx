@@ -1,14 +1,14 @@
 import React, { useRef, useState } from 'react';
-import { useTradeoffStore } from '../../store/useTradeOffStore';
+import { useTableStore } from '../store/useTableStore';
 import { Save, FileText, FolderOpen, Scale, Trophy } from 'lucide-react';
 
-export function TradeoffToolbar({ showTemplates, setShowTemplates }) {
+export function TableToolbar({ showTemplates, setShowTemplates }) {
   // Stany i akcje ze store'a
-  const showTradeoffs = useTradeoffStore(s => s.showTradeoffs);
-  const showRanking = useTradeoffStore(s => s.showRanking);
-  const toggleTradeoffs = useTradeoffStore(s => s.toggleTradeoffs);
-  const toggleRanking = useTradeoffStore(s => s.toggleRanking);
-  const loadScenario = useTradeoffStore(s => s.loadScenario); // Potrzebne do wczytania pliku
+  const showTradeoffs = useTableStore(s => s.showTradeoffs);
+  const showRanking = useTableStore(s => s.showRanking);
+  const toggleTradeoffs = useTableStore(s => s.toggleTradeoffs);
+  const toggleRanking = useTableStore(s => s.toggleRanking);
+  const loadScenario = useTableStore(s => s.loadScenario); // Potrzebne do wczytania pliku
   
   // Stan UI
   const [showHelpTooltip, setShowHelpTooltip] = useState(false);
@@ -24,7 +24,7 @@ export function TradeoffToolbar({ showTemplates, setShowTemplates }) {
   // ==========================================
   const handleExportJson = () => {
     // Pobieramy całą aktualną zawartość tabeli prosto ze store'a
-    const state = useTradeoffStore.getState();
+    const state = useTableStore.getState();
     
     // Budujemy obiekt zgodny z formatem Twoich szablonów
     const exportData = {

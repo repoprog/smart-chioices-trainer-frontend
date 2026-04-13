@@ -3,7 +3,7 @@ import { DecisionTreeCanvas } from '../components/DecisionTreeCanvas.jsx';
 import { useTreeStore } from '../store/useTreeStore.js';
 import { scenarios } from '../data/scenarios.js'; 
 import { DecisionTreeToolbar } from './DecisionTreeToolbar.jsx';
-import ConfirmModal from '../components/ConfirmModal'; 
+import {ConfirmModal} from '../components/ui/ConfirmModal'; 
 // POTRZEBUJEMY TYLKO LOCK DO ŚRODKA TOOLTIPA
 import { Lock } from 'lucide-react'; 
 

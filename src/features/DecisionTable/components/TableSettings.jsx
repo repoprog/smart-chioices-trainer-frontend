@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useTradeoffStore } from '../../store/useTradeOffStore';
+import { useTableStore } from '../store/useTableStore';
 import { Settings2, ChevronDown, ChevronUp, X, Plus, Trash2 } from 'lucide-react';
-import { scalePresets } from '../../data/scalePresets';
-import ConfirmModal from '../ConfirmModal'; // Upewnij się, że ścieżka jest dobra!
+import { scalePresets } from '../data/scalePresets';
+import {ConfirmModal} from '../../../components/ui/ConfirmModal'; // Upewnij się, że ścieżka jest dobra!
 
-export function TradeoffSettings() {
+export function TableSettings() {
     const presetKeys = Object.keys(scalePresets);
     const [showScalesSettings, setShowScalesSettings] = useState(false);
     const [newScaleWord, setNewScaleWord] = useState('');
@@ -20,7 +20,7 @@ export function TradeoffSettings() {
         addScale,
         removeScale,
         clearScales
-    } = useTradeoffStore();
+    } = useTableStore();
 
     const handleLoadPreset = (presetKey) => {
         // Po prostu ładujemy nowy preset bez pytania!

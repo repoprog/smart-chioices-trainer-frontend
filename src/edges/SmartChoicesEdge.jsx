@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { BaseEdge, EdgeLabelRenderer, getStraightPath } from "@xyflow/react";
 import { useTreeStore } from "../store/useTreeStore.js";
-import { FloatingToolbar } from "../components/FloatingToolbar.jsx";
+import { FloatingToolbar } from "../components/ui/FloatingToolbar.jsx";
 import { useClipboardActions } from "../hooks/useClipboardActions.js";
 const parseProbability = (p) => {
   if (p == null) return 0;

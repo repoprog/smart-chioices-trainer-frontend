@@ -1,7 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 import { Layout } from './components/Layout.jsx'
-import { TradeoffModule } from './components/Tradeoff/TradeoffModule.jsx' // Zostawiamy działającą logikę!
+import { DecisionTablePage } from './features/DecisionTable/DecisionTablePage.jsx'
 import { DecisionTreePage } from './pages/DecisionTreePage.jsx' // Zostawiamy działającą logikę!
 import LandingPage from './pages/LandingPage.jsx'
 import UserPanel from './pages/UserPanel.jsx' // Nowy plik od Ciebie
@@ -16,7 +16,7 @@ function App() {
         <Route path="/app" element={<Layout />}>
           <Route index element={<Navigate to="table" replace />} />
           {/* Używamy starej, prawdziwej tabeli */}
-          <Route path="table" element={<TradeoffModule />} /> 
+          <Route path="table" element={<DecisionTablePage />} /> 
           {/* Używamy starego, prawdziwego drzewa */}
           <Route path="tree" element={<DecisionTreePage />} />
           {/* Nowe strony z UI */}

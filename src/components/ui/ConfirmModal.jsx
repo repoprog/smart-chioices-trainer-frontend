@@ -1,7 +1,7 @@
 import { AlertTriangle } from "lucide-react";
 import Modal from "./Modal";
 
-export default function ConfirmModal({
+export  function ConfirmModal({
   isOpen,
   onClose,
   onConfirm,

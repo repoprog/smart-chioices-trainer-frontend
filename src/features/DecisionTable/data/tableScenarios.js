@@ -1,4 +1,4 @@
-export const tradeoffScenarios = {
+export const tableScenarios = {
   blank: {
     name: "Pusta tabela (Od nowa)",
     description: "Czysta karta. Dodaj własne alternatywy, cele i przeprowadź analizę od podstaw.",

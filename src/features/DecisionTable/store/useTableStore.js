@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { scalePresets } from '../data/scalePresets'; 
 
-// 1. Definiujemy czysty, startowy stan tabeli
 const blankState = {
   alternatives: [],
   objectives: [],
@@ -17,15 +16,14 @@ const blankState = {
   showRejected: false,
   activePreset: 'Jakość / Standard',
   customScales: [...scalePresets['Jakość / Standard']], 
-  isDirty: false, // <--- DODANE: Flaga "Brudnego Stanu"
+  isDirty: false, 
 };
 
-export const useTradeoffStore = create()(
+export const useTableStore = create()(
   persist(
     (set) => ({
       ...blankState,
 
-      // --- AKCJE UI (One nie brudzą stanu, to tylko widoki) ---
       toggleTradeoffs: () => set((state) => {
         if (!state.showTradeoffs) return { showTradeoffs: true, originalCells: { ...state.cells }, showRanking: false };
         return { showTradeoffs: false, originalCells: {} };
@@ -34,20 +32,18 @@ export const useTradeoffStore = create()(
       toggleShowRejected: () => set((state) => ({ showRejected: !state.showRejected })),
       toggleHideEqualized: () => set((state) => ({ hideEqualizedObjectives: !state.hideEqualizedObjectives })),
 
-      // --- AKCJE DANYCH (Te akcje BRUDZĄ stan) ---
-      addAlternative: () => set((state) => ({ alternatives: [...state.alternatives, `Alternatywa ${state.alternatives.length + 1}`], isDirty: true })), // <--- DODANE isDirty
-      
-      addObjective: () => set((state) => ({ objectives: [...state.objectives, `Cel ${state.objectives.length + 1}`], isDirty: true })), // <--- DODANE isDirty
+      addAlternative: () => set((state) => ({ alternatives: [...state.alternatives, `Alternatywa ${state.alternatives.length + 1}`], isDirty: true })), 
+      addObjective: () => set((state) => ({ objectives: [...state.objectives, `Cel ${state.objectives.length + 1}`], isDirty: true })), 
       
       updateAlternative: (index, value) => set((state) => {
         const newAlts = [...state.alternatives];
         newAlts[index] = value;
-        return { alternatives: newAlts, isDirty: true }; // <--- DODANE isDirty
+        return { alternatives: newAlts, isDirty: true }; 
       }),
       updateObjective: (index, value) => set((state) => {
         const newObjs = [...state.objectives];
         newObjs[index] = value;
-        return { objectives: newObjs, isDirty: true }; // <--- DODANE isDirty
+        return { objectives: newObjs, isDirty: true }; 
       }),
       updateCell: (row, col, value) => set((state) => {
         const key = `${row}-${col}`;
@@ -56,29 +52,26 @@ export const useTradeoffStore = create()(
         if (state.showTradeoffs && state.originalCells[key] === undefined && state.cells[key] !== undefined) {
           newOriginal[key] = state.cells[key];
         }
-        return { cells: newCells, originalCells: newOriginal, isDirty: true }; // <--- DODANE isDirty
+        return { cells: newCells, originalCells: newOriginal, isDirty: true }; 
       }),
-      updateUnit: (row, value) => set((state) => ({ objectiveUnits: { ...state.objectiveUnits, [row]: value }, isDirty: true })), // <--- DODANE isDirty
+      updateUnit: (row, value) => set((state) => ({ objectiveUnits: { ...state.objectiveUnits, [row]: value }, isDirty: true })), 
       
       toggleSortDirection: (row) => set((state) => ({
         sortDirections: { ...state.sortDirections, [row]: state.sortDirections[row] === 'lower' ? 'higher' : 'lower' },
-        isDirty: true // <--- DODANE isDirty
+        isDirty: true 
       })),
       
       rejectAlternative: (index) => set((state) => ({
         rejectedAlternatives: state.rejectedAlternatives.includes(index) ? state.rejectedAlternatives : [...state.rejectedAlternatives, index],
-        isDirty: true // <--- DODANE isDirty
+        isDirty: true 
       })),
       restoreAlternative: (index) => set((state) => ({
         rejectedAlternatives: state.rejectedAlternatives.filter(i => i !== index),
-        isDirty: true // <--- DODANE isDirty
+        isDirty: true 
       })),
 
-      // --- AKCJE USTAWIEŃ SKALI ---
-    loadPreset: (presetKey) => set((state) => {
-        
+      loadPreset: (presetKey) => set((state) => {
         const newPresetData = scalePresets[presetKey] || [];
-      
         const allPresetWords = Object.values(scalePresets).flat().map(p => p.word);
         
         const userAddedScales = state.customScales.filter(s => 
@@ -98,7 +91,6 @@ export const useTradeoffStore = create()(
       removeScale: (index) => set((state) => ({ customScales: state.customScales.filter((_, i) => i !== index), activePreset: null })),
       clearScales: () => set({ customScales: [], activePreset: null }),
       
-      // --- WCZYTYWANIE / RESETOWANIE (Te akcje CZYSZCZĄ stan) ---
       loadScenario: (scenario) => set({
         alternatives: scenario.alternatives || [],
         objectives: scenario.objectives || [],
@@ -110,11 +102,10 @@ export const useTradeoffStore = create()(
         showRanking: false,
         winnerIndex: null,
         equalizedObjectives: {},
-        isDirty: false // <--- CZYSTO po wczytaniu
+        isDirty: false 
       }),
       
-      resetAll: () => set({ ...blankState }), // blankState ma isDirty: false
-      
+      resetAll: () => set({ ...blankState }), 
     }),
     {
       name: 'smart-choices-storage-v2', 
