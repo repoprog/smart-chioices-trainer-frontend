@@ -7,8 +7,8 @@ import {
   getTreeMaxDepth,
   nextDomId,
   renumberDecisionAndChanceNodes,
-  getUniqueColumnXs // <--- UŻYWAMY NOWEJ LOGIKI
-} from './treeUtils.js';
+  getUniqueColumnXs 
+} from '../logic/treeUtils.js';
 import { evaluateDecisionTree } from '../logic/evaluation.js';
 
 // --- ZSYNCHRONIZOWANA LOGIKA NAGŁÓWKÓW ---

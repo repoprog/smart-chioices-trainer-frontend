@@ -10,13 +10,13 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
-import { edgeTypes } from '../edges'
-import { nodeTypes } from '../nodes'
+import { edgeTypes } from './edges/index.js'
+import { nodeTypes } from './nodes/index.js'
 import { useTreeStore } from '../store/useTreeStore.js'
-import { StageHeadersFlow } from './StageHeadersFlow.jsx'
-import { TreeToolbar } from '../components/TreeToolbar.jsx'
+import { StageHeaders} from './StageHeaders.jsx'
+import { TreeToolbar } from './TreeToolbar.jsx'
 
-export function DecisionTreeCanvas() {
+export function TreeCanvas() {
   const allNodes = useTreeStore((s) => s.nodes)
   const allEdges = useTreeStore((s) => s.edges)
   const winningPath = useTreeStore((s) => s.winningPath);
@@ -109,7 +109,7 @@ export function DecisionTreeCanvas() {
           elevateEdgesOnSelect={false}
           elevateNodesOnSelect={false}
         >
-          <StageHeadersFlow />
+          <StageHeaders />
           <Background
             id="tree-bg"
             gap={20}

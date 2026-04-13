@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Handle, Position } from '@xyflow/react'
-import { useTreeStore } from '../store/useTreeStore.js'
-import { NodeMenu } from '../components/NodeMenu.jsx'
+import { useTreeStore } from '../../store/useTreeStore.js'
+import { NodeMenu } from '../NodeMenu.jsx'
 
 const handleClass = '!h-2 !w-2 !min-h-0 !min-w-0 !border !border-slate-900 !bg-white !opacity-80'
 

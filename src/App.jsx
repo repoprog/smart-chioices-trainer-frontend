@@ -1,11 +1,11 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
-import { Layout } from './components/Layout.jsx'
+import { Layout } from './components/layout/Layout.jsx'
 import { DecisionTablePage } from './features/DecisionTable/DecisionTablePage.jsx'
-import { DecisionTreePage } from './pages/DecisionTreePage.jsx' // Zostawiamy działającą logikę!
+import { DecisionTreePage } from './features/DecisionTree/DecisionTreePage.jsx'
 import LandingPage from './pages/LandingPage.jsx'
-import UserPanel from './pages/UserPanel.jsx' // Nowy plik od Ciebie
-import Settings from './pages/Settings.jsx' // Nowy plik od Ciebie
+import UserPanel from './pages/UserPanel.jsx'
+import Settings from './pages/Settings.jsx'
 
 function App() {
   return (
@@ -15,11 +15,12 @@ function App() {
 
         <Route path="/app" element={<Layout />}>
           <Route index element={<Navigate to="table" replace />} />
-          {/* Używamy starej, prawdziwej tabeli */}
+          {/* Używamy zrefaktoryzowanej tabeli */}
           <Route path="table" element={<DecisionTablePage />} /> 
-          {/* Używamy starego, prawdziwego drzewa */}
+          {/* Używamy zrefaktoryzowanego drzewa */}
           <Route path="tree" element={<DecisionTreePage />} />
-          {/* Nowe strony z UI */}
+          
+          {/* Pozostałe strony UI */}
           <Route path="panel" element={<UserPanel />} />
           <Route path="settings" element={<Settings />} />
         </Route>

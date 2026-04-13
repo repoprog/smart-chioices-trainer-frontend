@@ -1,6 +1,6 @@
 // plik: src/data/scenarios.js
 
-export const scenarios = {
+export const treeScenarios = {
   blank: {
     name: "Pusta karta (od nowa)",
     description: "Czyste płótno. Zbuduj własne drzewo decyzyjne od podstaw, dodając węzły i określając prawdopodobieństwa.",

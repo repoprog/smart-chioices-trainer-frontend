@@ -1,4 +1,4 @@
-import { useTreeStore } from '../store/useTreeStore.js';
+import { useTreeStore } from '../features/DecisionTree/store/useTreeStore.js';
 
 export function useClipboardActions(id, isEdge = true) {
   const updateEdgeData = useTreeStore((s) => s.updateEdgeData);

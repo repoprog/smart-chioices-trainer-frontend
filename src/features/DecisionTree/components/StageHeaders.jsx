@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { ViewportPortal } from '@xyflow/react'
 
 import { useTreeStore } from '../store/useTreeStore.js'
-import { computeStageHeaderRowY, getUniqueColumnXs } from '../store/treeUtils.js'
+import { computeStageHeaderRowY, getUniqueColumnXs } from '../logic/treeUtils.js'
 
 const ArrowUp = () => (
   <svg
@@ -41,7 +41,7 @@ const ArrowDown = () => (
 );
 
 
-export function StageHeadersFlow() {
+export function StageHeaders() {
   const nodes = useTreeStore((s) => s.nodes)
   // edges już tu nie pobieramy, nie są potrzebne do osi X!
   const labels = useTreeStore((s) => s.stageColumnLabels)

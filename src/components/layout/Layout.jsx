@@ -21,7 +21,7 @@ export function Layout() {
             <Link
               to="/app/table"
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
-                isActive("/app/tabela")
+                isActive("/app/table")
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               }`}
@@ -33,7 +33,7 @@ export function Layout() {
             <Link
               to="/app/tree"
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
-                isActive("/app/drzewo")
+                isActive("/app/tree")
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               }`}
@@ -57,7 +57,7 @@ export function Layout() {
             <Link
               to="/app/settings"
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
-                isActive("/app/ustawienia")
+                isActive("/app/settings")
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               }`}

@@ -22,7 +22,7 @@ export function TreeToolbar() {
 
   // Zaktualizowana klasa bazowa przycisku
   const btnClass = "flex h-8 w-8 relative items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent transition-colors";
-
+  
   const toggleFullscreen = () => {
     const canvasContainer = document.getElementById('tree-canvas-container');
     if (!canvasContainer) return;
@@ -41,18 +41,27 @@ export function TreeToolbar() {
   }, []);
 
   const handleExportJson = () => {
-    const data = exportJson();
-    const blob = new Blob([data], { type: 'application/json' });
+    // Pobieramy aktualny stan bezpośrednio ze store'a
+    const state = useTreeStore.getState();
+    
+    const exportData = {
+      type: "DecisionTree",
+      nodes: state.nodes,
+      edges: state.edges,
+      labels: state.stageColumnLabels || [] 
+    };
+
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'drzewo-decyzyjne.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = "drzewo-decyzyjne.json";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
-
   const handleImportClick = () => {
     fileInputRef.current?.click();
   };

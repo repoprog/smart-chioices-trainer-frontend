@@ -1,8 +1,8 @@
 import { Handle, Position } from '@xyflow/react'
-import { NodeMenu } from '../components/NodeMenu.jsx'
-import { useTreeStore } from '../store/useTreeStore.js'
-import { FloatingToolbar } from '../components/ui/FloatingToolbar.jsx'
-import { useClipboardActions } from '../hooks/useClipboardActions.js'
+import { NodeMenu } from '../NodeMenu.jsx'
+import { useTreeStore } from '../../store/useTreeStore.js'
+import { FloatingToolbar } from '../../../../components/ui/FloatingToolbar.jsx'
+import { useClipboardActions } from '../../../../hooks/useClipboardActions.js'
 
 const handleClass = '!h-2 !w-2 !min-h-0 !min-w-0 !border !border-slate-900 !bg-white !opacity-80'
 

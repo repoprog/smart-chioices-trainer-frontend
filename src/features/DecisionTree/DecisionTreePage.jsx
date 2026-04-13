@@ -1,46 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import { DecisionTreeCanvas } from '../components/DecisionTreeCanvas.jsx';
-import { useTreeStore } from '../store/useTreeStore.js';
-import { scenarios } from '../data/scenarios.js'; 
-import { DecisionTreeToolbar } from './DecisionTreeToolbar.jsx';
-import {ConfirmModal} from '../components/ui/ConfirmModal'; 
-// POTRZEBUJEMY TYLKO LOCK DO ŚRODKA TOOLTIPA
-import { Lock } from 'lucide-react'; 
+import { useTreeStore } from './store/useTreeStore.js';
+import { treeScenarios } from './data/treeScenarios.js'; 
+
+import { TreeCanvas } from './components/TreeCanvas.jsx';
+import { TreePageToolbar } from './components/TreePageToolbar.jsx';
+import { ConfirmModal } from '../../components/ui/ConfirmModal'; 
+
+import { Lock, Info } from 'lucide-react'; 
 
 export function DecisionTreePage() {
   const { loadScenario, resetTree, isDirty } = useTreeStore();
   const [showTemplates, setShowTemplates] = useState(false);
-  
-  // Stan dla Tooltipa What-if
   const [showWhatIfTooltip, setShowWhatIfTooltip] = useState(false);
-
-  // Stany dla Modali Ostrzegawczych
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [pendingTemplate, setPendingTemplate] = useState(null);
 
-  // ZABEZPIECZENIE PRZED ZAMKNIĘCIEM PRZEGLĄDARKI (F5 / Krzyżyk)
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       if (isDirty) {
         e.preventDefault();
-        e.returnValue = ''; // Wymusza natywny komunikat przeglądarki
+        e.returnValue = ''; 
       }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty]);
 
-  // AUTOMATYCZNE ŁADOWANIE Z LINKU
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const scenarioKey = params.get('scenario'); 
-    if (scenarioKey && scenarios[scenarioKey]) {
-      const data = scenarios[scenarioKey];
+    if (scenarioKey && treeScenarios[scenarioKey]) {
+      const data = treeScenarios[scenarioKey];
       loadScenario(data.nodes, data.edges, data.labels);
     }
-  }, []);
+  }, [loadScenario]);
 
-  // LOGIKA RESETU
   const handleResetClick = () => {
     if (isDirty) {
       setIsResetModalOpen(true);
@@ -49,10 +43,9 @@ export function DecisionTreePage() {
     }
   };
 
-  // LOGIKA SZABLONÓW
   const handleTemplateClick = (scenarioData) => {
     if (isDirty) {
-      setPendingTemplate(scenarioData); // Czekamy na potwierdzenie w modalu
+      setPendingTemplate(scenarioData); 
     } else {
       loadScenario(scenarioData.nodes, scenarioData.edges, scenarioData.labels);
       setShowTemplates(false);
@@ -70,12 +63,10 @@ export function DecisionTreePage() {
   return (
     <div className="flex flex-col h-full space-y-6">
       
-      {/* NAGŁÓWEK I TOOLBAR */}
       <div className="flex flex-wrap md:flex-nowrap items-start md:items-center justify-between gap-4 relative z-50">
         <div className="flex-1">
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">Drzewo decyzyjne</h2>
           
-          {/* TEKST Z WPLECIONYM PRZYCISKIEM */}
           <div className="text-muted-foreground mt-1 text-sm flex flex-wrap items-center gap-1.5 leading-relaxed">
             <span>Najedź na węzeł, aby dodać gałąź. Zmieniaj prawdopodobieństwa by przeprowadzić symulację What-if -</span>
             
@@ -88,13 +79,11 @@ export function DecisionTreePage() {
                 ?
               </button>
 
-              {/* WŁAŚCIWY TOOLTIP */}
               {showWhatIfTooltip && (
                 <div className="absolute top-full left-0 mt-2 w-[360px] bg-card border border-border p-5 rounded-xl shadow-xl z-50 text-sm leading-relaxed text-left cursor-default font-normal text-foreground animate-in fade-in zoom-in-95 duration-200">
                   <button 
                     className="absolute top-3 right-3 bg-transparent border-none text-muted-foreground w-7 h-7 flex items-center justify-center cursor-pointer rounded-md transition-colors hover:text-foreground hover:bg-muted leading-none text-lg" 
                     onClick={(e) => { e.stopPropagation(); setShowWhatIfTooltip(false); }} 
-                    aria-label="Zamknij"
                   >
                     &times;
                   </button>
@@ -115,8 +104,7 @@ export function DecisionTreePage() {
 
                   <div className="mb-5">
                       <h4 className="mb-1.5 text-foreground text-[13px] font-semibold flex items-center gap-1.5">
-                         
-                          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded text-cyan-400 text-[14px] font-bold">
+                          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded text-cyan-400 bg-cyan-500/40 text-[9px] font-bold">
                             A
                           </span>
                           Auto-balansowanie
@@ -126,7 +114,6 @@ export function DecisionTreePage() {
                       </p>
                   </div>
 
-                  {/* UJEDNOLICONA ŻARÓWKA */}
                   <div className="bg-muted/50 p-3 rounded-lg border border-border/50 flex gap-2.5 items-start mt-2">
                       <span className="text-base leading-none">💡</span>
                       <p className="m-0 text-xs text-muted-foreground italic">
@@ -139,18 +126,17 @@ export function DecisionTreePage() {
           </div>
         </div>
         
-        <DecisionTreeToolbar 
+        <TreePageToolbar 
           showTemplates={showTemplates} 
           setShowTemplates={setShowTemplates} 
         />
       </div>
 
-     {/* ROZWIJANE SZABLONY */}
       {showTemplates && (
         <div className="border border-border rounded-lg p-4 bg-muted/20 animate-in fade-in slide-in-from-top-2 relative z-10">
           <h3 className="font-medium mb-3 text-sm text-foreground">Predefiniowane szablony</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {Object.entries(scenarios).map(([key, scenarioData]) => (
+            {Object.entries(treeScenarios).map(([key, scenarioData]) => (
               <button
                 key={key}
                 onClick={() => handleTemplateClick(scenarioData)}
@@ -164,10 +150,9 @@ export function DecisionTreePage() {
         </div>
       )}
 
-      {/* KONTENER CANVASU I RESET */}
       <div className="flex-1 min-h-[600px] border border-border rounded-xl overflow-hidden bg-card shadow-sm relative z-0 flex flex-col">
         <div className="flex-1 relative">
-            <DecisionTreeCanvas />
+            <TreeCanvas />
         </div>
         <div className="absolute bottom-4 right-4 z-10">
           <button 
@@ -179,7 +164,6 @@ export function DecisionTreePage() {
         </div>
       </div>
 
-      {/* MODAL 1: Ostrzeżenie przy resecie */}
       <ConfirmModal
         isOpen={isResetModalOpen}
         onClose={() => setIsResetModalOpen(false)}
@@ -193,7 +177,6 @@ export function DecisionTreePage() {
         confirmText="Wyczyść drzewo"
       />
 
-      {/* MODAL 2: Ostrzeżenie przy ładowaniu szablonu */}
       <ConfirmModal
         isOpen={pendingTemplate !== null}
         onClose={() => setPendingTemplate(null)}
