@@ -34,9 +34,9 @@ export function SmartChoicesEdge({
   const rawCost = String(cost);
   const numericCost = parseFloat(rawCost.replace(/zł|%|\s/g, '').replace(',', '.').replace('−', '-'));
   
-  let costColorClass = "text-slate-100 dark:text-slate-200"; // neutralny, np. gdy wartość to 0
-  if (numericCost > 0) costColorClass = "text-emerald-600 dark:text-emerald-400"; // Zyski (ciemniejszy zielony na jasnym)
-  else if (numericCost < 0) costColorClass = "text-red-600 dark:text-red-400"; // Koszty (ciemniejszy czerwony na jasnym)
+  let costColorClass = "text-slate-100 dark:text-slate-200"; 
+  if (numericCost > 0) costColorClass = "text-emerald-600 dark:text-emerald-400"; 
+  else if (numericCost < 0) costColorClass = "text-red-600 dark:text-red-400"; 
 
  
 const baseInputClassName = "nodrag nopan pointer-events-auto block w-[min(5.5rem,15vw)] max-w-[95px] rounded border border-transparent bg-transparent px-1.5 py-0.5 text-left font-sans text-[12px] font-medium leading-tight outline-none placeholder:text-slate-400 hover:border-slate-600 focus-visible:border-cyan-400 focus-visible:ring-1 focus-visible:ring-cyan-400 transition-colors";
@@ -79,7 +79,7 @@ const baseInputClassName = "nodrag nopan pointer-events-auto block w-[min(5.5rem
       <BaseEdge id={id} path={path} style={edgeStyle} />
       <EdgeLabelRenderer>
         
-        {/* ETYKIETA OPCJI */}
+    
         <div
           className="nodrag nopan pointer-events-auto"
           style={{
@@ -89,7 +89,6 @@ const baseInputClassName = "nodrag nopan pointer-events-auto block w-[min(5.5rem
             zIndex: 30, 
           }}
         >
-          {/* Grupa optyzmalizowana (group/opt) */}
           <div className="relative flex items-center group/opt">
             <input
             
@@ -112,7 +111,6 @@ const baseInputClassName = "nodrag nopan pointer-events-auto block w-[min(5.5rem
           </div>
         </div>
 
-        {/* ETYKIETA KOSZTÓW */}
         {renderCostArea && (
           <div
             className="nodrag nopan pointer-events-auto"
@@ -166,7 +164,7 @@ const baseInputClassName = "nodrag nopan pointer-events-auto block w-[min(5.5rem
           </div>
         )}
 
-        {/* ETYKIETA PRAWDOPODOBIEŃSTWA */}
+    
         {sourceNode?.type === "chance" && (
           <div
             className="nodrag nopan pointer-events-auto"
@@ -177,7 +175,7 @@ const baseInputClassName = "nodrag nopan pointer-events-auto block w-[min(5.5rem
               zIndex: 40, 
             }}
           >
-            {/* Grupa wyizolowana dla samego prawdopodobieństwa */}
+         
             <div className={`relative group/prob ${isHighlighted ? "highlighted" : ""}`}>
               <div className="flex items-center rounded border border-transparent bg-transparent px-1 py-0.5 hover:border-cyan-400 transition-colors">
                 <input
@@ -187,7 +185,7 @@ const baseInputClassName = "nodrag nopan pointer-events-auto block w-[min(5.5rem
                   className="w-9 bg-transparent text-right text-xs font-medium text-orange-400 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 <span className="text-xs text-slate-400 ml-0.5">%</span>
-                {/* PRZYCISK AUTOREBALANCE ON/OFF */}
+             
                 <button
                   type="button"
                   onClick={(e) => {
@@ -197,8 +195,8 @@ const baseInputClassName = "nodrag nopan pointer-events-auto block w-[min(5.5rem
                   onPointerDown={(e) => e.stopPropagation()}
                   className={`flex h-4 w-4 hide-on-export items-center justify-center rounded transition-colors ${
                     data?.isLocked 
-                      ? " text-slate-400 hover:bg-red-500/20 hover:text-red-400" // Zablokowany (Ręczny)
-                      : " text-cyan-400 hover:bg-cyan-500/40" // Auto
+                      ? " text-slate-400 hover:bg-red-500/20 hover:text-red-400" 
+                      : " text-cyan-400 hover:bg-cyan-500/40" 
                   }`}
                   title={data?.isLocked ? "Autorebalance WYŁĄCZONY (kliknij, aby włączyć)" : "Autorebalance WŁĄCZONY (zablokuj wpisując wartość)"}
                 >
@@ -214,7 +212,6 @@ const baseInputClassName = "nodrag nopan pointer-events-auto block w-[min(5.5rem
                 
               </div>
 
-             {/* SLIDER */}
               <div className="absolute top-full left-1/2 pt-0.5 w-40 -translate-x-1/2 z-50 hidden group-hover/prob:block focus-within:block">
                 <div className="flex items-center justify-between gap-1.5 rounded-md border border-cyan-500/60 bg-white/90 p-1.5 shadow-lg backdrop-blur-sm dark:bg-slate-900/50">
                   <button type="button" onClick={(e) => { e.stopPropagation(); stepProbability(-1); }} onPointerDown={(e) => e.stopPropagation()} className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-slate-100 text-lg font-medium leading-none text-cyan-600 hover:bg-slate-200 hover:text-cyan-700 focus:outline-none dark:bg-slate-800 dark:text-cyan-400 dark:hover:bg-slate-700 dark:hover:text-cyan-300">-</button>

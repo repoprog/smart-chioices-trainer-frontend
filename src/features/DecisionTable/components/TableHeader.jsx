@@ -1,4 +1,4 @@
-import { Crown } from "lucide-react";
+
 
 export function TableHeader({
   objectives,
@@ -50,7 +50,7 @@ export function TableHeader({
               title={alt}
             >
               <div className="flex items-center justify-center gap-1">
-                {isWinner && <Crown className="w-4 h-4 text-green-600 shrink-0" />}
+                {isWinner}
                 <input
                   className={`w-full py-2 px-1 border border-transparent bg-transparent rounded-md text-sm transition-all box-border [&:not(:read-only)]:hover:bg-card/80 [&:not(:read-only)]:focus:outline-none [&:not(:read-only)]:focus:bg-card [&:not(:read-only)]:focus:border-primary [&:not(:read-only)]:focus:ring-2 [&:not(:read-only)]:focus:ring-primary/20 uppercase font-bold tracking-wide text-center ${headerColor}`}
                   value={alt}

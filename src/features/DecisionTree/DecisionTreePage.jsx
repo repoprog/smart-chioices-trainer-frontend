@@ -154,14 +154,7 @@ export function DecisionTreePage() {
         <div className="flex-1 relative">
             <TreeCanvas />
         </div>
-        <div className="absolute bottom-4 right-4 z-10">
-          <button 
-            className="bg-card/80 backdrop-blur border border-border text-destructive/80 text-xs font-semibold cursor-pointer px-3 py-1.5 rounded-md hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all shadow-sm"
-            onClick={handleResetClick}
-          >
-            Wyczyść obszar
-          </button>
-        </div>
+        
       </div>
 
       <ConfirmModal

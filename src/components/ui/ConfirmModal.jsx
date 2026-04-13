@@ -1,7 +1,8 @@
 import { AlertTriangle } from "lucide-react";
 import Modal from "./Modal";
+import { Button } from "./Button"; // Importujemy nasz przycisk!
 
-export  function ConfirmModal({
+export function ConfirmModal({
   isOpen,
   onClose,
   onConfirm,
@@ -14,12 +15,6 @@ export  function ConfirmModal({
   const handleConfirm = () => {
     onConfirm();
     onClose();
-  };
-
-  const variantStyles = {
-    danger: "bg-destructive hover:opacity-90 text-destructive-foreground",
-    warning: "bg-primary hover:opacity-90 text-primary-foreground",
-    info: "bg-primary hover:opacity-90 text-primary-foreground",
   };
 
   return (
@@ -40,18 +35,16 @@ export  function ConfirmModal({
         </div>
 
         <div className="flex gap-3 justify-end pt-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-muted text-foreground hover:bg-muted/80 rounded-lg transition-colors"
-          >
+          <Button variant="secondary" onClick={onClose}>
             {cancelText}
-          </button>
-          <button
+          </Button>
+          
+          <Button 
+            variant={variant === "danger" ? "destructive" : "default"} 
             onClick={handleConfirm}
-            className={`px-4 py-2 rounded-lg transition-colors ${variantStyles[variant]}`}
           >
             {confirmText}
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

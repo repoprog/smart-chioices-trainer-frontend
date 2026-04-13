@@ -41,21 +41,21 @@ export const tableScenarios = {
     description: "Wybór kandydata. Znajdź i odrzuć słabe opcje, a potem zrób kompromis między resztą.",
     alternatives: ["Jan", "Piotr", "Anna", "Kamil"],
     objectives: ["Oczekiwania finansowe", "Znajomość Java/Spring", "Znajomość React", "Doświadczenie z AWS", "Praktyka w CI/CD", "Język Angielski"],
-    objectiveUnits: { 0: "zł" }, // Usunięte etykiety skali, zostawiamy tylko walutę
-    // Pensja: im mniej tym lepiej (lower). Reszta skilli: im więcej tym lepiej (higher)
+    objectiveUnits: { 0: "zł" }, 
+   
     sortDirections: { 0: "lower", 1: "higher", 2: "higher", 3: "higher", 4: "higher", 5: "higher" },
     cells: {
-      // Oczekiwania finansowe
+    
       "0-0": "13000", "0-1": "14000", "0-2": "15000", "0-3": "14500",
-      // Java/Spring
+  
       "1-0": "wysoki", "1-1": "średni", "1-2": "wysoki", "1-3": "średni",
-      // React
+   
       "2-0": "średni", "2-1": "niski",  "2-2": "wysoki", "2-3": "średni",
-      // AWS
+    
       "3-0": "tak",    "3-1": "nie",    "3-2": "nie",    "3-3": "nie",
-      // CI/CD
+    
       "4-0": "tak",    "4-1": "nie",    "4-2": "tak",    "4-3": "nie",
-      // Język Angielski
+     
       "5-0": "wysoki", "5-1": "średni", "5-2": "wysoki", "5-3": "średni"
     }
   }

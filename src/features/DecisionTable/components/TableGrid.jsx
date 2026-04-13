@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTableStore } from '../store/useTableStore';
-import { getTradeoffResults, getRowRanks } from "../logic/tableLogic"; // Ścieżka do starej logiki (na razie)
+import { getTradeoffResults, getRowRanks } from "../logic/tableLogic"; 
 import { Eye, EyeOff } from 'lucide-react';
 
 import { ConfirmModal } from "../../../components/ui/ConfirmModal";

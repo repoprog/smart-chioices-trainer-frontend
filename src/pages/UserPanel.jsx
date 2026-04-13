@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Search, Edit2, Trash2, Calendar, MessageSquare, X, Plus, Tag } from "lucide-react";
+import { Button } from "../components/ui/Button"; // Importujemy nasz przycisk
 
 export default function UserPanel() {
   const [decisions, setDecisions] = useState([
@@ -118,17 +119,14 @@ export default function UserPanel() {
         </div>
         <div className="flex flex-wrap gap-2">
           {allTags.map((tag) => (
-            <button
+            <Button
               key={tag}
+              variant={selectedTags.includes(tag) ? "tagActive" : "tag"}
+              size="tagSize"
               onClick={() => toggleTagFilter(tag)}
-              className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                selectedTags.includes(tag)
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
             >
               {tag}
-            </button>
+            </Button>
           ))}
         </div>
         {selectedTags.length > 0 && (
@@ -162,20 +160,22 @@ export default function UserPanel() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => startEditing(decision)}
-                  className="p-2 hover:bg-muted rounded-lg transition-colors"
                   title="Edytuj notatkę"
                 >
                   <Edit2 className="w-4 h-4" />
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="dangerGhost"
+                  size="icon"
                   onClick={() => deleteDecision(decision.id)}
-                  className="p-2 hover:bg-destructive/10 text-destructive rounded-lg transition-colors"
                   title="Usuń"
                 >
                   <Trash2 className="w-4 h-4" />
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -197,6 +197,7 @@ export default function UserPanel() {
                       className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-sm"
                     >
                       {tag}
+                      {/* Zostawiam tu natywny button, bo to mini-krzyżyk wewnątrz taga */}
                       <button
                         onClick={() => removeTagFromEditing(tag)}
                         className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
@@ -205,7 +206,7 @@ export default function UserPanel() {
                       </button>
                     </span>
                   ))}
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 items-center">
                     <input
                       type="text"
                       value={newTagInput}
@@ -214,12 +215,13 @@ export default function UserPanel() {
                       placeholder="Nowy tag..."
                       className="px-2 py-1 bg-background border border-border rounded-full text-sm outline-none focus:border-primary transition-colors"
                     />
-                    <button
+                    <Button
+                      size="sm"
+                      className="rounded-full px-2 py-1 h-auto"
                       onClick={addTagToEditing}
-                      className="px-2 py-1 bg-primary text-primary-foreground rounded-full text-sm hover:bg-primary/90 transition-colors"
                     >
                       <Plus className="w-3 h-3" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ) : (
@@ -250,21 +252,19 @@ export default function UserPanel() {
                     rows={3}
                   />
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => saveNotes(decision.id)}
-                      className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90 transition-colors"
-                    >
+                    <Button size="sm" onClick={() => saveNotes(decision.id)}>
                       Zapisz
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
                       onClick={() => {
                         setEditingId(null);
                         setEditingTags(null);
                       }}
-                      className="px-3 py-1.5 bg-muted rounded-lg text-sm hover:bg-muted/80 transition-colors"
                     >
                       Anuluj
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ) : (

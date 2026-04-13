@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { useTableStore } from '../store/useTableStore';
 import { Settings2, ChevronDown, ChevronUp, X, Plus, Trash2 } from 'lucide-react';
 import { scalePresets } from '../data/scalePresets';
-import {ConfirmModal} from '../../../components/ui/ConfirmModal'; // Upewnij się, że ścieżka jest dobra!
+
+import { ConfirmModal } from '../../../components/ui/ConfirmModal'; 
+import { Button } from '../../../components/ui/Button';
 
 export function TableSettings() {
     const presetKeys = Object.keys(scalePresets);
@@ -10,7 +12,6 @@ export function TableSettings() {
     const [newScaleWord, setNewScaleWord] = useState('');
     const [newScaleRank, setNewScaleRank] = useState('');
     
-    // Stan dla modala usuwania
     const [isClearModalOpen, setIsClearModalOpen] = useState(false);
 
     const {
@@ -23,7 +24,6 @@ export function TableSettings() {
     } = useTableStore();
 
     const handleLoadPreset = (presetKey) => {
-        // Po prostu ładujemy nowy preset bez pytania!
         loadPreset(presetKey);
     };
 
@@ -43,54 +43,55 @@ export function TableSettings() {
     return (
         <div className="mt-8 border-t border-border pt-6 relative">
             
-            {/* Przycisk otwierający ustawienia */}
-            <button 
+            <Button 
+                variant="secondary"
                 onClick={() => setShowScalesSettings(!showScalesSettings)}
-                className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors text-sm font-medium"
             >
-                <Settings2 className="w-4 h-4 text-muted-foreground" />
+                <Settings2 className="w-4 h-4 mr-2 text-muted-foreground" />
                 Ustawienia ocen
                 {showScalesSettings ? (
                     <ChevronUp className="w-4 h-4 ml-1 text-muted-foreground" />
                 ) : (
                     <ChevronDown className="w-4 h-4 ml-1 text-muted-foreground" />
                 )}
-            </button>
+            </Button>
             
             {showScalesSettings && (
                 <div className="mt-4 p-5 bg-card border border-border rounded-xl shadow-sm space-y-6 max-w-[900px] animate-in fade-in slide-in-from-top-2">
                     
-                    {/* SEKCJA 1: Pakiety */}
+            
                     <div>
                         <h3 className="text-sm font-medium text-foreground mb-3">Gotowe pakiety ocen</h3>
                         <div className="flex flex-wrap items-center gap-2">
                             {presetKeys.map(presetKey => (
                                 <button 
                                     key={presetKey} 
-                                    className={`px-3 py-1.5 text-xs font-medium rounded-full cursor-pointer transition-colors ${
+                                    className={`px-3 py-1 rounded-full text-sm font-medium transition-colors cursor-pointer ${
                                         activePreset === presetKey 
-                                            ? 'bg-primary text-primary-foreground' 
-                                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                                    }`} 
+                                            ? "bg-primary text-primary-foreground shadow-sm"
+                                            : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground border border-transparent"
+                                    }`}
                                     onClick={() => handleLoadPreset(presetKey)}
                                 >
                                     {presetKey}
                                 </button>
                             ))}
                             
-                            <div className="w-px h-5 bg-border mx-1"></div> {/* Separator */}
+                            <div className="w-px h-5 bg-border mx-1"></div>
 
-                            <button 
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full cursor-pointer transition-colors text-destructive hover:bg-destructive/10" 
+                            <Button 
+                                variant="dangerGhost"
+                                size="sm"
+                                className="rounded-full h-7 px-3 text-xs"
                                 onClick={() => setIsClearModalOpen(true)}
                             >
-                                <Trash2 className="w-3 h-3" />
+                                <Trash2 className="w-3 h-3 mr-1.5" />
                                 Wyczyść listę
-                            </button>
+                            </Button>
                         </div>
                     </div>
 
-                    {/* SEKCJA 2: Aktywne Tagi Ocen */}
+                
                     <div>
                         <h3 className="text-sm font-medium text-foreground mb-3">Twoje aktywne oceny</h3>
                         {customScales.length > 0 ? (
@@ -119,7 +120,6 @@ export function TableSettings() {
                         )}
                     </div>
 
-                    {/* SEKCJA 3: Dodawanie nowej (w stylu Tagów) */}
                     <div className="pt-5 border-t border-border border-dashed">
                         <div className="flex items-end gap-3 flex-wrap sm:flex-nowrap">
                             <div className="flex-1 min-w-[200px]">
@@ -143,25 +143,25 @@ export function TableSettings() {
                                     onKeyDown={(e) => e.key === 'Enter' && handleAddScale()}
                                 />
                             </div>
-                            <button 
-                                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm mb-px" 
+                            
+                            <Button 
+                                className="rounded-full mb-px"
                                 onClick={handleAddScale}
                             >
-                                <Plus className="w-4 h-4" />
+                                <Plus className="w-4 h-4 mr-1.5" />
                                 Dodaj
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* NASZ MODAL DLA CZYSZCZENIA SKALI */}
             <ConfirmModal
                 isOpen={isClearModalOpen}
                 onClose={() => setIsClearModalOpen(false)}
                 onConfirm={executeClearScales}
                 title="Czyszczenie listy ocen"
-                message="Czy na pewno chcesz wyczyścić listę słów dla tej oceny? Własne oceny zostaną bezporwotnie usunięte."
+                message="Czy na pewno chcesz wyczyścić listę słów dla tej oceny? Własne oceny zostaną bezpowrotnie usunięte."
                 variant="danger"
                 confirmText="Wyczyść"
             />

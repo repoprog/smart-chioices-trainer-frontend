@@ -33,7 +33,6 @@ export function DecisionNode({ id, data }) {
           <Handle type="source" position={Position.Right} className={handleClass} />
         </div>
 
-        {/* MENU WĘZŁA: Bez animacji opacity */}
         <div
           className="absolute left-full top-1/2 pl-1 flex -translate-y-1/2 flex-col opacity-0 group-hover/node:pointer-events-auto group-hover/node:opacity-100 pointer-events-none z-[1000]"
           onPointerDown={(e) => e.stopPropagation()}

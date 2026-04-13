@@ -1,4 +1,4 @@
-import { SmartChoicesEdge } from './SmartChoicesEdge.jsx'
+import { SmartChoicesEdge } from './TreeEdge.jsx'
 
 export const edgeTypes = {
   smartChoices: SmartChoicesEdge,

@@ -24,7 +24,6 @@ export function TerminalNode({ id, data }) {
   const fillColor = isHighlighted ? '#ecfdf5' : '#ffffff'; // emerald-50 : white
   const strokeColor = isHighlighted ? '#10b981' : '#0f172a'; // emerald-600 : slate-900
 
-  // ... reszta logiki finansowej i klas inputa bez zmian ...
   
   const rawPayoff = String(data.payoff || '');
   const numericPayoff = parseFloat(rawPayoff.replace(/zł|%|\s/g, '').replace(',', '.').replace('−', '-'));

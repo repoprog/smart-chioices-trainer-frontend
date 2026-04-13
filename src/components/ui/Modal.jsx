@@ -1,6 +1,7 @@
-import { createPortal } from "react-dom"
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useEffect } from "react";
+import { Button } from "./Button"; 
 
 export default function Modal({ isOpen, onClose, title, children, size = "md" }) {
   useEffect(() => {
@@ -41,22 +42,19 @@ export default function Modal({ isOpen, onClose, title, children, size = "md" })
         {title && (
           <div className="flex items-center justify-between p-6 border-b border-border">
             <h3 className="font-medium text-foreground">{title}</h3>
-            <button
-              onClick={onClose}
-              className="p-1 text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg transition-colors"
-            >
+          
+            <Button variant="ghost" size="iconSm" onClick={onClose}>
               <X className="w-5 h-5" />
-            </button>
+            </Button>
           </div>
         )}
         <div className={title ? "p-6" : "p-6 pt-8"}>
           {!title && (
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 p-1 text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="absolute top-4 right-4">
+              <Button variant="ghost" size="iconSm" onClick={onClose}>
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
           )}
           {children}
         </div>

@@ -1,13 +1,12 @@
 import React, { useRef } from 'react';
 import { useTreeStore } from '../store/useTreeStore.js';
 import { Save, FileText, FolderOpen } from 'lucide-react';
+import { Button } from '../../../components/ui/Button'; // Importujemy nasz nowy przycisk!
 
 export function TreePageToolbar({ showTemplates, setShowTemplates }) {
   const fileInputRef = useRef(null);
   
   const loadScenario = useTreeStore(s => s.loadScenario);
-
-  const btnBase = "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium bg-muted hover:bg-muted/80 text-foreground";
 
   // --- ZAPIS DO JSON ---
   const handleExportJson = () => {
@@ -16,8 +15,8 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
       type: "DecisionTree",
       nodes: state.nodes,
       edges: state.edges,
-      // Zabezpieczenie: eksportujemy stageColumnLabels
-      labels: state.stageLabels || [] 
+      // Poprawiona nazwa zmiennej na poprawną ze store'a:
+      labels: state.stageColumnLabels || [] 
     };
 
     const dataStr = JSON.stringify(exportData, null, 2);
@@ -49,7 +48,7 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
         if (parsedData.nodes && parsedData.edges) {
           loadScenario(parsedData.nodes, parsedData.edges, parsedData.labels || []);
         } else {
-          alert("To nie wygląda na poprawny plik Drzewa Decyzyjnego.");
+          alert("To nie wygląda na poprawny plik Drzewa Decyzyjnej.");
         }
       } catch (error) {
         alert("Błąd odczytu pliku. Upewnij się, że to plik .json.");
@@ -70,23 +69,21 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
         className="hidden" 
       />
 
-      <button
-        onClick={() => setShowTemplates(!showTemplates)}
-        className={btnBase}
-      >
-        <FileText className="w-4 h-4" />
+      {/* UŻYWAMY NASZEGO NOWEGO KOMPONENTU */}
+      <Button variant="secondary" onClick={() => setShowTemplates(!showTemplates)}>
+        <FileText className="w-4 h-4 mr-2" />
         Przykłady
-      </button>
+      </Button>
 
-      <button onClick={handleImportClick} className={btnBase}>
-        <FolderOpen className="w-4 h-4" />
+      <Button variant="secondary" onClick={handleImportClick}>
+        <FolderOpen className="w-4 h-4 mr-2" />
         Wczytaj
-      </button>
+      </Button>
 
-      <button onClick={handleExportJson} className={btnBase}>
-        <Save className="w-4 h-4" />
+      <Button variant="secondary" onClick={handleExportJson}>
+        <Save className="w-4 h-4 mr-2" />
         Zapisz drzewo
-      </button>
+      </Button>
 
     </div>
   );

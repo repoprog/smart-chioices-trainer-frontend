@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useTableStore } from "./store/useTableStore"; 
-import { tableScenarios } from "./data/tableScenarios"; // Stare dane
-
-// Importujemy z naszego nowego, zrefaktoryzowanego folderu components:
+import { tableScenarios } from "./data/tableScenarios"; 
 import { TableGrid } from "./components/TableGrid";
 import { TableSettings } from "./components/TableSettings";
 import { TableToolbar } from "./components/TableToolbar";
-
-// Nasz globalny modal
 import { ConfirmModal } from "../../components/ui/ConfirmModal";
 
 export function DecisionTablePage() {
