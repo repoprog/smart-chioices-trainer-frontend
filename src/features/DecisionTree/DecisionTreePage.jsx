@@ -6,7 +6,7 @@ import { TreeCanvas } from './components/TreeCanvas.jsx';
 import { TreePageToolbar } from './components/TreePageToolbar.jsx';
 import { ConfirmModal } from '../../components/ui/ConfirmModal'; 
 
-import { Lock, Info } from 'lucide-react'; 
+import { Lock } from 'lucide-react'; 
 
 export function DecisionTreePage() {
   const { loadScenario, resetTree, isDirty } = useTreeStore();
@@ -35,13 +35,6 @@ export function DecisionTreePage() {
     }
   }, [loadScenario]);
 
-  const handleResetClick = () => {
-    if (isDirty) {
-      setIsResetModalOpen(true);
-    } else {
-      resetTree();
-    }
-  };
 
   const handleTemplateClick = (scenarioData) => {
     if (isDirty) {
@@ -67,13 +60,13 @@ export function DecisionTreePage() {
         <div className="flex-1">
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">Drzewo decyzyjne</h2>
           
-          <div className="text-muted-foreground mt-1 text-sm flex flex-wrap items-center gap-1.5 leading-relaxed">
-            <span>Najedź na węzeł, aby dodać gałąź. Zmieniaj prawdopodobieństwa by przeprowadzić symulację What-if -</span>
+          <div className="text-muted-foreground mt-1 text-sm flex flex-wrap items-center gap-1 leading-relaxed">
+            <span>Najedź na węzeł, aby dodać gałąź. Zmieniaj prawdopodobieństwa i obserwuj wyniki w czasie rzeczywistym (What-if</span>
             
-            <div className="relative inline-flex items-center">
+            <div className="relative inline-flex items-center mx-[2px]">
               <button 
                 onClick={() => setShowWhatIfTooltip(!showWhatIfTooltip)}
-                className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-full border border-border bg-muted text-muted-foreground text-[11px] font-bold transition-all hover:bg-background hover:text-primary hover:border-primary focus:outline-none"
+                className="inline-flex items-center justify-center w-[16px] h-[16px] rounded-full border border-border bg-muted text-muted-foreground text-[10px] font-bold transition-all hover:bg-background hover:text-primary hover:border-primary focus:outline-none -translate-y-[1px]"
                 title="Jak używać symulacji What-If?"
               >
                 ?
@@ -123,6 +116,8 @@ export function DecisionTreePage() {
                 </div> 
               )}
             </div>
+
+            <span>).</span>
           </div>
         </div>
         

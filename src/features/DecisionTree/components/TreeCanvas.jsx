@@ -41,12 +41,13 @@ export function TreeCanvas() {
     }));
   }, [allEdges, winningPath]);
 
-
+  // Zaktualizowany onInit
   const onInit = useCallback((rf) => {
     requestAnimationFrame(() =>
       rf.fitView({
-        padding: { top: 0.22, x: 0.12, bottom: 0.12 },
-      }),
+        padding: 0.3, // <--- Czyste, bezpieczne 10% marginesu
+        includeHiddenNodes: false,
+      })
     )
   }, [])
 
@@ -108,6 +109,11 @@ export function TreeCanvas() {
           proOptions={{ hideAttribution: true }}
           elevateEdgesOnSelect={false}
           elevateNodesOnSelect={false}
+          fitView 
+          fitViewOptions={{ 
+          padding: 0.3, 
+        includeHiddenNodes: false,
+          }}
         >
           <StageHeaders />
           <Background

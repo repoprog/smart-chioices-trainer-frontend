@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { useTreeStore } from '../store/useTreeStore.js';
 import { Save, FileText, FolderOpen } from 'lucide-react';
-import { Button } from '../../../components/ui/Button'; // Importujemy nasz nowy przycisk!
+import { Button } from '../../../components/ui/Button'; 
 
 export function TreePageToolbar({ showTemplates, setShowTemplates }) {
   const fileInputRef = useRef(null);
@@ -15,7 +15,6 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
       type: "DecisionTree",
       nodes: state.nodes,
       edges: state.edges,
-      // Poprawiona nazwa zmiennej na poprawną ze store'a:
       labels: state.stageColumnLabels || [] 
     };
 
@@ -31,7 +30,7 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
     URL.revokeObjectURL(url);
   };
 
-  // --- WCZYTYWANIE Z JSON ---
+
   const handleImportClick = () => {
     fileInputRef.current?.click();
   };
@@ -69,7 +68,6 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
         className="hidden" 
       />
 
-      {/* UŻYWAMY NASZEGO NOWEGO KOMPONENTU */}
       <Button variant="secondary" onClick={() => setShowTemplates(!showTemplates)}>
         <FileText className="w-4 h-4 mr-2" />
         Przykłady

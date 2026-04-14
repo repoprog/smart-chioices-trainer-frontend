@@ -10,10 +10,11 @@ import {
   getUniqueColumnXs 
 } from '../logic/treeUtils.js';
 import { evaluateDecisionTree } from '../logic/evaluation.js';
+import { treeScenarios } from '../data/treeScenarios.js';
 
-// --- ZSYNCHRONIZOWANA LOGIKA NAGŁÓWKÓW ---
+
 function syncColumnLabels(nodes, edges, prevLabels = []) {
-  // Idealna synchronizacja z StageHeadersFlow!
+
   const columnCount = getUniqueColumnXs(nodes, edges).length;
   
   if (columnCount === 0) return []; 
@@ -111,7 +112,7 @@ export function getLayoutedElements(nodes, edges) {
     }
   });
 
-  const yOffset = -minY + 20;
+  const yOffset = -minY + 160;
 
   return nodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
@@ -130,23 +131,12 @@ export function getLayoutedElements(nodes, edges) {
   });
 }
 
-const initialNodes = [
-  { id: 'd1', type: 'decision', position: { x: 32, y: 220 }, zIndex: 100, data: { nodeNumber: 1 } },
-  { id: 'c1', type: 'chance', position: { x: 300, y: 140 }, data: { nodeNumber: 2 } },
-  { id: 't-no', type: 'terminal', position: { x: 300, y: 400 }, data: { payoff: '0 zł' } },
-  { id: 't-up', type: 'terminal', position: { x: 620, y: 60 }, data: { payoff: '120 000 zł' } },
-  { id: 't-down', type: 'terminal', position: { x: 620, y: 220 }, data: { payoff: '−40 000 zł' } },
-];
+const defaultScenario = treeScenarios.basketball || { nodes: [], edges: [], labels: [] };
+const layoutedInitial = getLayoutedElements(defaultScenario.nodes, defaultScenario.edges);
 
-const initialEdges = [
-  { id: 'e-d1-c1', source: 'd1', target: 'c1', type: 'smartChoices', data: { optionLabel: 'Tak', probability: null } },
-  { id: 'e-d1-tno', source: 'd1', target: 't-no', type: 'smartChoices', data: { optionLabel: 'Nie', probability: null } },
-  { id: 'e-c1-tup', source: 'c1', target: 't-up', type: 'smartChoices', data: { optionLabel: 'Sukces', probability: '60.00%', isLocked: false } },
-  { id: 'e-c1-tdown', source: 'c1', target: 't-down', type: 'smartChoices', data: { optionLabel: 'Porażka', probability: '40.00%', isLocked: false } },
-];
-
-const numberedInitial = renumberDecisionAndChanceNodes(initialNodes, initialEdges);
-const initialStageLabels = syncColumnLabels(numberedInitial, initialEdges, []);
+const numberedInitial = renumberDecisionAndChanceNodes(layoutedInitial, defaultScenario.nodes, defaultScenario.edges);
+const initialStageLabels = syncColumnLabels(numberedInitial, defaultScenario.edges, defaultScenario.labels || []);
+  
 
 const parseProbability = (p) => {
   if (p == null) return 0;
@@ -291,7 +281,7 @@ const evaluateAndSetWinningPath = (state) => {
 export const useTreeStore = create()(
   temporal((set) => ({
   nodes: numberedInitial,
-  edges: initialEdges,
+  edges: defaultScenario.edges,
   stageColumnLabels: initialStageLabels,
   evaluationMode: 'max',
   evaluationMap: {},

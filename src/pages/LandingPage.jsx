@@ -39,25 +39,24 @@ const steps = [
     {
         num: 1,
         title: "Zbuduj model problemu",
-        desc: "Wprowadź swoje alternatywy (np. oferty pracy) oraz kryteria (np. pensja, czas dojazdu). W przypadku drzewa — połącz decyzje z węzłami niepewności (szansami).",
+        desc: "Tabela — gdy masz konkretne opcje do porównania (np. oferty pracy: pensja, dojazd). Drzewo — gdy decyzja zawiera ryzyko i niepewność.",
         colorStyle: "border-purple-500 !text-purple-400 shadow-[0_0_10px_rgba(139,92,246,0.4)]"
     },
     {
         num: 2,
-        title: "Ustal wagi i wartości",
-        desc: "Określ kierunek sortowania (czy wyższa pensja jest lepsza, czy gorsza?). Wpisz konkretne kwoty, procenty lub skorzystaj z gotowych, własnych ocen tekstowych (np. \"wysoki standard\" → 3 pkt).",
+        title: "Wprowadź dane",
+        desc: "Liczby, procenty, własne oceny tekstowe (np. \"wysoki standard\" → 3 pkt), prawdopodobieństwa — narzędzie dopasuje się do Twoich danych.",
         colorStyle: "border-cyan-500 !text-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.4)]"
     },
     {
         num: 3,
-        title: "Automatyczna eliminacja",
-        desc: "Nasz algorytm skanuje tabelę i bezwzględnie filtruje (Pareto Dominance) opcje, które są we wszystkim gorsze od innych. Odpadają w przedbiegach, oszczędzając Twój czas.",
-        colorStyle: "border-red-500 !text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.4)]"
+        title: "Automatyczna analiza",
+        desc: "Algorytm analizuje dane i eliminuje opcje zdominowane (gorsze we wszystkich kryteriach), redukując przestrzeń decyzji. W drzewie obliczana jest wartość oczekiwana każdej ścieżki — bez ręcznych kalkulacji."
     },
     {
         num: 4,
-        title: "Kompromisy i Wygrana",
-        desc: "Dokonuj równej wymiany (\"What-if\"). Zwiększaj koszt kosztem jakości, aż zrównasz ze sobą kryteria i wyłonisz ostatecznego zwycięzcę, popartego twardymi danymi (lub najwyższym wskaźnikiem EV).",
+        title: "Kompromisy i wybór",
+        desc: "Dokonuj świadomych kompromisów między celami w tabeli lub symuluj scenariusze what-if na drzewie — aż pozostanie jedna, najlepsza decyzja oparta na danych.",
         colorStyle: "border-emerald-500 !text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.4)]"
     }
 ];

@@ -11,7 +11,6 @@ export function TreeToolbar() {
   const pastStates = useTemporalTreeStore((state) => state.pastStates);
   const futureStates = useTemporalTreeStore((state) => state.futureStates);
 
-  const exportJson = useTreeStore((state) => state.exportJson);
   const importJson = useTreeStore((state) => state.importJson);
 
   const { getNodes, setViewport, getViewport } = useReactFlow();
@@ -22,7 +21,7 @@ export function TreeToolbar() {
   const canRedo = futureStates.length > 0;
 
   const btnClass = "flex h-9 w-9 relative items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent transition-colors";
-  // Nowa klasa dla "plakietki" (badge) z nazwą formatu
+ 
   const badgeClass = "absolute -bottom-1.5 right-0 rounded-[4px] bg-background border border-border px-[3px] py-[1px] text-[8px] font-bold text-muted-foreground shadow-sm leading-none z-10";
 
   const toggleFullscreen = () => {

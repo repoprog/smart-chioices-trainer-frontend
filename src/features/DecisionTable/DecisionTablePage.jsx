@@ -67,7 +67,7 @@ export function DecisionTablePage() {
             Tabela Smart Choices
           </h2>
           <p className="text-muted-foreground mt-1 text-sm">
-            Wypisz cele (kryteria) i alternatywy. Uzupełnij wartości i wyeliminuj zdominowane opcje...
+            Wypisz cele (kryteria) i alternatywy, oceń każdą opcję i wyeliminuj zdominowane w rankingu, dokonuj kompromisów między celami, aż wyłoni się najlepsza decyzja.
           </p>
         </div>
         <TablePageToolbar showTemplates={showTemplates} setShowTemplates={setShowTemplates} />
