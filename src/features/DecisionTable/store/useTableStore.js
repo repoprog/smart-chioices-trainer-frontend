@@ -14,8 +14,8 @@ const blankState = {
   hideEqualizedObjectives: false,
   rejectedAlternatives: [],
   showRejected: false,
-  activePreset: 'Jakość / Standard',
-  customScales: [...scalePresets['Jakość / Standard']], 
+  activePreset: 'jakość / standard',
+  customScales: [...scalePresets['jakość / standard']], 
   isDirty: false, 
 };
 

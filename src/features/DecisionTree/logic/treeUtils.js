@@ -266,16 +266,33 @@ export function ensureColumnLabelsLength(labels, len) {
   return base
 }
 
-export function getUniqueColumnXs(nodes) {
-  const xs = nodes.map(n => n.position?.x || 0);
+export function getUniqueColumnXs(nodes, edges) {
+  if (!nodes || nodes.length === 0) return [];
+  if (!edges) return [];
+
+  const depthMap = computeDepthMap(nodes, edges);
+  const nodesByDepth = new Map();
+
+  // 1. Grupujemy WSZYSTKIE węzły (bez żadnych wyjątków dla terminali) po ich prawdziwej głębokości
+  nodes.forEach(node => {
+    const depth = depthMap.get(node.id) ?? 0;
+    if (!nodesByDepth.has(depth)) {
+      nodesByDepth.set(depth, []);
+    }
+    nodesByDepth.get(depth).push(node.position.x);
+  });
+
   const uniqueXs = [];
-  
-  xs.forEach(x => {
-    if (!uniqueXs.some(ux => Math.abs(ux - x) < 150)) {
-      uniqueXs.push(x);
+  const sortedDepths = Array.from(nodesByDepth.keys()).sort((a, b) => a - b);
+
+  // 2. Jeden poziom głębokości = dokładnie JEDEN nagłówek. Zero sztucznego dodawania.
+  sortedDepths.forEach(depth => {
+    const xsAtThisDepth = nodesByDepth.get(depth);
+    if (xsAtThisDepth && xsAtThisDepth.length > 0) {
+      // Bierzemy najmniejszy X z danego poziomu, żeby nagłówek zaczynał się równo z pierwszym węzłem
+      uniqueXs.push(Math.min(...xsAtThisDepth));
     }
   });
-  
-  return uniqueXs.sort((a, b) => a - b);
-}
 
+  return uniqueXs;
+}

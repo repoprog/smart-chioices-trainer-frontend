@@ -104,7 +104,7 @@ export function DecisionTreePage() {
 
                   <div className="mb-5">
                       <h4 className="mb-1.5 text-foreground text-[13px] font-semibold flex items-center gap-1.5">
-                          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded text-cyan-400 bg-cyan-500/40 text-[9px] font-bold">
+                          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded text-cyan-400 text-[13px] font-bold">
                             A
                           </span>
                           Auto-balansowanie

@@ -46,7 +46,7 @@ export function TableHeader({
           return (
             <th
               key={`col-${colIndex}`}
-              className={`p-1.5 align-middle overflow-hidden text-ellipsis sticky top-0 z-[20] shadow-[inset_0_-1px_0_var(--border),inset_-1px_0_0_var(--border)] bg-card/90 backdrop-blur-md ${isRejected && !showRejected ? "hidden" : ""} ${isRejected && showRejected ? "opacity-40" : ""} ${winnerClasses} ${isLastHeader ? "rounded-tr-xl" : ""}`}
+              className={`p-1.5 align-middle overflow-hidden text-ellipsis sticky top-0 z-[20] shadow-[inset_0_-1px_0_var(--border),inset_-1px_0_0_var(--border)] bg-muted/90 backdrop-blur-md ${isRejected && !showRejected ? "hidden" : ""} ${isRejected && showRejected ? "opacity-40" : ""} ${winnerClasses} ${isLastHeader ? "rounded-tr-xl" : ""}`}
               title={alt}
             >
               <div className="flex items-center justify-center gap-1">

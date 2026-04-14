@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Table2, Network, Filter, SlidersHorizontal ,  } from 'lucide-react'; 
+import { Table2, Network, Filter, SlidersHorizontal } from 'lucide-react'; 
+import { motion } from 'framer-motion'; 
 
 const features = [
     {
@@ -63,7 +64,7 @@ const steps = [
 
 export default function LandingPage() {
     return (
-        <div className="min-h-screen bg-[#030303] !text-white font-sans selection:bg-purple-500/30">
+        <div className="min-h-screen bg-[#030303] !text-white font-sans selection:bg-purple-500/30 overflow-hidden">
           
             <header className="fixed top-0 left-1/2 -translate-x-1/2 mt-6 z-50">
                 <nav className="flex items-center gap-1.5 px-4 py-2 border border-white/5 bg-black/60 backdrop-blur-md rounded-full shadow-[0_0_20px_-10px_rgba(139,92,246,0.3)]">
@@ -77,26 +78,50 @@ export default function LandingPage() {
                 </nav>
             </header>
 
-         
             <section className="pt-40 pb-20 px-6 text-center max-w-[1200px] mx-auto">
-                <h1 className="m-0 text-5xl md:text-7xl font-extrabold tracking-[-2px] md:tracking-[-3.5px] leading-[1.1] md:leading-[1] !text-white">
+                <motion.h1 
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.7, ease: "easeOut" }}
+                    className="m-0 text-5xl md:text-7xl font-extrabold tracking-[-2px] md:tracking-[-3.5px] leading-[1.1] md:leading-[1] !text-white"
+                >
                    Podejmuj decyzje w oparciu <br />
-                    o dane, nie przeczucie
-                </h1>
-                <p className="mt-6 mb-10 max-w-[600px] mx-auto !text-white/70 text-lg leading-relaxed">
+                    o dane, nie przeczucie.
+                </motion.h1>
+                
+                <motion.p 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
+                    className="mt-6 mb-10 max-w-[600px] mx-auto !text-white/70 text-lg leading-relaxed"
+                >
                     Decidely zamienia niepewność w liczby. Tabela decyzyjna lub drzewo scenariuszy — metodologia prosto z Harvard Business School.
-                </p>
-                <div className="flex flex-col md:flex-row gap-4 justify-center">
+                </motion.p>
+                
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.7, delay: 0.4, ease: "easeOut" }}
+                    className="flex flex-col md:flex-row gap-4 justify-center"
+                >
                     <Link to="/app/table?scenario=developerHiring" className="px-5 py-2.5 cursor-pointer font-semibold text-sm bg-purple-500 !text-white border-none rounded-md transition-all hover:shadow-[0_0_30px_0_rgba(139,92,246,0.2)] hover:bg-purple-600">
                       Porównaj Opcje
                     </Link>
-                    <Link to="/app/tree?scenario=basketball" className="px-5 py-2.5 cursor-pointer font-semibold text-sm bg-cyan-400 !text-black border-none rounded-md transition-all hover:shadow-[0_0_30px_0_rgba(34,211,238,0.2)] hover:bg-cyan-500">
+                   <Link 
+                        to="/app/tree?scenario=basketball" 
+                        className="px-5 py-2.5 cursor-pointer font-semibold text-sm bg-cyan-600 !text-white border-none rounded-md transition-all hover:shadow-[0_0_30px_0_rgba(8,145,178,0.3)] hover:bg-cyan-500"
+                    >
                         Zbuduj Drzewo Decyzji
                     </Link>
-                </div>
+                </motion.div>
                 
-                {/* Pochylony Screenshot Applikacji */}
-                <div className="relative mt-20 w-full max-w-[1000px] mx-auto">
+                {/* Pochylony Screenshot Applikacji - Animowany */}
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.95, y: 40 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ duration: 1, delay: 0.6, ease: "easeOut" }}
+                    className="relative mt-20 w-full max-w-[1000px] mx-auto"
+                >
                     <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/30 to-cyan-400/30 blur-[80px] -z-10 rounded-full"></div>
                     <div className="p-3 bg-white/5 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-sm transition-transform duration-500 hover:[transform:perspective(1000px)_rotateX(0deg)_rotateY(0deg)_scale(1.02)] [transform:perspective(1000px)_rotateX(8deg)_rotateY(-12deg)_rotateZ(2deg)_scale(1.02)]">
                         <img 
@@ -105,21 +130,39 @@ export default function LandingPage() {
                             className="w-full h-auto rounded-xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] block" 
                         />
                     </div>
-                </div>
+                </motion.div>
             </section>
 
-    
             <section id="features" className="py-20 px-6 max-w-[1200px] mx-auto">
-                <h2 className="text-center m-0 text-4xl font-extrabold tracking-[-1.5px] !text-white">
+                <motion.h2 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.6 }}
+                    className="text-center m-0 text-4xl font-extrabold tracking-[-1.5px] !text-white"
+                >
                     Koniec z wyborem na czucie.
-                </h2>
-                <p className="text-center mt-4 text-sm !text-white/60 max-w-[600px] mx-auto">
+                </motion.h2>
+                <motion.p 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.6, delay: 0.1 }}
+                    className="text-center mt-4 text-sm !text-white/60 max-w-[600px] mx-auto"
+                >
                     Zbudowane w oparciu o metodologię Smart Choices (Harvard Business School Press) — stosowaną przy decyzjach, gdzie stawką jest coś ważnego.
-                </p>
+                </motion.p>
                 
                 <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4 auto-rows-[250px]">
-                    {features.map(({ id, title, desc, Icon, wrapperClass, iconContainerClass }) => (
-                        <div key={id} className={`p-8 flex flex-col justify-end gap-3 rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-colors shadow-[inset_0_1px_0_0_rgba(255,255,255,0.01)] ${wrapperClass}`}>
+                    {features.map(({ id, title, desc, Icon, wrapperClass, iconContainerClass }, i) => (
+                        <motion.div 
+                            key={id} 
+                            initial={{ opacity: 0, y: 40 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: "-50px" }}
+                            transition={{ duration: 0.5, delay: i * 0.15 }}
+                            className={`p-8 flex flex-col justify-end gap-3 rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-colors shadow-[inset_0_1px_0_0_rgba(255,255,255,0.01)] ${wrapperClass}`}
+                        >
                             <div className={iconContainerClass}>
                                 <Icon className="w-6 h-6 !text-white" />
                             </div>
@@ -127,23 +170,42 @@ export default function LandingPage() {
                             <p className="m-0 text-[13px] !text-white/60 leading-relaxed max-w-[500px]">
                                 {desc}
                             </p>
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
             </section>
 
             {/* 3. SEKCJA JAK TO DZIAŁA (Kroki) */}
             <section id="how-it-works" className="py-24 px-6 max-w-[1000px] mx-auto">
-                <h2 className="text-center m-0 text-3xl font-extrabold tracking-[-1px] !text-white">
+                <motion.h2 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.6 }}
+                    className="text-center m-0 text-3xl font-extrabold tracking-[-1px] !text-white"
+                >
                     Proces decyzyjny w 4 krokach
-                </h2>
-                <p className="text-center mt-4 mb-16 text-sm !text-white/60 max-w-[600px] mx-auto">
+                </motion.h2>
+                <motion.p 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.6, delay: 0.1 }}
+                    className="text-center mt-4 mb-16 text-sm !text-white/60 max-w-[600px] mx-auto"
+                >
                     Przekształć chaos informacyjny w czystą, matematyczną odpowiedź.
-                </p>
+                </motion.p>
 
                 <div className="relative border-l border-white/10 ml-4 md:ml-12 space-y-12 pb-4">
-                    {steps.map(({ num, title, desc, colorStyle }) => (
-                        <div key={num} className="relative pl-8 md:pl-12">
+                    {steps.map(({ num, title, desc, colorStyle }, i) => (
+                        <motion.div 
+                            key={num} 
+                            initial={{ opacity: 0, x: -30 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true, margin: "-100px" }}
+                            transition={{ duration: 0.6, delay: i * 0.15 }}
+                            className="relative pl-8 md:pl-12"
+                        >
                             <div className={`absolute left-[-16px] top-1 flex items-center justify-center w-8 h-8 rounded-full bg-[#030303] border-2 font-bold text-sm ${colorStyle}`}>
                                 {num}
                             </div>
@@ -151,21 +213,44 @@ export default function LandingPage() {
                             <p className="mt-2 text-[14px] !text-white/60 leading-relaxed">
                                 {desc}
                             </p>
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
             </section>
 
             {/* 4. SEKCJA USE CASES */}
             <section id="cases" className="py-20 px-6 max-w-[1200px] mx-auto text-center">
-                <h2 className="m-0 text-3xl font-bold !text-white/90">Gdzie to się sprawdza</h2>
-                <div className="mt-10 flex flex-wrap gap-3 justify-center">
+                <motion.h2 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.5 }}
+                    className="m-0 text-3xl font-bold !text-white/90"
+                >
+                    Gdzie to się sprawdza
+                </motion.h2>
+                <motion.div 
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: "-100px" }}
+                    variants={{
+                        visible: { transition: { staggerChildren: 0.1 } }
+                    }}
+                    className="mt-10 flex flex-wrap gap-3 justify-center"
+                >
                     {['Zatrudnienie Kandydata', 'Wybór Frameworka', 'Planowanie Kariery', 'Wybór Oferty Pracy', 'Kupno Samochodu'].map(item => (
-                        <div key={item} className="px-4 py-1.5 border border-white/10 bg-black rounded-full text-[12px] font-medium !text-white/70 transition-colors hover:!text-white hover:border-white/30">
+                        <motion.div 
+                            key={item} 
+                            variants={{
+                                hidden: { opacity: 0, y: 20 },
+                                visible: { opacity: 1, y: 0 }
+                            }}
+                            className="px-4 py-1.5 border border-white/10 bg-black rounded-full text-[12px] font-medium !text-white/70 transition-colors hover:!text-white hover:border-white/30"
+                        >
                             {item}
-                        </div>
+                        </motion.div>
                     ))}
-                </div>
+                </motion.div>
             </section>
 
             {/* 5. SEKCJA TECH STACK */}

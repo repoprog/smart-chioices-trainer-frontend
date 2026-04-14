@@ -3,7 +3,7 @@ import { useTableStore } from "./store/useTableStore";
 import { tableScenarios } from "./data/tableScenarios"; 
 import { TableGrid } from "./components/TableGrid";
 import { TableSettings } from "./components/TableSettings";
-import { TableToolbar } from "./components/TableToolbar";
+import { TablePageToolbar } from "./components/TablePageToolbar";
 import { ConfirmModal } from "../../components/ui/ConfirmModal";
 
 export function DecisionTablePage() {
@@ -70,7 +70,7 @@ export function DecisionTablePage() {
             Wypisz cele (kryteria) i alternatywy. Uzupełnij wartości i wyeliminuj zdominowane opcje...
           </p>
         </div>
-        <TableToolbar showTemplates={showTemplates} setShowTemplates={setShowTemplates} />
+        <TablePageToolbar showTemplates={showTemplates} setShowTemplates={setShowTemplates} />
       </div>
 
       {showTemplates && (

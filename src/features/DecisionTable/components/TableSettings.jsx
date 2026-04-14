@@ -57,11 +57,11 @@ export function TableSettings() {
             </Button>
             
             {showScalesSettings && (
-                <div className="mt-4 p-5 bg-card border border-border rounded-xl shadow-sm space-y-6 max-w-[900px] animate-in fade-in slide-in-from-top-2">
+                <div className="mt-4 p-5 bg-card border border-border rounded-xl shadow-sm space-y-6 max-w-[1000px] animate-in fade-in slide-in-from-top-2">
                     
             
                     <div>
-                        <h3 className="text-sm font-medium text-foreground mb-3">Gotowe pakiety ocen</h3>
+                        <h3 className="text-sm font-medium text-foreground mb-3">Gotowe oceny</h3>
                         <div className="flex flex-wrap items-center gap-2">
                             {presetKeys.map(presetKey => (
                                 <button 

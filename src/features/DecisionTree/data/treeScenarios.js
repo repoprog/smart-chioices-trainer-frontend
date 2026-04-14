@@ -57,7 +57,7 @@ export const treeScenarios = {
     edges: [
       // Opcje decyzji (Koszty podjęcia akcji)
       { id: 'e1', source: 'd1', target: 't1', type: 'smartChoices', data: { optionLabel: 'Przyjmij ugodę', cost: '0', probability: null } },
-      { id: 'e2', source: 'd1', target: 'c1', type: 'smartChoices', data: { optionLabel: 'Idź do sądu', cost: '20 000', probability: null } }, // 20k to koszt prawników
+      { id: 'e2', source: 'd1', target: 'c1', type: 'smartChoices', data: { optionLabel: 'Idź do sądu', cost: '-20 000', probability: null } }, // 20k to koszt prawników
       
       // Wyrok
       { id: 'e3', source: 'c1', target: 't2', type: 'smartChoices', data: { optionLabel: 'Wygrana (Uniewinnienie)', probability: '70.00%', isLocked: true } },
@@ -97,7 +97,7 @@ export const treeScenarios = {
   basketball: {
     name: "Rzut w Ostatniej Sekundzie",
     description: "Finałowy mecz, tracisz 2 punkty. Rzucać bezpieczniej za 2 punkty (i liczyć na wygraną w dogrywce), czy zaryzykować rzut za 3 punkty po natychmiastowe zwycięstwo?",
-    labels: ["Wybór Rzutu", "Skuteczność Rzutu", "Dogrywka (OT)", "Punkty Mocy"], // "Punkty Mocy" zamiast pieniędzy
+    labels: ["Jaki rzut?", "Rzut udany?", "Dogrywka (OT)", "Rezultat końcowy"], 
     nodes: [
       { id: 'd1', type: 'decision', position: { x: 0, y: 0 }, zIndex: 100, data: { nodeNumber: 1 } },
       { id: 'c1', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 2 } }, 
@@ -105,16 +105,16 @@ export const treeScenarios = {
       { id: 'c3', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 4 } },
       
       // Tutaj używam wartości punktowej 100 (wygrana) i 0 (przegrana)
-      { id: 't1', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0' } }, 
-      { id: 't2', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '100' } }, 
-      { id: 't3', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0' } }, 
-      { id: 't4', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '100' } }, 
-      { id: 't5', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0' } }, 
+      { id: 't1', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0 (Przegrana)' } }, 
+      { id: 't2', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '100 (Wygrana)' } }, 
+      { id: 't3', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0 (Przegrana)' } }, 
+      { id: 't4', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '100 (Wygrana)' } }, 
+      { id: 't5', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0 (Przegrana)' } }, 
     ],
     edges: [
       // Brak "kosztów" finansowych w rzucie piłką, koszt = 0
-      { id: 'e1', source: 'd1', target: 'c1', type: 'smartChoices', data: { optionLabel: 'Za 2 punkty', cost: '0', probability: null } },
-      { id: 'e2', source: 'd1', target: 'c2', type: 'smartChoices', data: { optionLabel: 'Za 3 punkty', cost: '0', probability: null } },
+      { id: 'e1', source: 'd1', target: 'c1', type: 'smartChoices', data: { optionLabel: 'Za 2 punkty', probability: null } },
+      { id: 'e2', source: 'd1', target: 'c2', type: 'smartChoices', data: { optionLabel: 'Za 3 punkty', probability: null } },
       
       { id: 'e3', source: 'c1', target: 'c3', type: 'smartChoices', data: { optionLabel: 'Trafiony', probability: '55.00%', isLocked: true } },
       { id: 'e4', source: 'c1', target: 't1', type: 'smartChoices', data: { optionLabel: 'Pudło', probability: '45.00%', isLocked: true } },
@@ -122,7 +122,7 @@ export const treeScenarios = {
       { id: 'e5', source: 'c3', target: 't2', type: 'smartChoices', data: { optionLabel: 'Wygrana w OT', probability: '50.00%', isLocked: true } },
       { id: 'e6', source: 'c3', target: 't3', type: 'smartChoices', data: { optionLabel: 'Porażka w OT', probability: '50.00%', isLocked: true } },
 
-      { id: 'e7', source: 'c2', target: 't4', type: 'smartChoices', data: { optionLabel: 'Trafiony (Wygrana!)', probability: '38.00%', isLocked: true } },
+      { id: 'e7', source: 'c2', target: 't4', type: 'smartChoices', data: { optionLabel: 'Trafiony', probability: '38.00%', isLocked: true } },
       { id: 'e8', source: 'c2', target: 't5', type: 'smartChoices', data: { optionLabel: 'Pudło', probability: '62.00%', isLocked: true } },
     ]
   }

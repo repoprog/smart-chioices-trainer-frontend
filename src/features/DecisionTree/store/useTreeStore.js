@@ -14,7 +14,7 @@ import { evaluateDecisionTree } from '../logic/evaluation.js';
 // --- ZSYNCHRONIZOWANA LOGIKA NAGŁÓWKÓW ---
 function syncColumnLabels(nodes, edges, prevLabels = []) {
   // Idealna synchronizacja z StageHeadersFlow!
-  const columnCount = getUniqueColumnXs(nodes).length;
+  const columnCount = getUniqueColumnXs(nodes, edges).length;
   
   if (columnCount === 0) return []; 
 
@@ -613,7 +613,7 @@ export const useTreeStore = create()(
        evaluationMode: state.evaluationMode,
        evaluationMap: state.evaluationMap,
        winningPath: state.winningPath,
-       // Omijamy isDirty, zundo nie powinno tego cofać
+    
      }),
    }
  )

@@ -1,49 +1,14 @@
 import { useMemo } from 'react'
 import { ViewportPortal } from '@xyflow/react'
+import { ArrowUp, ArrowDown } from 'lucide-react';
 
 import { useTreeStore } from '../store/useTreeStore.js'
 import { computeStageHeaderRowY, getUniqueColumnXs } from '../logic/treeUtils.js'
 
-const ArrowUp = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M12 5l0 14" />
-    <path d="M18 11l-6 -6" />
-    <path d="M6 11l6 -6" />
-  </svg>
-);
-
-const ArrowDown = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M12 5l0 14" />
-    <path d="M18 13l-6 6" />
-    <path d="M6 13l-6 6" />
-  </svg>
-);
-
 
 export function StageHeaders() {
   const nodes = useTreeStore((s) => s.nodes)
-  // edges już tu nie pobieramy, nie są potrzebne do osi X!
+ const edges = useTreeStore((s) => s.edges);
   const labels = useTreeStore((s) => s.stageColumnLabels)
   const setStageColumnLabel = useTreeStore((s) => s.setStageColumnLabel)
   const evaluationMode = useTreeStore((s) => s.evaluationMode);
@@ -53,8 +18,8 @@ export function StageHeaders() {
 
   // CZYŚCIUTKA LOGIKA:
   const columnXs = useMemo(() => {
-    return getUniqueColumnXs(nodes).map(x => x + 22);
-  }, [nodes]);
+    return getUniqueColumnXs(nodes, edges).map(x => x + 22);
+  }, [nodes, edges]);
 
   if (!columnXs.length) return null
 
@@ -97,8 +62,12 @@ export function StageHeaders() {
       // Zamienione z cyan na emerald (szmaragdowy zielony), dopasowane do Twoich zysków
       className='absolute -right-2 top-1/2 flex h-8 -translate-y-1/2 translate-x-full cursor-pointer items-center gap-1.5 whitespace-nowrap rounded border bg-emerald-50 px-3 text-[11px] font-semibold shadow-sm transition-all backdrop-blur-sm border-emerald-400/80 text-emerald-800 hover:border-emerald-500 hover:bg-emerald-100 dark:border-emerald-700/80 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:border-emerald-600 dark:hover:bg-emerald-900'
     >
-      <span className="text-sm leading-none font-bold text-emerald-600 dark:text-emerald-400">
-        {evaluationMode === 'max' ? '⭡' : '⭣'}
+      <span className="text-emerald-600 dark:text-emerald-400">
+        {evaluationMode === 'max' ? (
+          <ArrowUp className="w-4 h-4 stroke-[2.5px]" /> 
+        ) : (
+          <ArrowDown className="w-4 h-4 stroke-[2.5px]" />
+        )}
       </span>
       <span>
         {evaluationMode === 'max' ? 'Lepiej [Max]' : 'Lepiej [Min]'}

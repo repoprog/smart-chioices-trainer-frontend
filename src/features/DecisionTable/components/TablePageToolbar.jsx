@@ -1,9 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { useTableStore } from '../store/useTableStore';
 import { Save, FileText, FolderOpen, Scale, Trophy, X } from 'lucide-react';
-import { Button } from '../../../components/ui/Button'; // Importujemy nasz nowy super-przycisk!
+import { Button } from '../../../components/ui/Button'; 
 
-export function TableToolbar({ showTemplates, setShowTemplates }) {
+export function TablePageToolbar({ showTemplates, setShowTemplates }) {
   const showTradeoffs = useTableStore(s => s.showTradeoffs);
   const showRanking = useTableStore(s => s.showRanking);
   const toggleTradeoffs = useTableStore(s => s.toggleTradeoffs);
@@ -132,7 +132,7 @@ export function TableToolbar({ showTemplates, setShowTemplates }) {
             <div className="bg-muted/50 p-3 rounded-lg border border-border/50 flex gap-2.5 items-start mt-2">
                 <span className="text-base leading-none">💡</span>
                 <p className="m-0 text-xs text-muted-foreground italic">
-                  Najprościej zrównywać atrybuty (np. czas, standard, kolor), a zwiększać kwoty.
+                  Najprościej wyrównywać atrybuty (np. czas, standard, kolor), a zmieniać kwoty.
                 </p>
             </div>
           </div> 
