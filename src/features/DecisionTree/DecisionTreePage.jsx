@@ -4,7 +4,8 @@ import { treeScenarios } from './data/treeScenarios.js';
 import { TreeCanvas } from './components/TreeCanvas.jsx';
 import { TreePageToolbar } from './components/TreePageToolbar.jsx';
 import { ConfirmModal } from '../../components/ui/ConfirmModal'; 
-import { Tooltip } from '../../components/ui/Tooltip'; // <-- NASZ NOWY KOMPONENT
+import { Tooltip } from '../../components/ui/Tooltip'; 
+import { Card } from '../../components/ui/Card'; 
 import { Lock } from 'lucide-react'; 
 
 export function DecisionTreePage() {
@@ -61,7 +62,7 @@ export function DecisionTreePage() {
           <div className="text-muted-foreground mt-1 text-sm flex flex-wrap items-center gap-1 leading-relaxed">
             <span>Najedź na węzeł, aby dodać gałąź. Zmieniaj prawdopodobieństwa i obserwuj wyniki w czasie rzeczywistym (What-if</span>
             
-            {/* TOOLTIP REFACTOR: Replacing manual logic with Tooltip component */}
+            {/* TOOLTIP */}
             <Tooltip
               title="Symulacja „What-if”"
               subtitle="(Auto-balans)"
@@ -110,28 +111,29 @@ export function DecisionTreePage() {
         />
       </div>
 
-      {/* Template selection and Canvas container remain unchanged but now cleaner in context */}
+   
       {showTemplates && (
-        <div className="border border-border rounded-lg p-4 bg-muted/20 animate-in fade-in slide-in-from-top-2 relative z-10">
+        <Card noPadding className="p-4 bg-muted/20 animate-in fade-in slide-in-from-top-2 relative z-10">
           <h3 className="font-medium mb-3 text-sm text-foreground">Predefiniowane szablony</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {Object.entries(treeScenarios).map(([key, scenarioData]) => (
               <button
                 key={key}
                 onClick={() => handleTemplateClick(scenarioData)}
-                className="p-4 border border-border rounded-lg bg-card hover:border-primary hover:bg-primary/5 transition-colors text-left shadow-sm group flex flex-col h-full"
+                className="p-4 border border-border rounded-lg bg-card hover:border-primary hover:bg-primary/5 transition-colors text-left shadow-sm group flex flex-col h-full focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
                 <div className="font-medium mb-1 text-foreground group-hover:text-primary transition-colors">{scenarioData.name}</div>
                 <div className="text-xs text-muted-foreground">{scenarioData.description}</div>
               </button>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
-      <div className="flex-1 min-h-[600px] border border-border rounded-xl overflow-hidden bg-card shadow-sm relative z-0 flex flex-col">
+  
+      <Card noPadding className="flex-1 min-h-[600px] overflow-hidden relative z-0 flex flex-col">
         <TreeCanvas />
-      </div>
+      </Card>
 
       <ConfirmModal
         isOpen={isResetModalOpen}

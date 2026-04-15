@@ -1,5 +1,6 @@
 import { scalePresets } from '../data/scalePresets'; 
 
+// CORE MECHANIC: Check if all active alternatives share the exact same value for a specific objective (Tradeoff elimination)
 export const checkIsRowEqualized = (rowIndex, state) => {
   const { showTradeoffs, showRanking, alternatives, rejectedAlternatives, cells } = state;
   if (!showTradeoffs && !showRanking) return false;
@@ -11,6 +12,7 @@ export const checkIsRowEqualized = (rowIndex, state) => {
   for (let c of activeAlts) {
     const val = cells[`${rowIndex}-${c}`];
     if (val === undefined || val.toString().trim() === '') return false;
+    
     const cleanVal = val.toString().trim().toLowerCase().replace(/\s/g, '');
     if (firstValue === null) firstValue = cleanVal;
     else if (firstValue !== cleanVal) return false;
@@ -22,6 +24,7 @@ export const getEqualizedRowsIndexes = (state) => {
   return state.objectives.map((_, i) => i).filter(i => checkIsRowEqualized(i, state));
 };
 
+// CORE MECHANIC: Parse and map text values (e.g., "Premium") to numeric ranks using active and global presets, then calculate relative row rankings
 export const getRowRanks = (rowIndex, state) => {
   const { alternatives, rejectedAlternatives, cells, customScales, sortDirections } = state;
   const activeAlts = alternatives.map((_, i) => i).filter(i => !rejectedAlternatives.includes(i));
@@ -64,6 +67,7 @@ export const getRowRanks = (rowIndex, state) => {
   return ranks;
 };
 
+// CORE MECHANIC: Evaluate strict and practical Pareto domination between alternatives
 export const analyzeDomination = (state, equalizedRowsIndexes, completeAlts, activeObjForCheck) => {
   const { objectives, alternatives, rejectedAlternatives } = state;
   const matrix = {};
@@ -121,6 +125,7 @@ export const analyzeDomination = (state, equalizedRowsIndexes, completeAlts, act
   return { results, matrix };
 };
 
+// CORE MECHANIC: Master selector to compute all analytical results on the fly (Derived State)
 export const getTradeoffResults = (state) => {
   const { showRanking, alternatives, objectives, rejectedAlternatives, cells } = state;
 

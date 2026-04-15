@@ -21,9 +21,10 @@ const blankState = {
 
 export const useTableStore = create()(
   persist(
-    (set) => ({
+    (set) => ({ 
       ...blankState,
 
+      // --- UI & State Actions ---
       toggleTradeoffs: () => set((state) => {
         if (!state.showTradeoffs) return { showTradeoffs: true, originalCells: { ...state.cells }, showRanking: false };
         return { showTradeoffs: false, originalCells: {} };
@@ -101,7 +102,6 @@ export const useTableStore = create()(
         showTradeoffs: false,
         showRanking: false,
         winnerIndex: null,
-        equalizedObjectives: {},
         isDirty: false 
       }),
       

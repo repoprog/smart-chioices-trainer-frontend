@@ -5,6 +5,8 @@ import { jsPDF } from 'jspdf';
 import { useTreeStore, useTemporalTreeStore } from '../store/useTreeStore.js';
 import { FolderOpen, Save, Image as ImageIcon, FileText, Undo2, Redo2, Maximize, Minimize } from 'lucide-react'; 
 
+import { Button } from '../../../components/ui/Button'; // <-- IMPORT NASZEGO KOMPONENTU
+
 export function TreeToolbar() {
   const undo = useTemporalTreeStore((state) => state.undo);
   const redo = useTemporalTreeStore((state) => state.redo);
@@ -20,9 +22,8 @@ export function TreeToolbar() {
   const canUndo = pastStates.length > 0;
   const canRedo = futureStates.length > 0;
 
-  const btnClass = "flex h-9 w-9 relative items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent transition-colors";
- 
-  const badgeClass = "absolute -bottom-1.5 right-0 rounded-[4px] bg-background border border-border px-[3px] py-[1px] text-[8px] font-bold text-muted-foreground shadow-sm leading-none z-10";
+  // Pozostawiamy klasę dla małych napisów "PNG" i "PDF"
+  const badgeClass = "absolute -bottom-1.5 right-0 rounded-[4px] bg-background border border-border px-[3px] py-[1px] text-[8px] font-bold text-muted-foreground shadow-sm leading-none z-10 pointer-events-none";
 
   const toggleFullscreen = () => {
     const canvasContainer = document.getElementById('tree-canvas-container');
@@ -185,19 +186,19 @@ export function TreeToolbar() {
   return (
     <div className="tree-toolbar-export absolute top-3 left-3 z-10 flex items-center gap-1 rounded-lg border border-border bg-card/95 p-1.5 shadow-sm backdrop-blur-sm">
       
-      <button onClick={() => undo()} disabled={!canUndo} title="Cofnij (Ctrl+Z)" className={btnClass}>
+      <Button variant="ghost" size="icon" onClick={() => undo()} disabled={!canUndo} title="Cofnij (Ctrl+Z)">
         <Undo2 className="w-[18px] h-[18px]" />
-      </button>
+      </Button>
       
-      <button onClick={() => redo()} disabled={!canRedo} title="Ponów (Ctrl+Y)" className={btnClass}>
+      <Button variant="ghost" size="icon" onClick={() => redo()} disabled={!canRedo} title="Ponów (Ctrl+Y)">
         <Redo2 className="w-[18px] h-[18px]" />
-      </button>
+      </Button>
 
       <div className="mx-1.5 h-5 w-px bg-border" />
 
-      <button onClick={toggleFullscreen} title={isFullscreen ? "Zamknij pełny ekran" : "Pełny ekran (F11)"} className={btnClass}>
+      <Button variant="ghost" size="icon" onClick={toggleFullscreen} title={isFullscreen ? "Zamknij pełny ekran" : "Pełny ekran (F11)"}>
         {isFullscreen ? <Minimize className="w-[18px] h-[18px]" /> : <Maximize className="w-[18px] h-[18px]" />}
-      </button>
+      </Button>
 
       <div className="mx-1.5 h-5 w-px bg-border" />
 
@@ -209,25 +210,25 @@ export function TreeToolbar() {
         className="hidden" 
       />
 
-      <button onClick={handleImportClick} title="Wczytaj projekt z pliku (JSON)" className={btnClass}>
+      <Button variant="ghost" size="icon" onClick={handleImportClick} title="Wczytaj projekt z pliku (JSON)">
         <FolderOpen className="w-[18px] h-[18px] text-muted-foreground" />
-      </button>
+      </Button>
 
-      <button onClick={handleExportJson} title="Zapisz projekt jako plik (JSON)" className={btnClass}>
+      <Button variant="ghost" size="icon" onClick={handleExportJson} title="Zapisz projekt jako plik (JSON)">
         <Save className="w-[18px] h-[18px] text-muted-foreground" />
-      </button>
+      </Button>
       
       <div className="mx-1.5 h-5 w-px bg-border" />
 
-      <button onClick={() => exportGraph('png')} title="Pobierz jako obraz (PNG)" className={btnClass}>
+      <Button variant="ghost" size="icon" className="relative" onClick={() => exportGraph('png')} title="Pobierz jako obraz (PNG)">
         <ImageIcon className="w-[18px] h-[18px]" />
         <span className={badgeClass}>PNG</span>
-      </button>
+      </Button>
       
-      <button onClick={() => exportGraph('pdf')} title="Pobierz jako dokument (PDF)" className={btnClass}>
+      <Button variant="ghost" size="icon" className="relative" onClick={() => exportGraph('pdf')} title="Pobierz jako dokument (PDF)">
         <FileText className="w-[18px] h-[18px]" />
         <span className={badgeClass}>PDF</span>
-      </button>
+      </Button>
     </div>
   );
 }

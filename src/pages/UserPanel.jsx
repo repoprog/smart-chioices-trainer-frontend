@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Search, Edit2, Trash2, Calendar, MessageSquare, X, Plus, Tag } from "lucide-react";
-import { Button } from "../components/ui/Button"; // Importujemy nasz przycisk
+import { Button } from "../components/ui/Button"; 
+import { Input } from "../components/ui/Input";   // <-- NOWY
+import { Badge } from "../components/ui/Badge";   // <-- NOWY
+import { Card } from "../components/ui/Card";     // <-- NOWY
 
 export default function UserPanel() {
   const [decisions, setDecisions] = useState([
@@ -22,15 +25,6 @@ export default function UserPanel() {
       notes: "ROI przekracza 25%, ryzyko jest akceptowalne. Rozpoczęcie planowane na Q2 2026.",
       tags: ["projekt", "inwestycje", "finanse"],
     },
-    {
-      id: "3",
-      title: "Strategia marketingowa",
-      type: "table",
-      date: "2026-03-28",
-      result: "Opcja A - wynik: 189 punktów",
-      notes: "Kampania cyfrowa z focus na social media. Budget zwiększony o 15%.",
-      tags: ["marketing", "biznes", "strategia"],
-    },
   ]);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,11 +37,8 @@ export default function UserPanel() {
   const allTags = Array.from(new Set(decisions.flatMap((d) => d.tags)));
 
   const filteredDecisions = decisions.filter((d) => {
-    const matchesSearch =
-      d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      d.notes.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesTags =
-      selectedTags.length === 0 || selectedTags.some((tag) => d.tags.includes(tag));
+    const matchesSearch = d.title.toLowerCase().includes(searchQuery.toLowerCase()) || d.notes.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesTags = selectedTags.length === 0 || selectedTags.some((tag) => d.tags.includes(tag));
     return matchesSearch && matchesTags;
   });
 
@@ -58,25 +49,15 @@ export default function UserPanel() {
   };
 
   const saveNotes = (id) => {
-    setDecisions(
-      decisions.map((d) =>
-        d.id === id ? { ...d, notes: editedNotes, tags: editingTags || d.tags } : d
-      )
-    );
+    setDecisions(decisions.map((d) => d.id === id ? { ...d, notes: editedNotes, tags: editingTags || d.tags } : d));
     setEditingId(null);
     setEditingTags(null);
   };
 
-  const deleteDecision = (id) => {
-    setDecisions(decisions.filter((d) => d.id !== id));
-  };
+  const deleteDecision = (id) => setDecisions(decisions.filter((d) => d.id !== id));
 
   const toggleTagFilter = (tag) => {
-    setSelectedTags(
-      selectedTags.includes(tag)
-        ? selectedTags.filter((t) => t !== tag)
-        : [...selectedTags, tag]
-    );
+    setSelectedTags(selectedTags.includes(tag) ? selectedTags.filter((t) => t !== tag) : [...selectedTags, tag]);
   };
 
   const addTagToEditing = () => {
@@ -86,198 +67,143 @@ export default function UserPanel() {
     }
   };
 
-  const removeTagFromEditing = (tag) => {
-    if (editingTags) {
-      setEditingTags(editingTags.filter((t) => t !== tag));
-    }
-  };
-
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2>Panel użytkownika</h2>
-          <p className="text-muted-foreground mt-1">Przeglądaj i zarządzaj swoimi decyzjami</p>
-        </div>
+      <div>
+        <h2 className="text-2xl font-bold">Panel użytkownika</h2>
+        <p className="text-muted-foreground mt-1">Przeglądaj i zarządzaj swoimi decyzjami</p>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="Szukaj decyzji..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 bg-muted/30 border border-border rounded-lg outline-none focus:border-primary transition-colors"
-        />
-      </div>
+      {/* REFACTOR: Wyszukiwarka używa nowego komponentu Input */}
+      <Input 
+        icon={Search}
+        placeholder="Szukaj decyzji po tytule lub notatkach..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
 
-      <div className="border border-border rounded-lg p-4">
+      {/* REFACTOR: Karta filtrów używa Card i Badge */}
+      <Card className="p-4">
         <div className="flex items-center gap-2 mb-3">
           <Tag className="w-4 h-4 text-muted-foreground" />
           <h3 className="font-medium">Filtruj według tagów</h3>
         </div>
         <div className="flex flex-wrap gap-2">
           {allTags.map((tag) => (
-            <Button
+            <Badge
               key={tag}
-              variant={selectedTags.includes(tag) ? "tagActive" : "tag"}
-              size="tagSize"
+              variant={selectedTags.includes(tag) ? "active" : "interactive"}
               onClick={() => toggleTagFilter(tag)}
             >
               {tag}
-            </Button>
+            </Badge>
           ))}
         </div>
         {selectedTags.length > 0 && (
-          <button
-            onClick={() => setSelectedTags([])}
-            className="text-sm text-muted-foreground hover:text-foreground mt-3 transition-colors"
-          >
+          <button onClick={() => setSelectedTags([])} className="text-sm text-muted-foreground hover:text-foreground mt-3 transition-colors">
             Wyczyść filtry
           </button>
         )}
-      </div>
+      </Card>
 
-      <div className="space-y-3">
+      {/* REFACTOR: Lista decyzji używa Card */}
+      <div className="space-y-4">
         {filteredDecisions.map((decision) => (
-          <div key={decision.id} className="border border-border rounded-lg p-5 hover:border-primary/50 transition-colors">
+          <Card key={decision.id} className="hover:border-primary/50 transition-colors">
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <div className="flex items-center gap-3">
-                  <h3 className="font-medium">{decision.title}</h3>
-                  <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">
+                  <h3 className="font-semibold text-lg">{decision.title}</h3>
+                  <Badge variant="default">
                     {decision.type === "table" ? "Tabela" : "Drzewo"}
-                  </span>
+                  </Badge>
                 </div>
                 <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
                   <Calendar className="w-4 h-4" />
-                  {new Date(decision.date).toLocaleDateString("pl-PL", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
+                  {new Date(decision.date).toLocaleDateString("pl-PL", { year: "numeric", month: "long", day: "numeric" })}
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => startEditing(decision)}
-                  title="Edytuj notatkę"
-                >
+                <Button variant="ghost" size="icon" onClick={() => startEditing(decision)} title="Edytuj notatkę">
                   <Edit2 className="w-4 h-4" />
                 </Button>
-                <Button
-                  variant="dangerGhost"
-                  size="icon"
-                  onClick={() => deleteDecision(decision.id)}
-                  title="Usuń"
-                >
+                <Button variant="dangerGhost" size="icon" onClick={() => deleteDecision(decision.id)} title="Usuń">
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
             </div>
 
-            <div className="mb-4 p-3 bg-muted/30 rounded-lg">
-              <div className="text-sm font-medium">Wynik decyzji</div>
-              <div className="mt-1">{decision.result}</div>
+            <div className="mb-4 p-3 bg-primary/5 text-primary border border-primary/10 rounded-lg">
+              <div className="text-xs font-bold uppercase tracking-wider mb-1">Wynik analizy</div>
+              <div className="font-medium">{decision.result}</div>
             </div>
 
             <div className="mb-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
                 <Tag className="w-4 h-4" />
                 Tagi
               </div>
+              
               {editingId === decision.id && editingTags ? (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {editingTags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-sm"
-                    >
+                    <Badge key={tag} variant="primary" className="pr-1">
                       {tag}
-                      {/* Zostawiam tu natywny button, bo to mini-krzyżyk wewnątrz taga */}
-                      <button
-                        onClick={() => removeTagFromEditing(tag)}
-                        className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
-                      >
+                      <button onClick={() => setEditingTags(editingTags.filter((t) => t !== tag))} className="hover:bg-primary/20 rounded-full p-0.5 ml-1 transition-colors">
                         <X className="w-3 h-3" />
                       </button>
-                    </span>
+                    </Badge>
                   ))}
-                  <div className="flex gap-1 items-center">
+                  <div className="flex items-center gap-1 ml-2">
                     <input
                       type="text"
                       value={newTagInput}
                       onChange={(e) => setNewTagInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && addTagToEditing()}
-                      placeholder="Nowy tag..."
-                      className="px-2 py-1 bg-background border border-border rounded-full text-sm outline-none focus:border-primary transition-colors"
+                      placeholder="Dodaj tag..."
+                      className="px-3 py-1 bg-background border border-border rounded-full text-sm outline-none focus:border-primary transition-colors"
                     />
-                    <Button
-                      size="sm"
-                      className="rounded-full px-2 py-1 h-auto"
-                      onClick={addTagToEditing}
-                    >
-                      <Plus className="w-3 h-3" />
-                    </Button>
                   </div>
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {decision.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-2 py-1 bg-muted text-muted-foreground rounded-full text-sm"
-                    >
-                      {tag}
-                    </span>
+                    <Badge key={tag}>{tag}</Badge>
                   ))}
                 </div>
               )}
             </div>
 
             <div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
                 <MessageSquare className="w-4 h-4" />
                 Notatki
               </div>
               {editingId === decision.id ? (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <textarea
                     value={editedNotes}
                     onChange={(e) => setEditedNotes(e.target.value)}
-                    className="w-full px-3 py-2 bg-background border border-border rounded-lg outline-none focus:border-primary transition-colors resize-none"
+                    className="w-full px-4 py-3 bg-background border border-border rounded-lg outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors resize-none"
                     rows={3}
                   />
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={() => saveNotes(decision.id)}>
-                      Zapisz
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => {
-                        setEditingId(null);
-                        setEditingTags(null);
-                      }}
-                    >
-                      Anuluj
-                    </Button>
+                    <Button onClick={() => saveNotes(decision.id)}>Zapisz</Button>
+                    <Button variant="secondary" onClick={() => { setEditingId(null); setEditingTags(null); }}>Anuluj</Button>
                   </div>
                 </div>
               ) : (
-                <p className="text-muted-foreground">{decision.notes}</p>
+                <p className="text-foreground leading-relaxed bg-muted/20 p-4 rounded-lg">{decision.notes}</p>
               )}
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
       {filteredDecisions.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          Nie znaleziono decyzji pasujących do zapytania
+        <div className="text-center py-16 text-muted-foreground bg-muted/10 rounded-xl border border-dashed border-border">
+          <Search className="w-8 h-8 mx-auto mb-3 text-muted-foreground/50" />
+          Nie znaleziono decyzji pasujących do zapytania.
         </div>
       )}
     </div>

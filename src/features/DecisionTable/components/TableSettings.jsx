@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useTableStore } from '../store/useTableStore';
 import { Settings2, ChevronDown, ChevronUp, X, Plus, Trash2 } from 'lucide-react';
 import { scalePresets } from '../data/scalePresets';
 
 import { ConfirmModal } from '../../../components/ui/ConfirmModal'; 
 import { Button } from '../../../components/ui/Button';
+import { Card } from '../../../components/ui/Card';   
+import { Badge } from '../../../components/ui/Badge'; 
 
 export function TableSettings() {
     const presetKeys = Object.keys(scalePresets);
@@ -23,10 +25,12 @@ export function TableSettings() {
         clearScales
     } = useTableStore();
 
+    // CORE MECHANIC: Load a predefined scale preset and merge it with user-defined scales
     const handleLoadPreset = (presetKey) => {
         loadPreset(presetKey);
     };
 
+    // CORE MECHANIC: Add a new custom scale word with its associated numeric rank
     const handleAddScale = () => {
         if (newScaleWord.trim() !== '' && newScaleRank.trim() !== '') {
             addScale(newScaleWord.trim(), newScaleRank.trim());
@@ -42,7 +46,6 @@ export function TableSettings() {
 
     return (
         <div className="mt-8 border-t border-border pt-6 relative">
-            
             <Button 
                 variant="secondary"
                 onClick={() => setShowScalesSettings(!showScalesSettings)}
@@ -57,27 +60,22 @@ export function TableSettings() {
             </Button>
             
             {showScalesSettings && (
-                <div className="mt-4 p-5 bg-card border border-border rounded-xl shadow-sm space-y-6 max-w-[1000px] animate-in fade-in slide-in-from-top-2">
-                    
-            
+                <Card className="mt-4 space-y-6 max-w-[1000px] animate-in fade-in slide-in-from-top-2">
+                    {/* SEKCJA: GOTOWE PRESETY */}
                     <div>
-                        <h3 className="text-sm font-medium text-foreground mb-3">Gotowe oceny</h3>
+                        <h3 className="text-sm font-semibold text-foreground mb-3">Gotowe pakiety ocen</h3>
                         <div className="flex flex-wrap items-center gap-2">
                             {presetKeys.map(presetKey => (
-                                <button 
+                                <Badge 
                                     key={presetKey} 
-                                    className={`px-3 py-1 rounded-full text-sm font-medium transition-colors cursor-pointer ${
-                                        activePreset === presetKey 
-                                            ? "bg-primary text-primary-foreground shadow-sm"
-                                            : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground border border-transparent"
-                                    }`}
+                                    variant={activePreset === presetKey ? "active" : "interactive"}
                                     onClick={() => handleLoadPreset(presetKey)}
                                 >
                                     {presetKey}
-                                </button>
+                                </Badge>
                             ))}
                             
-                            <div className="w-px h-5 bg-border mx-1"></div>
+                            <div className="w-px h-5 bg-border mx-1" />
 
                             <Button 
                                 variant="dangerGhost"
@@ -91,28 +89,28 @@ export function TableSettings() {
                         </div>
                     </div>
 
-                
+                    {/* SEKCJA: AKTYWNE OCENY */}
                     <div>
-                        <h3 className="text-sm font-medium text-foreground mb-3">Twoje aktywne oceny</h3>
+                        <h3 className="text-sm font-semibold text-foreground mb-3">Twoje aktywne oceny</h3>
                         {customScales.length > 0 ? (
                             <div className="flex flex-wrap gap-2">
                                 {customScales.map((scale, index) => (
-                                    <span 
+                                    <Badge 
                                         key={index} 
-                                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-sm font-medium shadow-sm transition-all"
+                                        variant="primary" 
+                                        className="pr-1"
                                     >
                                         <span>
                                             {scale.word} 
                                             <span className="opacity-50 ml-1 font-normal tracking-tight">→ {scale.rank}</span>
                                         </span>
                                         <button 
-                                            className="hover:bg-primary/20 rounded-full p-0.5 ml-0.5 transition-colors focus:outline-none" 
+                                            className="hover:bg-primary/20 rounded-full p-0.5 ml-1 transition-colors focus:outline-none" 
                                             onClick={() => removeScale(index)} 
-                                            title="Usuń"
                                         >
                                             <X className="w-3 h-3" />
                                         </button>
-                                    </span>
+                                    </Badge>
                                 ))}
                             </div>
                         ) : (
@@ -120,40 +118,45 @@ export function TableSettings() {
                         )}
                     </div>
 
+             
                     <div className="pt-5 border-t border-border border-dashed">
-                        <div className="flex items-end gap-3 flex-wrap sm:flex-nowrap">
-                            <div className="flex-1 min-w-[200px]">
-                                <label className="block text-xs font-medium text-muted-foreground mb-1.5 ml-1">Nazwa oceny</label>
-                                <input 
-                                    className="w-full px-4 py-2 bg-background border border-border rounded-full text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                                    placeholder="np. premium" 
-                                    value={newScaleWord}
-                                    onChange={(e) => setNewScaleWord(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleAddScale()}
-                                />
-                            </div>
-                            <div className="w-[120px]">
-                                <label className="block text-xs font-medium text-muted-foreground mb-1.5 ml-1">Waga (punkty)</label>
-                                <input 
-                                    className="w-full px-4 py-2 bg-background border border-border rounded-full text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                                    placeholder="np. 5" 
-                                    type="number"
-                                    value={newScaleRank}
-                                    onChange={(e) => setNewScaleRank(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleAddScale()}
-                                />
-                            </div>
+                        <h3 className="text-sm font-semibold text-foreground mb-3">Dodaj własną ocenę</h3>
+                        
+                      
+                        <div className="inline-flex items-center bg-background border border-border rounded-full pl-4 pr-1 py-1 focus-within:border-primary transition-colors">
                             
+                            <input 
+                                placeholder="Nazwa (np. premium)" 
+                                value={newScaleWord}
+                                onChange={(e) => setNewScaleWord(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleAddScale()}
+                                className="bg-transparent border-none outline-none text-sm w-[160px] text-foreground placeholder:text-muted-foreground"
+                            />
+                            
+                            <div className="w-px h-4 bg-border mx-2 shrink-0" />
+                            
+                            <input 
+                                placeholder="Waga (np. 5)" 
+                                type="number"
+                                value={newScaleRank}
+                                onChange={(e) => setNewScaleRank(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleAddScale()}
+                                className="bg-transparent border-none outline-none text-sm w-[120px] text-center text-foreground placeholder:text-muted-foreground"
+                            />
+                            
+                
                             <Button 
-                                className="rounded-full mb-px"
+                                variant="default"
+                                size="circleSm"
+                                className="shrink-0 ml-1"
                                 onClick={handleAddScale}
+                                title="Dodaj ocenę"
                             >
-                                <Plus className="w-4 h-4 mr-1.5" />
-                                Dodaj
+                                <Plus className="w-4 h-4" />
                             </Button>
                         </div>
                     </div>
-                </div>
+                </Card>
             )}
 
             <ConfirmModal

@@ -10,7 +10,6 @@ export const Button = forwardRef(({
   
   const baseStyles = "inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-50 cursor-pointer";
 
- 
   const variants = {
     default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
     destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
@@ -25,12 +24,10 @@ export const Button = forwardRef(({
     
     defaultPurple: "bg-primary text-primary-foreground shadow-sm hover:bg-purple-500 hover:text-white",
     defaultAmber: "bg-primary text-primary-foreground shadow-sm hover:bg-amber-500 hover:text-white",
-    
-  
-    tag: "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground border border-transparent",
-    tagActive: "bg-primary text-primary-foreground shadow-sm border border-transparent",
-  };
 
+   
+    emeraldOutline: "border border-emerald-400/80 bg-emerald-50 text-emerald-800 shadow-sm backdrop-blur-sm hover:border-emerald-500 hover:bg-emerald-100 dark:border-emerald-700/80 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:border-emerald-600 dark:hover:bg-emerald-900",
+  };
 
   const sizes = {
     default: "h-9 px-4 py-2 text-sm rounded-lg",
@@ -39,8 +36,8 @@ export const Button = forwardRef(({
     icon: "h-9 w-9 rounded-lg", 
     iconSm: "h-7 w-7 text-lg rounded-lg",
     
-   
-    tagSize: "px-3 py-1 text-sm rounded-full", 
+    circle: "h-9 w-9 rounded-full p-0", 
+    circleSm: "h-7 w-7 rounded-full p-0",
   };
 
   const combinedClasses = `${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`;
