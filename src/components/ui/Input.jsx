@@ -1,6 +1,6 @@
 import React, { forwardRef, useId } from 'react';
 
-// CORE UI: Reusable input component supporting labels, icons, and error states.
+
 export const Input = forwardRef(({
   label,
   error,

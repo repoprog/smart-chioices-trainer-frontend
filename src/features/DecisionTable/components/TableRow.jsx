@@ -88,7 +88,7 @@ export function TableRow({
         </div>
       </td>
 
-      {/* REFACTOR: Mapping over alternatives using the clean TableCell component */}
+    
       {alternatives.map((_, colIndex) => {
         const cellKey = `${rowIndex}-${colIndex}`;
 

@@ -20,11 +20,9 @@ export function TerminalNode({ id, data }) {
   const probabilityPercent = (pathProb * 100).toFixed(1); 
   const isImpossible = pathProb === 0;
   
-  
-  const fillColor = isHighlighted ? '#ecfdf5' : '#ffffff'; // emerald-50 : white
-  const strokeColor = isHighlighted ? '#10b981' : '#0f172a'; // emerald-600 : slate-900
+  const fillColor = isHighlighted ? '#ecfdf5' : '#ffffff'; 
+  const strokeColor = isHighlighted ? '#10b981' : '#0f172a'; 
 
-  
   const rawPayoff = String(data.payoff || '');
   const numericPayoff = parseFloat(rawPayoff.replace(/zł|%|\s/g, '').replace(',', '.').replace('−', '-'));
   
@@ -41,20 +39,24 @@ export function TerminalNode({ id, data }) {
       : `border-slate-300 focus:border-sky-500 focus:ring-sky-500 ${textColorClass}`
   }`;
 
+
+  const containerClasses = `relative flex h-11 w-11 shrink-0 items-center justify-center transition-all ${
+    isHighlighted 
+      ? "drop-shadow-[0_0_8px_rgba(16,185,129,0.6)]" 
+      : "drop-shadow-sm"
+  }`;
+
   return (
-    // PANCERZ + Wyizolowana grupa głowna (group/node)
+   
     <div className="group/node relative z-10 hover:!z-[9999] flex h-11 items-center transition-all">
       <Handle type="target" position={Position.Left} className={handleClass} />
       
-      <div className={`relative flex h-11 w-11 shrink-0 items-center justify-center drop-shadow-sm ${isHighlighted ? "highlighted" : ""}`}>
-        <svg className="h-full w-full" viewBox="0 0 44 44">
+      <div className={containerClasses}>
+        <svg className="h-full w-full overflow-visible" viewBox="0 0 44 44">
           <polygon 
             points="2,2 42,22 2,42" 
-            // --- POPRAWKA TUTAJ ---
-            // Wpisujemy kolory bezpośrednio w atrybuty natywne SVG
             fill={fillColor}
             stroke={strokeColor}
-            // Zmieniono strokeWidth z 1.5 na 1, żeby pasowało do Tailwinda 'border'
             strokeWidth="1" 
             strokeLinejoin="round"
           />
@@ -63,7 +65,7 @@ export function TerminalNode({ id, data }) {
       
       <div className="ml-2 relative flex flex-col justify-center">
         
-        {/* GRUPA WEWNĘTRZNA DLA INPUTA (group/input) - zapobiega konfliktom z głównym menu */}
+   
         <div className="relative flex items-center group/input">
           <input
             type="text"
@@ -90,7 +92,6 @@ export function TerminalNode({ id, data }) {
         </div>
       </div>
 
-      {/* MENU WĘZŁA: Reaguje na group/node. Bez animacji opacity. */}
       <div
         className="absolute left-full top-1/2 pl-1 flex -translate-y-1/2 flex-col opacity-0 group-hover/node:pointer-events-auto group-hover/node:opacity-100 pointer-events-none z-[1000]"
         onPointerDown={(e) => e.stopPropagation()}

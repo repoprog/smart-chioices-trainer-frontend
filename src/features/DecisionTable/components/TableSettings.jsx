@@ -25,12 +25,12 @@ export function TableSettings() {
         clearScales
     } = useTableStore();
 
-    // CORE MECHANIC: Load a predefined scale preset and merge it with user-defined scales
+   
     const handleLoadPreset = (presetKey) => {
         loadPreset(presetKey);
     };
 
-    // CORE MECHANIC: Add a new custom scale word with its associated numeric rank
+ 
     const handleAddScale = () => {
         if (newScaleWord.trim() !== '' && newScaleRank.trim() !== '') {
             addScale(newScaleWord.trim(), newScaleRank.trim());
@@ -45,13 +45,14 @@ export function TableSettings() {
     };
 
     return (
-        <div className="mt-8 border-t border-border pt-6 relative">
+        <div className="relative">
             <Button 
                 variant="secondary"
+                size="sm"
                 onClick={() => setShowScalesSettings(!showScalesSettings)}
             >
                 <Settings2 className="w-4 h-4 mr-2 text-muted-foreground" />
-                Ustawienia ocen
+                Oceny
                 {showScalesSettings ? (
                     <ChevronUp className="w-4 h-4 ml-1 text-muted-foreground" />
                 ) : (
@@ -89,7 +90,6 @@ export function TableSettings() {
                         </div>
                     </div>
 
-                    {/* SEKCJA: AKTYWNE OCENY */}
                     <div>
                         <h3 className="text-sm font-semibold text-foreground mb-3">Twoje aktywne oceny</h3>
                         {customScales.length > 0 ? (

@@ -8,7 +8,6 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
   
   const loadScenario = useTreeStore(s => s.loadScenario);
 
-  // --- ZAPIS DO JSON ---
   const handleExportJson = () => {
     const state = useTreeStore.getState();
     const exportData = {

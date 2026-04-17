@@ -110,9 +110,10 @@ export function DecisionTablePage() {
       {/* MAIN TABLE AREA */}
       <Card className="flex-1 overflow-auto max-h-[85vh] custom-scrollbar flex flex-col relative z-0 p-6">
         <TableGrid />
-        <TableSettings />
+       
+            <TableSettings />
         
-        <div className="mt-6 flex justify-end">
+      <div className="mt-4 border-t border-border pt-4 flex justify-end">
           <Button
             variant="dangerGhost"
             size="sm"

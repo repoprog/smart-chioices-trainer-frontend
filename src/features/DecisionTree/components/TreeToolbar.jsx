@@ -5,7 +5,7 @@ import { jsPDF } from 'jspdf';
 import { useTreeStore, useTemporalTreeStore } from '../store/useTreeStore.js';
 import { FolderOpen, Save, Image as ImageIcon, FileText, Undo2, Redo2, Maximize, Minimize } from 'lucide-react'; 
 
-import { Button } from '../../../components/ui/Button'; // <-- IMPORT NASZEGO KOMPONENTU
+import { Button } from '../../../components/ui/Button'; 
 
 export function TreeToolbar() {
   const undo = useTemporalTreeStore((state) => state.undo);
@@ -22,7 +22,7 @@ export function TreeToolbar() {
   const canUndo = pastStates.length > 0;
   const canRedo = futureStates.length > 0;
 
-  // Pozostawiamy klasę dla małych napisów "PNG" i "PDF"
+ 
   const badgeClass = "absolute -bottom-1.5 right-0 rounded-[4px] bg-background border border-border px-[3px] py-[1px] text-[8px] font-bold text-muted-foreground shadow-sm leading-none z-10 pointer-events-none";
 
   const toggleFullscreen = () => {

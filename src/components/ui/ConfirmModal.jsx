@@ -1,6 +1,6 @@
 import { AlertTriangle } from "lucide-react";
 import Modal from "./Modal";
-import { Button } from "./Button"; // Importujemy nasz przycisk!
+import { Button } from "./Button"; 
 
 export function ConfirmModal({
   isOpen,

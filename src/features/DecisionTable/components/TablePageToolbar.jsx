@@ -13,7 +13,7 @@ export function TablePageToolbar({ showTemplates, setShowTemplates }) {
   
   const fileInputRef = useRef(null);
 
-  // CORE MECHANIC: Export current decision table state to a downloadable JSON file
+ 
   const handleExportJson = () => {
     const state = useTableStore.getState();
     const exportData = {
@@ -39,7 +39,7 @@ export function TablePageToolbar({ showTemplates, setShowTemplates }) {
     URL.revokeObjectURL(url);
   };
 
-  // CORE MECHANIC: Trigger hidden file input for JSON import
+
   const handleImportClick = () => {
     fileInputRef.current?.click();
   };

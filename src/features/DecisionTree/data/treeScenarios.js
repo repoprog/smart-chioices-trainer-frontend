@@ -1,4 +1,4 @@
-// plik: src/data/scenarios.js
+
 
 export const treeScenarios = {
   blank: {
@@ -16,23 +16,22 @@ export const treeScenarios = {
     description: "Czy warto inwestować duże środki w nowy produkt?",
     labels: ["Decyzja biznesowa", "Ryzyko Rynkowe", "Wynik Finansowy"],
     nodes: [
-      // 1. Decyzja początkowa
+    
       { id: 'd1', type: 'decision', position: { x: 0, y: 0 }, zIndex: 100, data: { nodeNumber: 1 } },
       
-      // 2. Ryzyko Rynkowe (Niepewność)
+  
       { id: 'c1', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 2 } }, 
-      
-      // 3. Wynik Finansowy (Terminal)
-      { id: 't1', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '200 000' } }, // Sukces
-      { id: 't2', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '20 000' } },  // Porażka
-      { id: 't3', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '5 000' } },   // Brak inwestycji (lokata)
+     
+      { id: 't1', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '200 000' } }, 
+      { id: 't2', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '20 000' } }, 
+      { id: 't3', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '5 000' } },   
     ],
     edges: [
-      // Opcje decyzji (tu dodajemy KOSZTY)
+    
       { id: 'e1', source: 'd1', target: 'c1', type: 'smartChoices', data: { optionLabel: 'Inwestuj w produkt', cost: '50 000', probability: null } },
       { id: 'e2', source: 'd1', target: 't3', type: 'smartChoices', data: { optionLabel: 'Zostaw kasę na lokacie', cost: '0', probability: null } },
       
-      // Szanse rynkowe po inwestycji
+   
       { id: 'e3', source: 'c1', target: 't1', type: 'smartChoices', data: { optionLabel: 'Wysoki popyt', probability: '60.00%', isLocked: true } },
       { id: 'e4', source: 'c1', target: 't2', type: 'smartChoices', data: { optionLabel: 'Niski popyt (Kryzys)', probability: '40.00%', isLocked: true } },
     ]
@@ -43,23 +42,22 @@ export const treeScenarios = {
     description: "Zgodzić się na pewną, ale bolesną ugodę, czy zaryzykować proces sądowy (z kosztami adwokackimi) i walczyć o uniewinnienie?",
     labels: ["Strategia Prawna", "Wyrok Sądu", "Koszty i Kary"],
     nodes: [
-      // 1. Decyzja początkowa
+   
       { id: 'd1', type: 'decision', position: { x: 0, y: 0 }, zIndex: 100, data: { nodeNumber: 1 } },
       
-      // 2. Ryzyko wyroku (Niepewność)
+   
       { id: 'c1', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 2 } }, 
       
-      // 3. Konsekwencje (Terminal) - tu wszystkie payoff są ujemne lub zerowe (bo to straty)
-      { id: 't1', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '-50 000' } }, // Ugoda
-      { id: 't2', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0' } },       // Wygrana w sądzie (brak kary)
-      { id: 't3', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '-150 000' } },// Przegrana w sądzie
+      { id: 't1', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '-50 000' } }, 
+      { id: 't2', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0' } },      
+      { id: 't3', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '-150 000' } },
     ],
     edges: [
-      // Opcje decyzji (Koszty podjęcia akcji)
+    
       { id: 'e1', source: 'd1', target: 't1', type: 'smartChoices', data: { optionLabel: 'Przyjmij ugodę', cost: '0', probability: null } },
       { id: 'e2', source: 'd1', target: 'c1', type: 'smartChoices', data: { optionLabel: 'Idź do sądu', cost: '-20 000', probability: null } }, // 20k to koszt prawników
       
-      // Wyrok
+   
       { id: 'e3', source: 'c1', target: 't2', type: 'smartChoices', data: { optionLabel: 'Wygrana (Uniewinnienie)', probability: '70.00%', isLocked: true } },
       { id: 'e4', source: 'c1', target: 't3', type: 'smartChoices', data: { optionLabel: 'Przegrana (Maksymalna kara)', probability: '30.00%', isLocked: true } },
     ]
@@ -80,15 +78,15 @@ export const treeScenarios = {
       { id: 't4', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '10 000' } },  // Słabe SEO
     ],
     edges: [
-      // KOSZTY KAMPANII
+     
       { id: 'e1', source: 'd1', target: 'c1', type: 'smartChoices', data: { optionLabel: 'Kampania Influencer/SM', cost: '-15 000', probability: null } },
       { id: 'e2', source: 'd1', target: 'c2', type: 'smartChoices', data: { optionLabel: 'Pozycjonowanie SEO', cost: '-4 000', probability: null } },
       
-      // REAKCJA NA SOCIAL MEDIA
+     
       { id: 'e3', source: 'c1', target: 't1', type: 'smartChoices', data: { optionLabel: 'Efekt Viralowy', probability: '25.00%', isLocked: true } },
       { id: 'e4', source: 'c1', target: 't2', type: 'smartChoices', data: { optionLabel: 'Brak odzewu', probability: '75.00%', isLocked: true } },
       
-      // REAKCJA NA SEO
+   
       { id: 'e5', source: 'c2', target: 't3', type: 'smartChoices', data: { optionLabel: 'Top 3 w Google', probability: '80.00%', isLocked: true } },
       { id: 'e6', source: 'c2', target: 't4', type: 'smartChoices', data: { optionLabel: 'Spadek w rankingach', probability: '20.00%', isLocked: true } },
     ]
@@ -104,7 +102,7 @@ export const treeScenarios = {
       { id: 'c2', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 3 } }, 
       { id: 'c3', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 4 } },
       
-      // Tutaj używam wartości punktowej 100 (wygrana) i 0 (przegrana)
+    
       { id: 't1', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0 (Przegrana)' } }, 
       { id: 't2', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '100 (Wygrana)' } }, 
       { id: 't3', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0 (Przegrana)' } }, 
@@ -112,7 +110,7 @@ export const treeScenarios = {
       { id: 't5', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0 (Przegrana)' } }, 
     ],
     edges: [
-      // Brak "kosztów" finansowych w rzucie piłką, koszt = 0
+    
       { id: 'e1', source: 'd1', target: 'c1', type: 'smartChoices', data: { optionLabel: 'Za 2 punkty', probability: null } },
       { id: 'e2', source: 'd1', target: 'c2', type: 'smartChoices', data: { optionLabel: 'Za 3 punkty', probability: null } },
       

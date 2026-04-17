@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Search, Edit2, Trash2, Calendar, MessageSquare, X, Plus, Tag } from "lucide-react";
 import { Button } from "../components/ui/Button"; 
-import { Input } from "../components/ui/Input";   // <-- NOWY
-import { Badge } from "../components/ui/Badge";   // <-- NOWY
-import { Card } from "../components/ui/Card";     // <-- NOWY
+import { Input } from "../components/ui/Input";   
+import { Badge } from "../components/ui/Badge";   
+import { Card } from "../components/ui/Card";     
 
 export default function UserPanel() {
   const [decisions, setDecisions] = useState([

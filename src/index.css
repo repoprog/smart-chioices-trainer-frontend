@@ -66,7 +66,7 @@ html {
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* --- TWOJE ORYGINALNE ZMIENNE (CIEMNY MOTYW) --- */
+    /* Dark mode --- */
     --text: #9ca3af;
     --text-h: #f3f4f6;
     --bg: #16171d;
@@ -78,7 +78,7 @@ html {
     --social-bg: rgba(47, 48, 58, 0.5);
     --shadow: rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
 
-    /* --- NOWE ZMIENNE FIGMA (CIEMNY MOTYW) --- */
+   /* light mode --- */
     --bg-app: oklch(0.145 0 0);
     --text-app: oklch(0.985 0 0);
     --primary: oklch(0.985 0 0);
@@ -96,7 +96,7 @@ html {
   }
 }
 
-/* === TWOJE BAZOWE USTAWIENIA === */
+/* Base */
 body { margin: 0; }
 #root { width: 100%; max-width: 100%; margin: 0; min-height: 100svh; box-sizing: border-box; }
 h1, h2 { font-family: var(--heading); font-weight: 500; color: var(--text-h); }
@@ -113,7 +113,7 @@ code { font-size: 15px; line-height: 135%; padding: 4px 8px; background: var(--c
   z-index: 9999 !important;
 }
 
-/* Podświetlenie ścieżki (krawędzi) */
+/* Path */
 .react-flow__edge.highlighted path {
   stroke: #4ade80;
   stroke-width: 2.5;

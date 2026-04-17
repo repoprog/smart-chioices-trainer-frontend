@@ -23,7 +23,7 @@ export function NodeMenu({ nodeId, nodeType, hasIncoming }) {
   return (
     <div className="flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl w-48 py-1 z-50 relative">
       
-      {/* SEKCJA: DODAWANIE (ukryta dla terminali) */}
+     
       {!isTerminal && (
         <>
           <button className={btnClass} onClick={() => addBranch(nodeId, 'chance')}>
@@ -51,7 +51,7 @@ export function NodeMenu({ nodeId, nodeType, hasIncoming }) {
         </>
       )}
 
-      {/* SEKCJA: ZAMIANA TYPU */}
+   
       {nodeType !== 'chance' && (
         <button className={btnClass} onClick={() => swapNodeType(nodeId, 'chance')}>
           <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -79,7 +79,7 @@ export function NodeMenu({ nodeId, nodeType, hasIncoming }) {
         </button>
       )}
 
-      {/* SEKCJA: KOSZTY I USUWANIE */}
+     
       {!isTerminal && (
         <>
           <div className={dividerClass} />

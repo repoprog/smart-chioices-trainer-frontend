@@ -1,298 +1,269 @@
-/** BFS od korzenia; numery tylko dla decision + chance, kolejność jak w Smart Choices (poziomami). */
-
-export function renumberDecisionAndChanceNodes(nodes, edges) {
-  const hasIncoming = new Set()
-  for (const e of edges) hasIncoming.add(e.target)
-
-  const roots = nodes.filter((n) => !hasIncoming.has(n.id))
-  const root = roots[0]
-  if (!root) return nodes
-
-  const byId = new Map(nodes.map((n) => [n.id, n]))
-  const outgoing = new Map()
-  for (const e of edges) {
-    if (!outgoing.has(e.source)) outgoing.set(e.source, [])
-    outgoing.get(e.source).push(e)
-  }
-
-  for (const [, list] of outgoing) {
-    list.sort((a, b) => {
-      const na = byId.get(a.target)
-      const nb = byId.get(b.target)
-      const dy = (na?.position?.y ?? 0) - (nb?.position?.y ?? 0)
-      if (dy !== 0) return dy
-      const dx = (na?.position?.x ?? 0) - (nb?.position?.x ?? 0)
-      return dx
-    })
-  }
-
-  const orderedIds = []
-  const visited = new Set()
-  const queue = [root.id]
-
-  while (queue.length) {
-    const id = queue.shift()
-    if (visited.has(id)) continue
-    visited.add(id)
-    const node = byId.get(id)
-    if (!node) continue
-    if (node.type === 'decision' || node.type === 'chance') {
-      orderedIds.push(id)
-    }
-    for (const e of outgoing.get(id) ?? []) queue.push(e.target)
-  }
-
-  let n = 1
-  const idToNumber = new Map()
-  for (const id of orderedIds) idToNumber.set(id, n++)
-
-  return nodes.map((node) => {
-    if (node.type !== 'decision' && node.type !== 'chance') return node
-    const num = idToNumber.get(node.id) ?? 0
-    return {
-      ...node,
-      data: { ...node.data, nodeNumber: num },
-    }
-  })
-}
-
-export function collectDescendants(startId, edges) {
-  const set = new Set()
-  const q = [startId]
-  while (q.length) {
-    const id = q.shift()
-    if (set.has(id)) continue
-    set.add(id)
-    for (const e of edges) {
-      if (e.source === id) q.push(e.target)
-    }
-  }
-  return set
-}
-
-let idCounter = 0
-export function nextDomId(prefix) {
-  idCounter += 1
-  return `${prefix}-${idCounter}`
-}
-
-
+import dagre from 'dagre';
 
 /**
- * Numer wierzchołka (`data.nodeNumber`), który usunie `removeBranch` (korzeń usuwanego poddrzewa).
- * Dla terminala zwraca `null` — wtedy etykieta tylko „Usuń gałąź”.
+ * CORE MECHANIC: Counter for generating unique DOM-safe IDs for new nodes and edges.
  */
-export function getNextRemovalTargetVertexNumber(parentId, nodes, edges) {
-  const outgoing = edges.filter((e) => e.source === parentId)
-  if (!outgoing.length) return null
-
-  const byId = new Map(nodes.map((n) => [n.id, n]))
-  const compareAsc = (a, b) => {
-    const na = byId.get(a.target)
-    const nb = byId.get(b.target)
-    const dy = (na?.position?.y ?? 0) - (nb?.position?.y ?? 0)
-    if (dy !== 0) return dy
-    const dx = (na?.position?.x ?? 0) - (nb?.position?.x ?? 0)
-    if (dx !== 0) return dx
-    return a.target.localeCompare(b.target)
-  }
-
-  const sortedDesc = [...outgoing].sort((a, b) => -compareAsc(a, b))
-  const victimEdge = sortedDesc[0]
-  const target = byId.get(victimEdge.target)
-  if (!target || target.type === 'terminal') return null
-
-  const num = target.data?.nodeNumber
-  if (typeof num !== 'number' || num < 1) return null
-  return num
+let idCounter = 0;
+export function nextDomId(prefix) {
+  idCounter += 1;
+  return `${prefix}-${idCounter}`;
 }
 
-/** głębokość od korzenia (0 = decyzja początkowa); zakładamy drzewo spójne z jednym korzeniem */
+/**
+ * CORE MECHANIC: Breadth-first search to collect all descendant nodes and edges.
+ * Used for recursive branch removal.
+ */
+export function collectDescendants(startId, edges) {
+  const set = new Set();
+  const q = [startId];
+  while (q.length) {
+    const id = q.shift();
+    if (set.has(id)) continue;
+    set.add(id);
+    for (const e of edges) {
+      if (e.source === id) q.push(e.target);
+    }
+  }
+  return set;
+}
+
+/**
+ * CORE MECHANIC: Calculate node depth relative to the root (0 = root).
+ */
 export function computeDepthMap(nodes, edges) {
-  const hasIncoming = new Set()
-  for (const e of edges) hasIncoming.add(e.target)
+  const hasIncoming = new Set();
+  for (const e of edges) hasIncoming.add(e.target);
 
-  const roots = nodes.filter((n) => !hasIncoming.has(n.id))
-  if (!roots.length) return new Map()
+  const roots = nodes.filter((n) => !hasIncoming.has(n.id));
+  if (!roots.length) return new Map();
 
-  const root = roots[0]
-  const depth = new Map([[root.id, 0]])
-  const queue = [root.id]
-  const outgoing = new Map()
+  const root = roots[0];
+  const depth = new Map([[root.id, 0]]);
+  const queue = [root.id];
+  const outgoing = new Map();
   for (const e of edges) {
-    if (!outgoing.has(e.source)) outgoing.set(e.source, [])
-    outgoing.get(e.source).push(e.target)
+    if (!outgoing.has(e.source)) outgoing.set(e.source, []);
+    outgoing.get(e.source).push(e.target);
   }
 
   while (queue.length) {
-    const id = queue.shift()
-    const d = depth.get(id) ?? 0
+    const id = queue.shift();
+    const d = depth.get(id) ?? 0;
     for (const t of outgoing.get(id) ?? []) {
       if (!depth.has(t)) {
-        depth.set(t, d + 1)
-        queue.push(t)
+        depth.set(t, d + 1);
+        queue.push(t);
       }
     }
   }
 
-  return depth
+  return depth;
 }
 
 export function getTreeMaxDepth(depthMap) {
-  let m = 0
-  for (const d of depthMap.values()) m = Math.max(m, d)
-  return m
+  let m = 0;
+  for (const d of depthMap.values()) m = Math.max(m, d);
+  return m;
 }
-
-export function estimateNodeWidthPx(node) {
-  if (!node) return 44
-  if (node.type === 'terminal') return 110
-  return 44
-}
-
-export function minNodeTopY(nodes) {
-  if (!nodes.length) return 0
-  let m = Infinity
-  for (const n of nodes) m = Math.min(m, n.position.y)
-  return Number.isFinite(m) ? m : 0
-}
-
-/** Wysokość pola Etap (h-8 + obramowanie), px w przestrzeni flow */
-const STAGE_HEADER_INPUT_HEIGHT = 38
-/** Minimalna luka między dolną krawędzią nagłówka a górną krawędzią najwyższego węzła */
-const STAGE_HEADER_BASE_GAP = 68
-/** Węzły w tym przedziale poniżej minY zwiększają dodatkowy odstęp (więcej gałęzi w górę) */
-const STAGE_HEADER_CLUSTER_RANGE = 140
-const STAGE_HEADER_CLUSTER_STEP = 14
-const STAGE_HEADER_CLUSTER_MAX_EXTRA = 84
 
 /**
- * Pozycja Y (górna krawędź) rzędu pól „Etap” — zawsze wyraźnie nad najwyższym węzłem;
- * przy większej liczbie węzłów blisko górnej krawędzi drzewa pasek idzie jeszcze wyżej.
+ * CORE MECHANIC: Assign sequential numbers to Decision and Chance nodes based on BFS order.
+ * Ensures consistent UI labels (Decision 1, Chance 2, etc.).
  */
-export function computeStageHeaderRowY(nodes) {
-  if (!nodes.length) return -STAGE_HEADER_INPUT_HEIGHT - STAGE_HEADER_BASE_GAP
+export function renumberDecisionAndChanceNodes(nodes, edges) {
+  const hasIncoming = new Set();
+  for (const e of edges) hasIncoming.add(e.target);
 
-  const minTop = minNodeTopY(nodes)
-  let cluster = 0
-  for (const n of nodes) {
-    if (n.position.y <= minTop + STAGE_HEADER_CLUSTER_RANGE) cluster += 1
+  const roots = nodes.filter((n) => !hasIncoming.has(n.id));
+  const root = roots[0];
+  if (!root) return nodes;
+
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  const outgoing = new Map();
+  for (const e of edges) {
+    if (!outgoing.has(e.source)) outgoing.set(e.source, []);
+    outgoing.get(e.source).push(e);
   }
-  const clusterExtra = Math.min(
-    STAGE_HEADER_CLUSTER_MAX_EXTRA,
-    Math.max(0, cluster - 1) * STAGE_HEADER_CLUSTER_STEP,
-  )
 
-  return (
-    minTop -
-    STAGE_HEADER_INPUT_HEIGHT -
-    STAGE_HEADER_BASE_GAP -
-    clusterExtra
-  )
+  // Sort children by Y position to maintain visual numbering order
+  for (const [, list] of outgoing) {
+    list.sort((a, b) => {
+      const na = byId.get(a.target);
+      const nb = byId.get(b.target);
+      const dy = (na?.position?.y ?? 0) - (nb?.position?.y ?? 0);
+      if (dy !== 0) return dy;
+      const dx = (na?.position?.x ?? 0) - (nb?.position?.x ?? 0);
+      return dx;
+    });
+  }
+
+  const orderedIds = [];
+  const visited = new Set();
+  const queue = [root.id];
+
+  while (queue.length) {
+    const id = queue.shift();
+    if (visited.has(id)) continue;
+    visited.add(id);
+    const node = byId.get(id);
+    if (!node) continue;
+    if (node.type === 'decision' || node.type === 'chance') {
+      orderedIds.push(id);
+    }
+    for (const e of outgoing.get(id) ?? []) queue.push(e.target);
+  }
+
+  let n = 1;
+  const idToNumber = new Map();
+  for (const id of orderedIds) idToNumber.set(id, n++);
+
+  return nodes.map((node) => {
+    if (node.type !== 'decision' && node.type !== 'chance') return node;
+    const num = idToNumber.get(node.id) ?? 0;
+    return {
+      ...node,
+      data: { ...node.data, nodeNumber: num },
+    };
+  });
 }
 
 /**
- * Etap i (indeks 0..): krawędzie z głębokości i do i+1.
- * x / w w przestrzeni flow: poziomy zasięg odcinków (prawa krawędź źródła → lewa krawędź celu).
+ * CORE MECHANIC: Automated graph layout using Dagre.
+ * Aligns terminal nodes to the far right for a clean horizontal finish.
  */
-export function computeStageHeaderBands(nodes, edges, labelCount) {
-  if (!labelCount || !nodes.length) return []
+export function getLayoutedElements(nodes, edges) {
+  const dagreGraph = new dagre.graphlib.Graph();
+  dagreGraph.setDefaultEdgeLabel(() => ({}));
+  dagreGraph.setGraph({ rankdir: 'LR', ranksep: 260, nodesep: 60 });
 
-  const depthMap = computeDepthMap(nodes, edges)
-  const byId = new Map(nodes.map((n) => [n.id, n]))
+  const depthMap = computeDepthMap(nodes, edges);
+  const maxDepth = getTreeMaxDepth(depthMap);
 
-  const bands = []
-  for (let i = 0; i < labelCount; i++) {
-    const fromDepth = i
-    const toDepth = i + 1
+  const nodesForDagre = [...nodes];
+  const edgesForDagre = [];
 
-    const edgeList = edges.filter(
-      (e) =>
-        depthMap.get(e.source) === fromDepth &&
-        depthMap.get(e.target) === toDepth,
-    )
+  // Logic to handle terminal node alignment across different depths
+  edges.forEach((edge) => {
+    const targetNode = nodes.find((n) => n.id === edge.target);
 
-    if (edgeList.length === 0) {
-      const atTo = nodes.filter((n) => depthMap.get(n.id) === toDepth)
-      if (atTo.length) {
-        let minx = Infinity
-        let maxx = -Infinity
-        for (const n of atTo) {
-          const w = estimateNodeWidthPx(n)
-          minx = Math.min(minx, n.position.x)
-          maxx = Math.max(maxx, n.position.x + w)
+    if (targetNode?.type === 'terminal') {
+      const sourceNodeId = edge.source;
+      const targetNodeId = edge.target;
+      const sourceNodeDepth = depthMap.get(sourceNodeId) ?? 0;
+      const terminalNodeDepth = sourceNodeDepth + 1;
+      const depthDiff = maxDepth - terminalNodeDepth;
+
+      if (depthDiff > 0) {
+        let lastNodeIdInChain = sourceNodeId;
+        for (let i = 0; i < depthDiff; i++) {
+          const dummyId = `dummy|${edge.id}|${i}`;
+          nodesForDagre.push({ id: dummyId });
+          edgesForDagre.push({
+            source: lastNodeIdInChain,
+            target: dummyId,
+            id: `e-dummy|${lastNodeIdInChain}|${dummyId}`,
+            type: 'smartChoices',
+            data: {},
+          });
+          lastNodeIdInChain = dummyId;
         }
-        bands.push({ x: minx, w: Math.max(maxx - minx, 48) })
+        edgesForDagre.push({
+          source: lastNodeIdInChain,
+          target: targetNodeId,
+          id: `e-dummy|${lastNodeIdInChain}|${targetNodeId}`,
+          type: 'smartChoices',
+          data: {},
+        });
       } else {
-        const prev = bands[bands.length - 1]
-        const px = prev ? prev.x + Math.max(prev.w, 48) + 16 : i * 200
-        bands.push({ x: px, w: 128 })
+        edgesForDagre.push(edge);
       }
-      continue
+    } else {
+      edgesForDagre.push(edge);
     }
+  });
 
-    let minLeft = Infinity
-    let maxRight = -Infinity
-    for (const e of edgeList) {
-      const src = byId.get(e.source)
-      const tgt = byId.get(e.target)
-      if (!src || !tgt) continue
-      const sw = estimateNodeWidthPx(src)
-      const segLeft = src.position.x + sw
-      const segRight = tgt.position.x
-      minLeft = Math.min(minLeft, segLeft)
-      maxRight = Math.max(maxRight, segRight)
-    }
+  nodesForDagre.forEach((node) => {
+    dagreGraph.setNode(node.id, { width: 44, height: 44 });
+  });
 
-    if (!Number.isFinite(minLeft) || !Number.isFinite(maxRight)) {
-      bands.push({ x: i * 200, w: 128 })
-      continue
-    }
+  edgesForDagre.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target);
+  });
 
-    bands.push({
-      x: minLeft,
-      w: Math.max(maxRight - minLeft, 24),
-    })
-  }
+  dagre.layout(dagreGraph);
 
-  return bands
+  let maxLeftX = 0;
+  let minY = Infinity;
+  nodes.forEach((node) => {
+    const pos = dagreGraph.node(node.id);
+    if (!pos) return;
+    const leftX = pos.x - 22;
+    if (leftX > maxLeftX) maxLeftX = leftX;
+    const topY = pos.y - 22;
+    if (topY < minY) minY = topY;
+  });
+
+  const yOffset = -minY + 160;
+
+  return nodes.map((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id);
+    if (!nodeWithPosition) return node;
+
+    let finalX = nodeWithPosition.x - 22;
+    const finalY = nodeWithPosition.y - 22 + yOffset;
+
+    // Terminal nodes are pushed to the max calculated X coordinate
+    if (node.type === 'terminal') finalX = maxLeftX;
+
+    return { ...node, position: { x: finalX, y: finalY } };
+  });
 }
 
-/** Nagłówki kolumn: indeks i = etap głębokości i+1 (pierwszy poziom dzieci korzenia → indeks 0) */
-export function ensureColumnLabelsLength(labels, len) {
-  const base = Array.isArray(labels) ? [...labels] : []
-  while (base.length < len) base.push('')
-  if (base.length > len) return base.slice(0, len)
-  return base
-}
-
+/**
+ * CORE MECHANIC: Calculate X coordinates for stage columns.
+ * Each depth level corresponds to one column header.
+ */
 export function getUniqueColumnXs(nodes, edges) {
   if (!nodes || nodes.length === 0) return [];
-  if (!edges) return [];
-
   const depthMap = computeDepthMap(nodes, edges);
   const nodesByDepth = new Map();
 
-  // 1. Grupujemy WSZYSTKIE węzły (bez żadnych wyjątków dla terminali) po ich prawdziwej głębokości
   nodes.forEach(node => {
     const depth = depthMap.get(node.id) ?? 0;
-    if (!nodesByDepth.has(depth)) {
-      nodesByDepth.set(depth, []);
-    }
+    if (!nodesByDepth.has(depth)) nodesByDepth.set(depth, []);
     nodesByDepth.get(depth).push(node.position.x);
   });
 
-  const uniqueXs = [];
   const sortedDepths = Array.from(nodesByDepth.keys()).sort((a, b) => a - b);
-
-  // 2. Jeden poziom głębokości = dokładnie JEDEN nagłówek. Zero sztucznego dodawania.
-  sortedDepths.forEach(depth => {
-    const xsAtThisDepth = nodesByDepth.get(depth);
-    if (xsAtThisDepth && xsAtThisDepth.length > 0) {
-      // Bierzemy najmniejszy X z danego poziomu, żeby nagłówek zaczynał się równo z pierwszym węzłem
-      uniqueXs.push(Math.min(...xsAtThisDepth));
-    }
+  return sortedDepths.map(depth => {
+    const xs = nodesByDepth.get(depth);
+    return Math.min(...xs);
   });
+}
 
-  return uniqueXs;
+/**
+ * CORE MECHANIC: Sync stage column labels with the current number of unique columns.
+ */
+export function syncColumnLabels(nodes, edges, prevLabels = []) {
+  const columnCount = getUniqueColumnXs(nodes, edges).length;
+  if (columnCount === 0) return []; 
+
+  let result = [...prevLabels];
+  while (result.length < columnCount) result.push('');
+  if (result.length > columnCount) result = result.slice(0, columnCount);
+  return result;
+}
+
+/**
+ * CORE MECHANIC: Position the Stage headers above the highest node in the tree.
+ */
+const STAGE_HEADER_INPUT_HEIGHT = 38;
+const STAGE_HEADER_BASE_GAP = 68;
+
+export function computeStageHeaderRowY(nodes) {
+  if (!nodes.length) return -STAGE_HEADER_INPUT_HEIGHT - STAGE_HEADER_BASE_GAP;
+  let minTop = Infinity;
+  for (const n of nodes) minTop = Math.min(minTop, n.position.y);
+  
+  return minTop - STAGE_HEADER_INPUT_HEIGHT - STAGE_HEADER_BASE_GAP;
 }

@@ -51,7 +51,8 @@ const steps = [
     {
         num: 3,
         title: "Automatyczna analiza",
-        desc: "Algorytm analizuje dane i eliminuje opcje zdominowane (gorsze we wszystkich kryteriach), redukując przestrzeń decyzji. W drzewie obliczana jest wartość oczekiwana każdej ścieżki — bez ręcznych kalkulacji."
+        desc: "Algorytm analizuje dane i eliminuje opcje zdominowane (gorsze we wszystkich kryteriach), redukując przestrzeń decyzji. W drzewie obliczana jest wartość oczekiwana każdej ścieżki — bez ręcznych kalkulacji.",
+        colorStyle: "border-white/50 !text-white/70"
     },
     {
         num: 4,
@@ -65,18 +66,21 @@ export default function LandingPage() {
     return (
         <div className="min-h-screen bg-[#030303] !text-white font-sans selection:bg-purple-500/30 overflow-hidden">
           
+            {/* NAWIGACJA - Przywrócono wymuszenia kolorów (!text-white) i oryginalny przycisk */}
             <header className="fixed top-0 left-1/2 -translate-x-1/2 mt-6 z-50">
                 <nav className="flex items-center gap-1.5 px-4 py-2 border border-white/5 bg-black/60 backdrop-blur-md rounded-full shadow-[0_0_20px_-10px_rgba(139,92,246,0.3)]">
                     <span className="font-bold text-sm tracking-tight !text-white/90 mr-4">Decidely.</span>
                     <a href="#features" className="!text-white/70 text-[12px] font-medium px-2.5 py-1 hover:!text-white transition-colors">Cechy</a>
                     <a href="#how-it-works" className="!text-white/70 text-[12px] font-medium px-2.5 py-1 hover:!text-white transition-colors">Jak to Działa?</a>
                     <a href="#cases" className="!text-white/70 text-[12px] font-medium px-2.5 py-1 hover:!text-white transition-colors">Przykłady</a>
+                    
                     <Link to="/app/table?scenario=developerHiring" className="inline-flex items-center gap-1.5 ml-4 px-3.5 py-1.5 border-none rounded-full bg-purple-500 !text-white text-[12px] font-semibold cursor-pointer transition-all hover:bg-purple-600 hover:shadow-[0_0_20px_0_rgba(139,92,246,0.2)]">
                         Rozpocznij (Free)
                     </Link>
                 </nav>
             </header>
 
+            {/* HERO SECTION */}
             <section className="pt-40 pb-20 px-6 text-center max-w-[1200px] mx-auto">
                 <motion.h1 
                     initial={{ opacity: 0, y: 30 }}
@@ -103,18 +107,16 @@ export default function LandingPage() {
                     transition={{ duration: 0.7, delay: 0.4, ease: "easeOut" }}
                     className="flex flex-col md:flex-row gap-4 justify-center"
                 >
+                    {/* Przywrócono oryginalne przyciski z precyzyjnymi kolorami i cieniami */}
                     <Link to="/app/table?scenario=developerHiring" className="px-5 py-2.5 cursor-pointer font-semibold text-sm bg-purple-500 !text-white border-none rounded-md transition-all hover:shadow-[0_0_30px_0_rgba(139,92,246,0.2)] hover:bg-purple-600">
                       Porównaj Opcje
                     </Link>
-                   <Link 
-                        to="/app/tree?scenario=basketball" 
-                        className="px-5 py-2.5 cursor-pointer font-semibold text-sm bg-cyan-600 !text-white border-none rounded-md transition-all hover:shadow-[0_0_30px_0_rgba(8,145,178,0.3)] hover:bg-cyan-500"
-                    >
+                    <Link to="/app/tree?scenario=basketball" className="px-5 py-2.5 cursor-pointer font-semibold text-sm bg-cyan-600 !text-white border-none rounded-md transition-all hover:shadow-[0_0_30px_0_rgba(8,145,178,0.3)] hover:bg-cyan-500">
                         Zbuduj Drzewo Decyzji
                     </Link>
                 </motion.div>
                 
-                {/* Pochylony Screenshot Applikacji - Animowany */}
+                {/* SCREENSHOT */}
                 <motion.div 
                     initial={{ opacity: 0, scale: 0.95, y: 40 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -132,6 +134,7 @@ export default function LandingPage() {
                 </motion.div>
             </section>
 
+            {/* FEATURES */}
             <section id="features" className="py-20 px-6 max-w-[1200px] mx-auto">
                 <motion.h2 
                     initial={{ opacity: 0, y: 20 }}
@@ -174,7 +177,7 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* 3. SEKCJA JAK TO DZIAŁA (Kroki) */}
+            {/* HOW IT WORKS */}
             <section id="how-it-works" className="py-24 px-6 max-w-[1000px] mx-auto">
                 <motion.h2 
                     initial={{ opacity: 0, y: 20 }}
@@ -217,7 +220,7 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* 4. SEKCJA USE CASES */}
+            {/* USE CASES */}
             <section id="cases" className="py-20 px-6 max-w-[1200px] mx-auto text-center">
                 <motion.h2 
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -252,7 +255,7 @@ export default function LandingPage() {
                 </motion.div>
             </section>
 
-            {/* 5. SEKCJA TECH STACK */}
+            {/* TECH STACK */}
             <section className="py-20 px-6 max-w-[1200px] mx-auto text-center border-t border-white/5 bg-[#010101]">
                 <h4 className="m-0 text-xs font-semibold uppercase tracking-[2px] !text-white/40">Zbudowany na nowoczesnym staku</h4>
                 <div className="mt-10 flex flex-wrap justify-center gap-10 items-center opacity-60">
@@ -262,7 +265,7 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* 6. ALGORITHM SIGNATURE */}
+            {/* ALGORITHM SIGNATURE */}
             <section className="pb-16 px-6 text-center bg-[#010101]">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]">
                     <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -272,7 +275,7 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* Footer */}
+            {/* FOOTER */}
             <footer className="py-10 px-6 text-center text-[11px] !text-white/30 border-t border-white/5">
                 © {new Date().getFullYear()} Decidely.
             </footer>

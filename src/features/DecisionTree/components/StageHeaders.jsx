@@ -4,7 +4,7 @@ import { ArrowUp, ArrowDown } from 'lucide-react';
 
 import { useTreeStore } from '../store/useTreeStore.js'
 import { computeStageHeaderRowY, getUniqueColumnXs } from '../logic/treeUtils.js'
-import { Button } from '../../../components/ui/Button'; // <-- IMPORT NASZEGO KOMPONENTU
+import { Button } from '../../../components/ui/Button'; 
 
 export function StageHeaders() {
   const nodes = useTreeStore((s) => s.nodes)
@@ -16,7 +16,7 @@ export function StageHeaders() {
 
   const rowY = useMemo(() => computeStageHeaderRowY(nodes), [nodes])
 
-  // CZYŚCIUTKA LOGIKA:
+
   const columnXs = useMemo(() => {
     return getUniqueColumnXs(nodes, edges).map(x => x + 22);
   }, [nodes, edges]);

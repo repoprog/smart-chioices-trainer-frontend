@@ -15,12 +15,12 @@ function App() {
 
         <Route path="/app" element={<Layout />}>
           <Route index element={<Navigate to="table" replace />} />
-          {/* Używamy zrefaktoryzowanej tabeli */}
+         
           <Route path="table" element={<DecisionTablePage />} /> 
-          {/* Używamy zrefaktoryzowanego drzewa */}
+         
           <Route path="tree" element={<DecisionTreePage />} />
           
-          {/* Pozostałe strony UI */}
+        
           <Route path="panel" element={<UserPanel />} />
           <Route path="settings" element={<Settings />} />
         </Route>

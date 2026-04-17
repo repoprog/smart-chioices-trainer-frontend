@@ -42,7 +42,6 @@ export function DecisionNode({ id, data }) {
         <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 flex justify-center">
            <div className="relative flex items-center justify-center">
              
-             {/* REFACTOR: Clean, isolated equation badge with specific symbol */}
              <NodeEquationBadge equation={data.equation} symbol="ƒ" />
 
              <div className="px-2 py-0.5 rounded-md bg-slate-900/50 backdrop-blur-sm shadow-inner pointer-events-none">

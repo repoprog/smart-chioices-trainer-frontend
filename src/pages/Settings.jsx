@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { User, Lock, Bell, Palette, Save, Mail } from "lucide-react";
-import { Input } from "../components/ui/Input"; // <-- NASZ NOWY KOMPONENT
+import { Input } from "../components/ui/Input"; 
 import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/Card"; // <-- IMPORT NASZEJ KARTY
 
 export default function Settings() {
   const [profileData, setProfileData] = useState({
@@ -63,20 +64,19 @@ export default function Settings() {
       </div>
 
       {successMessage && (
-        <div className="p-4 bg-primary/10 text-primary border border-primary/20 rounded-lg">
+        <div className="p-4 bg-primary/10 text-primary border border-primary/20 rounded-lg animate-in fade-in slide-in-from-top-2">
           {successMessage}
         </div>
       )}
 
       {/* PROFIL UŻYTKOWNIKA */}
-      <div className="border border-border rounded-lg p-6 space-y-6 bg-card">
+      <Card className="p-6 space-y-6">
         <div className="flex items-center gap-3 pb-4 border-b border-border">
           <User className="w-5 h-5 text-muted-foreground" />
-          <h3 className="font-medium">Profil użytkownika</h3>
+          <h3 className="font-medium text-foreground">Profil użytkownika</h3>
         </div>
 
         <div className="space-y-4">
-          {/* REFACTOR: Using new Input component */}
           <Input 
             label="Imię i nazwisko"
             icon={User}
@@ -97,13 +97,13 @@ export default function Settings() {
             Zapisz profil
           </Button>
         </div>
-      </div>
+      </Card>
 
       {/* ZMIANA HASŁA */}
-      <div className="border border-border rounded-lg p-6 space-y-6 bg-card">
+      <Card className="p-6 space-y-6">
         <div className="flex items-center gap-3 pb-4 border-b border-border">
           <Lock className="w-5 h-5 text-muted-foreground" />
-          <h3 className="font-medium">Zmiana hasła</h3>
+          <h3 className="font-medium text-foreground">Zmiana hasła</h3>
         </div>
 
         <div className="space-y-4">
@@ -137,19 +137,19 @@ export default function Settings() {
             Zmień hasło
           </Button>
         </div>
-      </div>
+      </Card>
 
       {/* POWIADOMIENIA */}
-      <div className="border border-border rounded-lg p-6 space-y-6 bg-card">
+      <Card className="p-6 space-y-6">
         <div className="flex items-center gap-3 pb-4 border-b border-border">
           <Bell className="w-5 h-5 text-muted-foreground" />
-          <h3 className="font-medium">Powiadomienia</h3>
+          <h3 className="font-medium text-foreground">Powiadomienia</h3>
         </div>
 
         <div className="space-y-4">
           <label className="flex items-center justify-between cursor-pointer group">
             <div>
-              <div className="font-medium group-hover:text-primary transition-colors">Powiadomienia email</div>
+              <div className="font-medium group-hover:text-primary transition-colors text-foreground">Powiadomienia email</div>
               <div className="text-sm text-muted-foreground">Otrzymuj powiadomienia na email</div>
             </div>
             <input
@@ -162,7 +162,7 @@ export default function Settings() {
 
           <label className="flex items-center justify-between cursor-pointer group">
             <div>
-              <div className="font-medium group-hover:text-primary transition-colors">Przypomnienia o decyzjach</div>
+              <div className="font-medium group-hover:text-primary transition-colors text-foreground">Przypomnienia o decyzjach</div>
               <div className="text-sm text-muted-foreground">Otrzymuj przypomnienia o zaplanowanych decyzjach</div>
             </div>
             <input
@@ -173,13 +173,13 @@ export default function Settings() {
             />
           </label>
         </div>
-      </div>
+      </Card>
 
       {/* MOTYW */}
-      <div className="border border-border rounded-lg p-6 space-y-6 bg-card">
+      <Card className="p-6 space-y-6">
         <div className="flex items-center gap-3 pb-4 border-b border-border">
           <Palette className="w-5 h-5 text-muted-foreground" />
-          <h3 className="font-medium">Motyw aplikacji</h3>
+          <h3 className="font-medium text-foreground">Motyw aplikacji</h3>
         </div>
 
         <div className="grid grid-cols-3 gap-3">
@@ -189,17 +189,17 @@ export default function Settings() {
               onClick={() => setTheme(themeOption)}
               className={`p-4 border rounded-lg transition-all ${
                 theme === themeOption
-                  ? "border-primary bg-primary/5 shadow-sm"
-                  : "border-border hover:border-primary/50 hover:bg-muted/30"
+                  ? "border-primary bg-primary/5 shadow-sm text-primary"
+                  : "border-border hover:border-primary/50 hover:bg-muted/30 text-foreground"
               }`}
             >
-              <div className="font-medium capitalize text-foreground">
+              <div className="font-medium capitalize">
                 {themeOption === "light" ? "Jasny" : themeOption === "dark" ? "Ciemny" : "Auto"}
               </div>
             </button>
           ))}
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
