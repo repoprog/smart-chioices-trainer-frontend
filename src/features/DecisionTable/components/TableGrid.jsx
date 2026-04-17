@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useTableStore } from '../store/useTableStore';
 import { getTradeoffResults, getRowRanks } from "../logic/tableLogic"; 
 import { Eye, EyeOff } from 'lucide-react';
@@ -22,15 +22,23 @@ export function TableGrid() {
   const {
     alternatives, objectives, cells, objectiveUnits, showRanking, sortDirections,
     showTradeoffs, originalCells, hideEqualizedObjectives, rejectedAlternatives, showRejected,
+    customScales, 
     toggleShowRejected, toggleHideEqualized, toggleSortDirection,
     addAlternative, addObjective, updateAlternative, updateObjective, updateCell, updateUnit,
     rejectAlternative, restoreAlternative,
   } = store;
 
+  
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const tradeoffResults = useMemo(() => getTradeoffResults(store), [
+    showRanking, showTradeoffs, alternatives, objectives,
+    rejectedAlternatives, cells, customScales, sortDirections
+  ]);
+
   const {
     equalizedRowsIndexes, equalizedCount, dominationResults,
     winnerIndex, completeAlts,
-  } = getTradeoffResults(store);
+  } = tradeoffResults;
 
   const closeConfirmModal = () => setModalConfig({ ...modalConfig, isOpen: false });
 

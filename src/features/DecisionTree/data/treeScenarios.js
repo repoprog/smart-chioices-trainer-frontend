@@ -14,7 +14,7 @@ export const treeScenarios = {
   investment: {
     name: "Analiza Inwestycji ",
     description: "Czy warto inwestować duże środki w nowy produkt?",
-    labels: ["Decyzja biznesowa", "Ryzyko Rynkowe", "Wynik Finansowy"],
+    labels: ["W Co Zainwestować?", "Ryzyko Rynkowe", "Wynik Finansowy"],
     nodes: [
     
       { id: 'd1', type: 'decision', position: { x: 0, y: 0 }, zIndex: 100, data: { nodeNumber: 1 } },
@@ -28,8 +28,8 @@ export const treeScenarios = {
     ],
     edges: [
     
-      { id: 'e1', source: 'd1', target: 'c1', type: 'smartChoices', data: { optionLabel: 'Inwestuj w produkt', cost: '50 000', probability: null } },
-      { id: 'e2', source: 'd1', target: 't3', type: 'smartChoices', data: { optionLabel: 'Zostaw kasę na lokacie', cost: '0', probability: null } },
+      { id: 'e1', source: 'd1', target: 'c1', type: 'smartChoices', data: { optionLabel: 'Produkt', cost: '50 000', probability: null } },
+      { id: 'e2', source: 'd1', target: 't3', type: 'smartChoices', data: { optionLabel: 'Lokakata bankowa', cost: '0', probability: null } },
       
    
       { id: 'e3', source: 'c1', target: 't1', type: 'smartChoices', data: { optionLabel: 'Wysoki popyt', probability: '60.00%', isLocked: true } },

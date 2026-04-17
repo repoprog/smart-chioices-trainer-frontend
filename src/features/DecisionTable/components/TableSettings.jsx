@@ -25,12 +25,10 @@ export function TableSettings() {
         clearScales
     } = useTableStore();
 
-   
     const handleLoadPreset = (presetKey) => {
         loadPreset(presetKey);
     };
 
- 
     const handleAddScale = () => {
         if (newScaleWord.trim() !== '' && newScaleRank.trim() !== '') {
             addScale(newScaleWord.trim(), newScaleRank.trim());
@@ -62,7 +60,8 @@ export function TableSettings() {
             
             {showScalesSettings && (
                 <Card className="mt-4 space-y-6 max-w-[1000px] animate-in fade-in slide-in-from-top-2">
-                    {/* SEKCJA: GOTOWE PRESETY */}
+                    
+                    {/* PREDEFINED SCALES SECTION */}
                     <div>
                         <h3 className="text-sm font-semibold text-foreground mb-3">Gotowe pakiety ocen</h3>
                         <div className="flex flex-wrap items-center gap-2">
@@ -90,6 +89,7 @@ export function TableSettings() {
                         </div>
                     </div>
 
+                    {/* ACTIVE SCALES SECTION */}
                     <div>
                         <h3 className="text-sm font-semibold text-foreground mb-3">Twoje aktywne oceny</h3>
                         {customScales.length > 0 ? (
@@ -118,13 +118,10 @@ export function TableSettings() {
                         )}
                     </div>
 
-             
+                    {/* CUSTOM SCALE INPUT */}
                     <div className="pt-5 border-t border-border border-dashed">
                         <h3 className="text-sm font-semibold text-foreground mb-3">Dodaj własną ocenę</h3>
-                        
-                      
                         <div className="inline-flex items-center bg-background border border-border rounded-full pl-4 pr-1 py-1 focus-within:border-primary transition-colors">
-                            
                             <input 
                                 placeholder="Nazwa (np. premium)" 
                                 value={newScaleWord}
@@ -144,7 +141,6 @@ export function TableSettings() {
                                 className="bg-transparent border-none outline-none text-sm w-[120px] text-center text-foreground placeholder:text-muted-foreground"
                             />
                             
-                
                             <Button 
                                 variant="default"
                                 size="circleSm"

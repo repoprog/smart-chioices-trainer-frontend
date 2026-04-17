@@ -1,6 +1,7 @@
 import { create, useStore } from 'zustand';
 import { temporal } from 'zundo';
 import { treeScenarios } from '../data/treeScenarios.js';
+import { decisionApi } from '../../../api/decisionApi.js'; 
 
 // CORE MECHANIC: Visual layout and graph traversal utilities
 import {
@@ -20,11 +21,12 @@ import {
 
 const defaultScenario = treeScenarios.basketball || { nodes: [], edges: [], labels: [] };
 const layoutedInitial = getLayoutedElements(defaultScenario.nodes, defaultScenario.edges);
-const numberedInitial = renumberDecisionAndChanceNodes(layoutedInitial, defaultScenario.edges); // Zmiana sygnatury zgodnie z oryginałem
+const numberedInitial = renumberDecisionAndChanceNodes(layoutedInitial, defaultScenario.edges);
 const initialStageLabels = syncColumnLabels(numberedInitial, defaultScenario.edges, defaultScenario.labels || []);
 
 export const useTreeStore = create()(
-  temporal((set) => ({
+
+  temporal((set, get) => ({
     nodes: numberedInitial,
     edges: defaultScenario.edges,
     stageColumnLabels: initialStageLabels,
@@ -32,6 +34,21 @@ export const useTreeStore = create()(
     evaluationMap: {},
     winningPath: new Set(),
     isDirty: false, 
+    isLoading: false, 
+    isSimulationMode: false, // <-- NOWY STAN: Domyślnie matematyka jest ukryta
+
+    
+    loadRemoteTreeScenario: async (id) => {
+      set({ isLoading: true });
+      try {
+        const data = await decisionApi.getTreeById(id);
+        get().loadScenario(data.nodes || [], data.edges || [], data.labels || []);
+      } catch (error) {
+        console.error("Błąd podczas ładowania scenariusza drzewa:", error);
+      } finally {
+        set({ isLoading: false });
+      }
+    },
 
     // --- LOAD & RESET ---
     loadScenario: (newNodes, newEdges, newLabels = []) =>
@@ -141,6 +158,37 @@ export const useTreeStore = create()(
         }
 
         const newState = { ...state, edges: allEdges, isDirty: true };
+        return evaluateAndSetWinningPath(newState);
+      }),
+
+      // --- NOWA AKCJA: What-If (Toggle ON/OFF) ---
+    toggleSimulationMode: () =>
+      set((state) => {
+        const newMode = !state.isSimulationMode;
+
+        // Jeśli WYŁĄCZAMY tryb, ukrywamy matematykę na węzłach (nie ruszając kłódek)
+        if (!newMode) {
+          return { isSimulationMode: false };
+        }
+
+        // Jeśli WŁĄCZAMY tryb, odblokowujemy wszystkie kłódki na zdarzeniach losowych
+        const chanceNodeIds = new Set(state.nodes.filter(n => n.type === 'chance').map(n => n.id));
+        let hasChanges = false;
+        
+        const newEdges = state.edges.map(edge => {
+          if (chanceNodeIds.has(edge.source) && edge.data?.isLocked !== false) {
+            hasChanges = true;
+            return { ...edge, data: { ...edge.data, isLocked: false } };
+          }
+          return edge;
+        });
+
+        // Optymalizacja: jeśli wszystko było otwarte, zmieniamy tylko tryb widoku
+        if (!hasChanges) {
+          return { isSimulationMode: true };
+        }
+
+        const newState = { ...state, edges: newEdges, isSimulationMode: true, isDirty: true };
         return evaluateAndSetWinningPath(newState);
       }),
 
@@ -343,14 +391,15 @@ export const useTreeStore = create()(
       stageColumnLabels: state.stageColumnLabels,
       evaluationMode: state.evaluationMode,
       evaluationMap: state.evaluationMap,
-      winningPath: Array.from(state.winningPath), // Set -> Array dla serializacji zundo
+      winningPath: Array.from(state.winningPath), 
+      // Celowo pomijamy 'isSimulationMode' i 'isLoading' - nie chcemy, aby
+      // Ctrl+Z (Cofnij) zmieniało nam tryb widoku albo kręciło spinnerem!
     }),
   }
  )
 );
 
 export const useTemporalTreeStore = (selector) => useStore(useTreeStore.temporal, selector);
-
 
 useTreeStore.getState().init();
 useTreeStore.temporal.getState().clear();

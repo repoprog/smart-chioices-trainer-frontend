@@ -19,11 +19,13 @@ export const Button = forwardRef(({
     dangerGhost: "text-destructive/80 hover:bg-destructive/10 hover:text-destructive",
     
     purple: "bg-purple-500 text-white shadow-sm hover:bg-purple-600",
+    cyan: "bg-cyan-500  text-white shadow-sm hover:bg-cyan-600 hover:text-white",
     amber: "bg-amber-500 text-white shadow-sm hover:bg-amber-600",
     amberOutline: "border border-amber-500/50 text-amber-700 dark:text-amber-500 bg-transparent hover:bg-amber-500/10 shadow-sm",
     
     defaultPurple: "bg-primary text-primary-foreground shadow-sm hover:bg-purple-500 hover:text-white",
     defaultAmber: "bg-primary text-primary-foreground shadow-sm hover:bg-amber-500 hover:text-white",
+    defaultCyan: "bg-primary text-primary-foreground shadow-sm hover:bg-cyan-600 hover:text-white",
 
    
     emeraldOutline: "border border-emerald-400/80 bg-emerald-50 text-emerald-800 shadow-sm backdrop-blur-sm hover:border-emerald-500 hover:bg-emerald-100 dark:border-emerald-700/80 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:border-emerald-600 dark:hover:bg-emerald-900",

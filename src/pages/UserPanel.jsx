@@ -74,7 +74,7 @@ export default function UserPanel() {
         <p className="text-muted-foreground mt-1">Przeglądaj i zarządzaj swoimi decyzjami</p>
       </div>
 
-      {/* REFACTOR: Wyszukiwarka używa nowego komponentu Input */}
+      {/* Search Bar */}
       <Input 
         icon={Search}
         placeholder="Szukaj decyzji po tytule lub notatkach..."
@@ -82,7 +82,7 @@ export default function UserPanel() {
         onChange={(e) => setSearchQuery(e.target.value)}
       />
 
-      {/* REFACTOR: Karta filtrów używa Card i Badge */}
+      {/* Tag Filters */}
       <Card className="p-4">
         <div className="flex items-center gap-2 mb-3">
           <Tag className="w-4 h-4 text-muted-foreground" />
@@ -106,7 +106,7 @@ export default function UserPanel() {
         )}
       </Card>
 
-      {/* REFACTOR: Lista decyzji używa Card */}
+      {/* Decisions List */}
       <div className="space-y-4">
         {filteredDecisions.map((decision) => (
           <Card key={decision.id} className="hover:border-primary/50 transition-colors">
@@ -201,10 +201,10 @@ export default function UserPanel() {
       </div>
 
       {filteredDecisions.length === 0 && (
-        <div className="text-center py-16 text-muted-foreground bg-muted/10 rounded-xl border border-dashed border-border">
-          <Search className="w-8 h-8 mx-auto mb-3 text-muted-foreground/50" />
-          Nie znaleziono decyzji pasujących do zapytania.
-        </div>
+        <Card className="flex flex-col items-center justify-center text-center py-16 bg-muted/10 border-dashed border-2 shadow-none">
+          <Search className="w-8 h-8 text-muted-foreground/50 mb-3" />
+          <p className="text-muted-foreground m-0">Nie znaleziono decyzji pasujących do zapytania.</p>
+        </Card>
       )}
     </div>
   );

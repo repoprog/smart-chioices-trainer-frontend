@@ -83,6 +83,9 @@ export function TablePageToolbar({ showTemplates, setShowTemplates }) {
       <Button variant="secondary" onClick={handleImportClick}>
         <FolderOpen className="w-4 h-4 mr-2" /> Wczytaj
       </Button>
+      <Button variant="secondary" onClick={handleExportJson}>
+        <Save className="w-4 h-4 mr-2" /> Zapisz 
+      </Button>
 
       <div className="relative flex">
         <Button 
@@ -138,9 +141,7 @@ export function TablePageToolbar({ showTemplates, setShowTemplates }) {
         <Trophy className="w-4 h-4 mr-2" /> Ranking
       </Button>
 
-      <Button variant="secondary" onClick={handleExportJson}>
-        <Save className="w-4 h-4 mr-2" /> Zapisz 
-      </Button>
+      
     </div>
   );
 }

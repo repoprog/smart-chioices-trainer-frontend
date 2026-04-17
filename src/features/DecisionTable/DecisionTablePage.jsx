@@ -1,23 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { useTableStore } from "./store/useTableStore"; 
-import { tableScenarios } from "./data/tableScenarios"; 
+import { decisionApi } from "../../api/decisionApi"; 
 
 import { TableGrid } from "./components/TableGrid";
 import { TableSettings } from "./components/TableSettings";
 import { TablePageToolbar } from "./components/TablePageToolbar";
 
 import { ConfirmModal } from "../../components/ui/ConfirmModal";
-import { Card } from "../../components/ui/Card";       // <-- IMPORT NOWEGO KOMPONENTU
-import { Button } from "../../components/ui/Button";   // <-- IMPORT SYSTEMOWEGO PRZYCISKU
+import { Card } from "../../components/ui/Card";       
+import { Button } from "../../components/ui/Button";   
 
 export function DecisionTablePage() {
   const resetAll = useTableStore((s) => s.resetAll);
-  const loadScenario = useTableStore((s) => s.loadScenario);
   const isDirty = useTableStore((s) => s.isDirty);
+  const loadRemoteTableScenario = useTableStore((s) => s.loadRemoteTableScenario);
 
   const [showTemplates, setShowTemplates] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
-  const [pendingTemplate, setPendingTemplate] = useState(null);
+  
+const isLoading = useTableStore((s) => s.isLoading);
+  const [scenariosList, setScenariosList] = useState([]);
+
+  const [pendingTemplateId, setPendingTemplateId] = useState(null);
 
   // CORE MECHANIC: Prevent data loss by intercepting page unload if changes are unsaved
   useEffect(() => {
@@ -31,14 +35,21 @@ export function DecisionTablePage() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
 
+  useEffect(() => {
+    decisionApi.getTableScenarios()
+      .then((data) => setScenariosList(data))
+      .catch((err) => console.error("Nie udało się pobrać listy scenariuszy:", err));
+  }, []);
+
   // CORE MECHANIC: Handle scenario loading from URL parameters on initial mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const scenarioKey = params.get("scenario");
-    if (scenarioKey && tableScenarios[scenarioKey]) {
-      loadScenario(tableScenarios[scenarioKey]);
+    
+    if (scenarioKey) {
+      loadRemoteTableScenario(scenarioKey);
     }
-  }, [loadScenario]);
+  }, [loadRemoteTableScenario]);
 
   const handleResetClick = () => {
     if (isDirty) {
@@ -47,20 +58,19 @@ export function DecisionTablePage() {
       resetAll();
     }
   };
-
-  const handleTemplateClick = (scenarioData) => {
+  const handleTemplateClick = (scenarioId) => {
     if (isDirty) {
-      setPendingTemplate(scenarioData);
+      setPendingTemplateId(scenarioId);
     } else {
-      loadScenario(scenarioData);
+      loadRemoteTableScenario(scenarioId);
       setShowTemplates(false);
     }
   };
 
   const confirmLoadTemplate = () => {
-    if (pendingTemplate) {
-      loadScenario(pendingTemplate);
-      setPendingTemplate(null);
+    if (pendingTemplateId) {
+      loadRemoteTableScenario(pendingTemplateId);
+      setPendingTemplateId(null);
       setShowTemplates(false);
     }
   };
@@ -89,17 +99,18 @@ export function DecisionTablePage() {
         >
           <h3 className="font-medium mb-3 text-sm text-foreground">Przykładowe decyzje</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {Object.entries(tableScenarios).map(([key, scenarioData]) => (
+        
+            {scenariosList.map((scenario) => (
               <button
-                key={key}
-                onClick={() => handleTemplateClick(scenarioData)}
+                key={scenario.id}
+                onClick={() => handleTemplateClick(scenario.id)}
                 className="p-4 border border-border rounded-lg bg-card hover:border-primary/50 hover:bg-primary/5 transition-colors text-left shadow-sm group flex flex-col h-full focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
                 <div className="font-medium mb-1 text-foreground group-hover:text-primary transition-colors">
-                  {scenarioData.name}
+                  {scenario.name}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {scenarioData.description}
+                  {scenario.description || "Brak opisu"}
                 </div>
               </button>
             ))}
@@ -109,11 +120,19 @@ export function DecisionTablePage() {
 
       {/* MAIN TABLE AREA */}
       <Card className="flex-1 overflow-auto max-h-[85vh] custom-scrollbar flex flex-col relative z-0 p-6">
+        {isLoading && (
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/50 backdrop-blur-sm animate-in fade-in duration-200 rounded-lg">
+            <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4" />
+            <p className="text-sm font-medium text-primary animate-pulse tracking-wide">
+              Wczytywanie scenariusza...
+            </p>
+          </div>
+        )}
         <TableGrid />
        
-            <TableSettings />
+        <TableSettings />
         
-      <div className="mt-4 border-t border-border pt-4 flex justify-end">
+        <div className="mt-4 border-t border-border pt-4 flex justify-end">
           <Button
             variant="dangerGhost"
             size="sm"
@@ -136,8 +155,8 @@ export function DecisionTablePage() {
       />
 
       <ConfirmModal
-        isOpen={pendingTemplate !== null}
-        onClose={() => setPendingTemplate(null)}
+        isOpen={pendingTemplateId !== null}
+        onClose={() => setPendingTemplateId(null)}
         onConfirm={confirmLoadTemplate}
         title="Nadpisanie tabeli"
         message="Załadowanie nowego szablonu usunie Twoje dotychczasowe wpisy. Czy na pewno chcesz kontynuować?"

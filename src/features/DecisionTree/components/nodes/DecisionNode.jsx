@@ -8,6 +8,7 @@ const handleClass = '!h-2 !w-2 !min-h-0 !min-w-0 !border !border-slate-900 !bg-w
 
 export function DecisionNode({ id, data }) {
   const edges = useTreeStore((s) => s.edges);
+  const isSimulationMode = useTreeStore((s) => s.isSimulationMode);
   const hasIncoming = edges.some((e) => e.target === id);
   const isHighlighted = data?.isHighlighted;
 
@@ -38,11 +39,15 @@ export function DecisionNode({ id, data }) {
         </div>
       </div>
 
-      {hasExpectedValue && (
+     {hasExpectedValue && (
         <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 flex justify-center">
            <div className="relative flex items-center justify-center">
              
-             <NodeEquationBadge equation={data.equation} symbol="ƒ" />
+             <NodeEquationBadge 
+               equation={data.equation} 
+               symbol="ƒ" 
+               isSimulationActive={isSimulationMode}
+             />
 
              <div className="px-2 py-0.5 rounded-md bg-slate-900/50 backdrop-blur-sm shadow-inner pointer-events-none">
                <span className="text-yellow-400 text-xs font-bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>

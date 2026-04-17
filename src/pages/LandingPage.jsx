@@ -66,7 +66,7 @@ export default function LandingPage() {
     return (
         <div className="min-h-screen bg-[#030303] !text-white font-sans selection:bg-purple-500/30 overflow-hidden">
           
-            {/* NAWIGACJA - Przywrócono wymuszenia kolorów (!text-white) i oryginalny przycisk */}
+            {/*  NAVIGATION BAR */}
             <header className="fixed top-0 left-1/2 -translate-x-1/2 mt-6 z-50">
                 <nav className="flex items-center gap-1.5 px-4 py-2 border border-white/5 bg-black/60 backdrop-blur-md rounded-full shadow-[0_0_20px_-10px_rgba(139,92,246,0.3)]">
                     <span className="font-bold text-sm tracking-tight !text-white/90 mr-4">Decidely.</span>
@@ -107,7 +107,7 @@ export default function LandingPage() {
                     transition={{ duration: 0.7, delay: 0.4, ease: "easeOut" }}
                     className="flex flex-col md:flex-row gap-4 justify-center"
                 >
-                    {/* Przywrócono oryginalne przyciski z precyzyjnymi kolorami i cieniami */}
+                
                     <Link to="/app/table?scenario=developerHiring" className="px-5 py-2.5 cursor-pointer font-semibold text-sm bg-purple-500 !text-white border-none rounded-md transition-all hover:shadow-[0_0_30px_0_rgba(139,92,246,0.2)] hover:bg-purple-600">
                       Porównaj Opcje
                     </Link>

@@ -216,9 +216,39 @@ export function calculatePathProbabilities(nodes, edges) {
 
 /**
  * CORE MECHANIC: Main pipeline function to trace the optimal route based on EMV evaluations.
+ * Validates probabilities FIRST and aborts calculation if mathematically impossible state is detected.
  */
 export const evaluateAndSetWinningPath = (state) => {
   const { nodes, edges, evaluationMode } = state;
+  
+  let hasProbabilityError = false;
+  
+  // 1. Validation Step: Check for probability math errors first
+  for (const node of nodes) {
+    if (node.type === 'chance') {
+      const outgoingEdges = edges.filter((e) => e.source === node.id);
+      if (outgoingEdges.length > 0) {
+        const sum = outgoingEdges.reduce((acc, e) => acc + (parseProbability(e.data?.probability) * 100), 0);
+        if (Math.abs(sum - 100) > 0.01) {
+          hasProbabilityError = true;
+          break; 
+        }
+      }
+    }
+  }
+
+  // 2. Abort calculating Expected Value if tree is mathematically invalid
+  if (hasProbabilityError) {
+    const nodesWithoutEv = nodes.map(node => {
+      const newData = { ...node.data };
+      delete newData.expectedValue;
+      delete newData.equation;
+      return { ...node, data: newData };
+    });
+    return { ...state, nodes: nodesWithoutEv, evaluationMap: {}, winningPath: [] };
+  }
+
+  // 3. Normal evaluation if math is correct
   const evaluationMap = evaluateDecisionTree(nodes, edges, evaluationMode);
   const cumulativeProbs = calculatePathProbabilities(nodes, edges);
 
@@ -237,53 +267,37 @@ export const evaluateAndSetWinningPath = (state) => {
     return { ...node, data: newData };
   });
   
-  const winningPath = new Set();
-  let hasProbabilityError = false;
+  const winningPathSet = new Set();
   
-  // Validation step
-  for (const node of nodes) {
-    if (node.type === 'chance') {
-      const outgoingEdges = edges.filter((e) => e.source === node.id);
-      if (outgoingEdges.length > 0) {
-        const sum = outgoingEdges.reduce((acc, e) => acc + (parseProbability(e.data?.probability) * 100), 0);
-        if (Math.abs(sum - 100) > 0.01) {
-          hasProbabilityError = true;
-          break; 
+  const rootNode = nodesWithEv.find((n) => (n.type === 'decision' || n.type === 'chance') && !edges.some((e) => e.target === n.id));
+  if (rootNode) {
+    const queue = [rootNode.id];
+    winningPathSet.add(rootNode.id);
+
+    while (queue.length > 0) {
+      const currentNodeId = queue.shift();
+      const currentNode = nodesWithEv.find((n) => n.id === currentNodeId);
+      const evaluationResult = evaluationMap[currentNodeId];
+
+      if (currentNode?.type === 'decision' && evaluationResult?.optimalEdgeId) {
+        const optimalEdge = edges.find((e) => e.id === evaluationResult.optimalEdgeId);
+        if (optimalEdge) {
+          winningPathSet.add(optimalEdge.id);
+          winningPathSet.add(optimalEdge.target);
+          queue.push(optimalEdge.target);
         }
-      }
-    }
-  }
-  
-  if (!hasProbabilityError) {
-    const rootNode = nodesWithEv.find((n) => (n.type === 'decision' || n.type === 'chance') && !edges.some((e) => e.target === n.id));
-    if (rootNode) {
-      const queue = [rootNode.id];
-      winningPath.add(rootNode.id);
-
-      while (queue.length > 0) {
-        const currentNodeId = queue.shift();
-        const currentNode = nodesWithEv.find((n) => n.id === currentNodeId);
-        const evaluationResult = evaluationMap[currentNodeId];
-
-        if (currentNode?.type === 'decision' && evaluationResult?.optimalEdgeId) {
-          const optimalEdge = edges.find((e) => e.id === evaluationResult.optimalEdgeId);
-          if (optimalEdge) {
-            winningPath.add(optimalEdge.id);
-            winningPath.add(optimalEdge.target);
-            queue.push(optimalEdge.target);
+      } else {
+        const childEdges = edges.filter((e) => e.source === currentNodeId);
+        childEdges.forEach((edge) => {
+          if(currentNode?.type === 'chance') {
+             winningPathSet.add(edge.id);
+             winningPathSet.add(edge.target);
+             queue.push(edge.target);
           }
-        } else {
-          const childEdges = edges.filter((e) => e.source === currentNodeId);
-          childEdges.forEach((edge) => {
-            if(currentNode?.type === 'chance') {
-               winningPath.add(edge.id);
-               winningPath.add(edge.target);
-               queue.push(edge.target);
-            }
-          });
-        }
+        });
       }
     }
   }
-  return { ...state, nodes: nodesWithEv, evaluationMap, winningPath };
+  
+ return { ...state, nodes: nodesWithEv, evaluationMap, winningPath: Array.from(winningPathSet) };
 };

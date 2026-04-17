@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { TableCell } from './TableCell'; 
 
 // CORE MECHANIC: Renders a single row for an objective. Delegates individual alternative data to TableCell.
-export function TableRow({
+export const TableRow = memo(function TableRow({
   rowIndex,
   objName,
   alternatives,
@@ -119,4 +119,4 @@ export function TableRow({
       })}
     </tr>
   );
-}
+});

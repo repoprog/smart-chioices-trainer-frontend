@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTreeStore } from './store/useTreeStore.js';
-import { treeScenarios } from './data/treeScenarios.js'; 
+import { decisionApi } from '../../api/decisionApi'; 
+
 import { TreeCanvas } from './components/TreeCanvas.jsx';
 import { TreePageToolbar } from './components/TreePageToolbar.jsx';
 import { ConfirmModal } from '../../components/ui/ConfirmModal'; 
@@ -9,10 +10,18 @@ import { Card } from '../../components/ui/Card';
 import { Lock } from 'lucide-react'; 
 
 export function DecisionTreePage() {
-  const { loadScenario, resetTree, isDirty } = useTreeStore();
+
+  const resetTree = useTreeStore((s) => s.resetTree);
+  const isDirty = useTreeStore((s) => s.isDirty);
+  const loadRemoteTreeScenario = useTreeStore((s) => s.loadRemoteTreeScenario);
+
   const [showTemplates, setShowTemplates] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
-  const [pendingTemplate, setPendingTemplate] = useState(null);
+  const isLoading = useTreeStore((s) => s.isLoading);
+  
+ 
+  const [scenariosList, setScenariosList] = useState([]);
+  const [pendingTemplateId, setPendingTemplateId] = useState(null);
 
   // CORE MECHANIC: Prevent data loss by intercepting page unload if changes are unsaved
   useEffect(() => {
@@ -26,29 +35,36 @@ export function DecisionTreePage() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty]);
 
+
+  useEffect(() => {
+    decisionApi.getTreeScenarios()
+      .then((data) => setScenariosList(data))
+      .catch((err) => console.error("Nie udało się pobrać listy scenariuszy drzewa:", err));
+  }, []);
+
   // CORE MECHANIC: Handle scenario loading from URL parameters
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const scenarioKey = params.get('scenario'); 
-    if (scenarioKey && treeScenarios[scenarioKey]) {
-      const data = treeScenarios[scenarioKey];
-      loadScenario(data.nodes, data.edges, data.labels);
+    if (scenarioKey) {
+      loadRemoteTreeScenario(scenarioKey);
     }
-  }, [loadScenario]);
+  }, [loadRemoteTreeScenario]);
 
-  const handleTemplateClick = (scenarioData) => {
+ 
+  const handleTemplateClick = (scenarioId) => {
     if (isDirty) {
-      setPendingTemplate(scenarioData); 
+      setPendingTemplateId(scenarioId); 
     } else {
-      loadScenario(scenarioData.nodes, scenarioData.edges, scenarioData.labels);
+      loadRemoteTreeScenario(scenarioId);
       setShowTemplates(false);
     }
   };
 
   const confirmLoadTemplate = () => {
-    if (pendingTemplate) {
-      loadScenario(pendingTemplate.nodes, pendingTemplate.edges, pendingTemplate.labels);
-      setPendingTemplate(null);
+    if (pendingTemplateId) {
+      loadRemoteTreeScenario(pendingTemplateId);
+      setPendingTemplateId(null);
       setShowTemplates(false);
     }
   };
@@ -60,48 +76,9 @@ export function DecisionTreePage() {
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">Drzewo decyzyjne</h2>
           
           <div className="text-muted-foreground mt-1 text-sm flex flex-wrap items-center gap-1 leading-relaxed">
-            <span>Najedź na węzeł, aby dodać gałąź. Zmieniaj prawdopodobieństwa i obserwuj wyniki w czasie rzeczywistym (What-if</span>
+            <span>Najedź na węzeł, aby dodać gałąź. Zmieniaj prawdopodobieństwa i obserwuj wyniki w czasie rzeczywistym </span>
             
-            {/* TOOLTIP */}
-            <Tooltip
-              title="Symulacja „What-if”"
-              subtitle="(Auto-balans)"
-              trigger={
-                <button 
-                  className="inline-flex items-center justify-center w-[16px] h-[16px] rounded-full border border-border bg-muted text-muted-foreground text-[10px] font-bold transition-all hover:bg-background hover:text-primary hover:border-primary focus:outline-none -translate-y-[1px]"
-                >
-                  ?
-                </button>
-              }
-            >
-              <div className="mb-4">
-                <h4 className="mb-1.5 text-foreground text-[13px] font-semibold flex items-center gap-1.5">
-                  <Lock className="w-3.5 h-3.5 text-muted-foreground" /> Ręczna kontrola
-                </h4>
-                <p className="text-xs m-0">
-                  Wpisane prawdopodobieństwa są domyślnie blokowane. Jeśli ich suma przekroczy 100%, aplikacja Cię ostrzeże.
-                </p>
-              </div>
-
-              <div className="mb-5">
-                <h4 className="mb-1.5 text-foreground text-[13px] font-semibold flex items-center gap-1.5">
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded text-cyan-400 text-[13px] font-bold">A</span>
-                  Auto-balansowanie
-                </h4>
-                <p className="text-xs m-0">
-                  Odblokuj kłódki przy gałęziach, aby system przeliczał wartości automatycznie. Zwiększenie jednej szansy proporcjonalnie pomniejszy pozostałe.
-                </p>
-              </div>
-
-              <div className="bg-muted/50 p-3 rounded-lg border border-border/50 flex gap-2.5 items-start mt-2">
-                <span className="text-base leading-none">💡</span>
-                <p className="m-0 text-xs italic">
-                  Zmieniaj wartości i obserwuj na żywo, jak wpływa to na wynik oraz która opcja staje się nowym zwycięzcą.
-                </p>
-              </div>
-            </Tooltip>
-
-            <span>).</span>
+          
           </div>
         </div>
         
@@ -116,14 +93,19 @@ export function DecisionTreePage() {
         <Card noPadding className="p-4 bg-muted/20 animate-in fade-in slide-in-from-top-2 relative z-10">
           <h3 className="font-medium mb-3 text-sm text-foreground">Predefiniowane szablony</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {Object.entries(treeScenarios).map(([key, scenarioData]) => (
+          
+            {scenariosList.map((scenario) => (
               <button
-                key={key}
-                onClick={() => handleTemplateClick(scenarioData)}
+                key={scenario.id}
+                onClick={() => handleTemplateClick(scenario.id)}
                 className="p-4 border border-border rounded-lg bg-card hover:border-primary hover:bg-primary/5 transition-colors text-left shadow-sm group flex flex-col h-full focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
-                <div className="font-medium mb-1 text-foreground group-hover:text-primary transition-colors">{scenarioData.name}</div>
-                <div className="text-xs text-muted-foreground">{scenarioData.description}</div>
+                <div className="font-medium mb-1 text-foreground group-hover:text-primary transition-colors">
+                  {scenario.name}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {scenario.description || "Brak opisu"}
+                </div>
               </button>
             ))}
           </div>
@@ -132,6 +114,14 @@ export function DecisionTreePage() {
 
   
       <Card noPadding className="flex-1 min-h-[600px] overflow-hidden relative z-0 flex flex-col">
+        {isLoading && (
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/50 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="w-10 h-10 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin mb-4" />
+            <p className="text-sm font-medium text-cyan-600 dark:text-cyan-400 animate-pulse tracking-wide">
+              Pobieranie symulacji...
+            </p>
+          </div>
+        )}
         <TreeCanvas />
       </Card>
 
@@ -146,8 +136,9 @@ export function DecisionTreePage() {
       />
 
       <ConfirmModal
-        isOpen={pendingTemplate !== null}
-        onClose={() => setPendingTemplate(null)}
+
+        isOpen={pendingTemplateId !== null}
+        onClose={() => setPendingTemplateId(null)}
         onConfirm={confirmLoadTemplate}
         title="Nadpisanie drzewa"
         message="Załadowanie nowego szablonu usunie Twoje obecne drzewo. Czy na pewno chcesz kontynuować?"

@@ -19,7 +19,14 @@ import { TreeLegend } from './TreeLegend.jsx'
 export function TreeCanvas() {
   const allNodes = useTreeStore((s) => s.nodes)
   const allEdges = useTreeStore((s) => s.edges)
-  const winningPath = useTreeStore((s) => s.winningPath);
+  const storeWinningPath = useTreeStore((s) => s.winningPath);
+
+  const winningPath = useMemo(() => {
+    return storeWinningPath instanceof Set 
+      ? storeWinningPath 
+      : new Set(storeWinningPath || []);
+  }, [storeWinningPath]);
+  
 
   const nodes = useMemo(() => {
     return allNodes.map((node) => ({

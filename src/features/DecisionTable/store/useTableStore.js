@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { scalePresets } from '../data/scalePresets'; 
+import { decisionApi } from '../../../api/decisionApi.js'; 
 
 const blankState = {
   alternatives: [],
@@ -17,12 +18,27 @@ const blankState = {
   activePreset: 'jakość / standard',
   customScales: [...scalePresets['jakość / standard']], 
   isDirty: false, 
+  isLoading: false, 
 };
 
 export const useTableStore = create()(
   persist(
-    (set) => ({ 
+    
+    (set, get) => ({ 
       ...blankState,
+
+      
+      loadRemoteTableScenario: async (id) => {
+        set({ isLoading: true });
+        try {
+          const data = await decisionApi.getTableById(id);
+          get().loadScenario(data); 
+        } catch (error) {
+          console.error("Błąd podczas ładowania scenariusza tabeli:", error);
+        } finally {
+          set({ isLoading: false });
+        }
+      },
 
       // --- UI & State Actions ---
       toggleTradeoffs: () => set((state) => {
@@ -108,7 +124,7 @@ export const useTableStore = create()(
       resetAll: () => set({ ...blankState }), 
     }),
     {
-      name: 'smart-choices-storage-v2', 
+      name: 'smart-choices-storage', 
     }
   )
 );

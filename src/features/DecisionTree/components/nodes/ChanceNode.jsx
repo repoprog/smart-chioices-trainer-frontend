@@ -14,11 +14,13 @@ const parseProbability = (p) => {
 
 export function ChanceNode({ id, data }) {
   const edges = useTreeStore((s) => s.edges);
+  const isSimulationMode = useTreeStore((s) => s.isSimulationMode);
   const isHighlighted = data?.isHighlighted;
   
   const outgoingEdges = edges.filter((e) => e.source === id);
   const hasChildren = outgoingEdges.length > 0;
   const hasIncoming = edges.some((e) => e.target === id);
+  
 
   // CORE MECHANIC: Validation of probability sum for Chance Nodes (must equal 100%)
   const probSum = outgoingEdges.reduce((sum, e) => sum + parseProbability(e.data?.probability), 0);
@@ -57,11 +59,16 @@ export function ChanceNode({ id, data }) {
         </div>
       </div>
 
-      {hasExpectedValue && (
+     {hasExpectedValue && (
         <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 flex justify-center">
            <div className="relative flex items-center justify-center">
              
-             <NodeEquationBadge equation={data.equation} symbol="∑" />
+          
+             <NodeEquationBadge 
+               equation={data.equation} 
+               symbol="∑" 
+               isSimulationActive={isSimulationMode}
+             />
 
              <div className="px-2 py-0.5 rounded-md bg-slate-900/50 backdrop-blur-sm shadow-inner pointer-events-none">
                <span className="text-yellow-400 text-xs font-bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>

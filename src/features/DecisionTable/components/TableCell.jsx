@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { memo } from 'react';
+
 
 // CORE MECHANIC: Isolated cell component handling value formatting, tradeoff original states, 
 // and dynamic styling based on Pareto domination and ranking results.
-export function TableCell({
+export const TableCell = memo(function TableCell({
   rowIndex,
   colIndex,
   currentVal,
@@ -128,4 +129,4 @@ export function TableCell({
       </div>
     </td>
   );
-}
+});
