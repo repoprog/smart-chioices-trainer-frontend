@@ -3,7 +3,7 @@ import { Square, Circle, Triangle } from 'lucide-react';
 
 export function TreeLegend() {
   return (
-    <Panel position="bottom-left" className="pointer-events-none m-4 mb-[4.5rem] hide-on-export">
+    <Panel position="bottom-left" className="pointer-events-none m-4 mb-[4.5rem] ">
       <div className="ml-16 flex items-center gap-4 rounded border border-border bg-card/95 px-3 py-2 font-sans text-[10px] text-muted-foreground shadow-sm backdrop-blur-sm transition-colors leading-none">
         
         <span className="flex items-center gap-1.5">

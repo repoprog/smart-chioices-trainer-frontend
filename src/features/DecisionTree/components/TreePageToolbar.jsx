@@ -69,7 +69,21 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
         className="hidden" 
       />
 
-      {/* PRZYCISK WHAT-IF - SPÓJNY Z KOMPROMISAMI */}
+      
+      <Button variant="secondary" onClick={() => setShowTemplates(!showTemplates)}>
+        <FileText className="w-4 h-4 mr-2" />
+        Przykłady
+      </Button>
+
+      <Button variant="secondary" onClick={handleImportClick}>
+        <FolderOpen className="w-4 h-4 mr-2" />
+        Wczytaj
+      </Button>
+
+      <Button variant="secondary" onClick={handleExportJson}>
+        <Save className="w-4 h-4 mr-2" />
+        Zapisz
+      </Button>
       <div className="relative flex">
         <Button 
         variant={isSimulationMode ? "cyan" : "defaultCyan"}
@@ -117,20 +131,6 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
         </Button>
       </div>
 
-      <Button variant="secondary" onClick={() => setShowTemplates(!showTemplates)}>
-        <FileText className="w-4 h-4 mr-2" />
-        Przykłady
-      </Button>
-
-      <Button variant="secondary" onClick={handleImportClick}>
-        <FolderOpen className="w-4 h-4 mr-2" />
-        Wczytaj
-      </Button>
-
-      <Button variant="secondary" onClick={handleExportJson}>
-        <Save className="w-4 h-4 mr-2" />
-        Zapisz
-      </Button>
 
     </div>
   );

@@ -1,16 +1,20 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { scalePresets } from '../data/scalePresets'; 
+import { tableScenarios } from '../data/tableScenarios.js'; 
 import { decisionApi } from '../../../api/decisionApi.js'; 
 
+
+const starterScenario = tableScenarios.developerHiring;
+
 const blankState = {
-  alternatives: [],
-  objectives: [],
-  cells: {},
+  alternatives: starterScenario.alternatives,
+  objectives: starterScenario.objectives,
+  cells: starterScenario.cells,
   originalCells: {},
-  objectiveUnits: {},
-  sortDirections: {},
-  showRanking: false,
+  objectiveUnits: starterScenario.objectiveUnits || {},
+  sortDirections: starterScenario.sortDirections || {},
+  showRanking: true, 
   showTradeoffs: false,
   hideEqualizedObjectives: false,
   rejectedAlternatives: [],
@@ -27,7 +31,7 @@ export const useTableStore = create()(
     (set, get) => ({ 
       ...blankState,
 
-      
+      // --- REMOTE DATA FETCHING ---
       loadRemoteTableScenario: async (id) => {
         set({ isLoading: true });
         try {
@@ -87,6 +91,7 @@ export const useTableStore = create()(
         isDirty: true 
       })),
 
+      // --- PRESET & SCALE MANAGEMENT ---
       loadPreset: (presetKey) => set((state) => {
         const newPresetData = scalePresets[presetKey] || [];
         const allPresetWords = Object.values(scalePresets).flat().map(p => p.word);
@@ -108,6 +113,7 @@ export const useTableStore = create()(
       removeScale: (index) => set((state) => ({ customScales: state.customScales.filter((_, i) => i !== index), activePreset: null })),
       clearScales: () => set({ customScales: [], activePreset: null }),
       
+      // --- LOAD & RESET ---
       loadScenario: (scenario) => set({
         alternatives: scenario.alternatives || [],
         objectives: scenario.objectives || [],
