@@ -1,7 +1,8 @@
 import React from 'react';
 import { Button } from "../../../components/ui/Button";
-import { Badge } from "../../../components/ui/Badge"; // <-- IMPORT NOWEGO KOMPONENTU
+import { Badge } from "../../../components/ui/Badge"; 
 import { Crown } from "lucide-react";
+import { DOMINATION_TYPES } from '../../../constants/decisionTypes';
 
 // CORE MECHANIC: Renders the final analysis row, evaluating Pareto domination,
 // completeness, and determining the ultimate winner of the decision matrix.
@@ -94,7 +95,7 @@ export function TableConclusions({
         if (!dom) return <td key={`dom-${colIndex}`} className={`p-1.5 align-middle border-b border-r border-border bg-card ${isLastCell ? 'rounded-br-xl' : ''}`}></td>;
 
         // 5. STATE: STRICT DOMINATION
-        if (dom.type === "strict") {
+        if (dom.type === "DOMINATION_TYPES.STRICT") {
           return (
             <td key={`dom-${colIndex}`} className={`p-3 align-middle border-b border-r border-border bg-red-50 dark:bg-red-950/30 text-[11px] text-center ${isLastCell ? 'rounded-br-xl' : ''}`}>
               <Badge variant="danger" className="mb-2">Zdominowana</Badge>

@@ -5,6 +5,8 @@ import { ArrowUp, ArrowDown } from 'lucide-react';
 import { useTreeStore } from '../store/useTreeStore.js'
 import { computeStageHeaderRowY, getUniqueColumnXs } from '../logic/treeUtils.js'
 import { Button } from '../../../components/ui/Button'; 
+import { EVALUATION_MODES } from '../../../constants/decisionTypes';
+
 
 export function StageHeaders() {
   const nodes = useTreeStore((s) => s.nodes)
@@ -26,7 +28,7 @@ export function StageHeaders() {
   const headerWidth = 160;
 
   const handleToggleMode = () => {
-    setEvaluationMode(evaluationMode === 'max' ? 'min' : 'max');
+    setEvaluationMode(evaluationMode === EVALUATION_MODES.MAX ? EVALUATION_MODES.MIN : EVALUATION_MODES.MAX);
   }
 
   return (
@@ -60,18 +62,18 @@ export function StageHeaders() {
                 <Button
                   variant="emeraldOutline"
                   onClick={handleToggleMode}
-                  title={evaluationMode === 'max' ? 'Zmień na poszukiwanie minimum (np. kosztów)' : 'Zmień na poszukiwanie maksimum (np. zysków)'}
+                  title={evaluationMode === EVALUATION_MODES.MAX ? 'Zmień na poszukiwanie minimum (np. kosztów)' : 'Zmień na poszukiwanie maksimum (np. zysków)'}
                   className="absolute -right-2 top-1/2 h-8 -translate-y-1/2 translate-x-full gap-1.5 whitespace-nowrap rounded px-3 text-[11px] font-semibold"
                 >
                   <span className="text-emerald-600 dark:text-emerald-400">
-                    {evaluationMode === 'max' ? (
+                    {evaluationMode === EVALUATION_MODES.MAX ? (
                       <ArrowUp className="w-4 h-4 stroke-[2.5px]" /> 
                     ) : (
                       <ArrowDown className="w-4 h-4 stroke-[2.5px]" />
                     )}
                   </span>
                   <span>
-                    {evaluationMode === 'max' ? 'Lepiej [Max]' : 'Lepiej [Min]'}
+                    {evaluationMode === EVALUATION_MODES.MAX ? 'Lepiej [Max]' : 'Lepiej [Min]'}
                   </span>
                 </Button>
               )}

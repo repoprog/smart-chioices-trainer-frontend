@@ -1,13 +1,12 @@
-import React, { memo } from 'react';
-
+import React, { memo, useState, useEffect } from 'react';
+import { useTableStore } from '../store/useTableStore';
+import { DOMINATION_TYPES } from '../../../constants/decisionTypes';
 
 // CORE MECHANIC: Isolated cell component handling value formatting, tradeoff original states, 
 // and dynamic styling based on Pareto domination and ranking results.
 export const TableCell = memo(function TableCell({
   rowIndex,
   colIndex,
-  currentVal,
-  originalVal,
   unit,
   rankVal,
   maxRank,
@@ -21,18 +20,30 @@ export const TableCell = memo(function TableCell({
   isLastRow,
   isLastCol,
   isFocused,
-  setFocusedCell,
-  updateCell
+  setFocusedCell
 }) {
   const cellKey = `${rowIndex}-${colIndex}`;
 
+  
+  const globalVal = useTableStore(state => state.cells[cellKey] || "");
+  const originalVal = useTableStore(state => state.originalCells[cellKey] || "");
+  const updateCell = useTableStore(state => state.updateCell);
+
+ 
+  const [localVal, setLocalVal] = useState(globalVal);
+
+ 
+  useEffect(() => {
+    setLocalVal(globalVal);
+  }, [globalVal]);
+
   // Formatting logic for display
-  let displayValue = currentVal;
+  let displayValue = localVal; 
   if (showRanking) {
     displayValue = rankVal ? `${rankVal}` : "";
-  } else if (!isFocused && currentVal !== "" && unit) {
-    if (!currentVal.toString().includes(unit)) {
-      displayValue = `${currentVal} ${unit}`;
+  } else if (!isFocused && localVal !== "" && unit) {
+    if (!localVal.toString().includes(unit)) {
+      displayValue = `${localVal} ${unit}`;
     }
   }
 
@@ -42,15 +53,15 @@ export const TableCell = memo(function TableCell({
   // Background styling based on evaluation state
   let bgStyle = "bg-card";
   if (isWinner) bgStyle = "bg-green-50 dark:bg-green-900/10";
-  else if (domType === "strict") bgStyle = "bg-red-50 dark:bg-red-950/30";
-  else if (domType === "practical") bgStyle = "bg-amber-50 dark:bg-amber-950/30";
+  else if (domType === DOMINATION_TYPES.STRICT) bgStyle = "bg-red-50 dark:bg-red-950/30";
+  else if (domType === DOMINATION_TYPES.PRACTICAL) bgStyle = "bg-amber-50 dark:bg-amber-950/30";
 
   let tdClass = "";
   if (isRejected && !showRejected) tdClass = "hidden";
   else if (isRejected && showRejected) tdClass = "opacity-30";
 
-  const hasChangedInTradeoff = showTradeoffs && !showRanking && originalVal !== "" && originalVal !== currentVal;
-  const hasValidValue = currentVal !== undefined && currentVal.toString().trim() !== "";
+  const hasChangedInTradeoff = showTradeoffs && !showRanking && originalVal !== "" && originalVal !== localVal;
+  const hasValidValue = localVal !== undefined && localVal.toString().trim() !== "";
   
   // CORE MECHANIC: Highlight the objectively best value in a row when not in strict ranking mode
   const showGreenDot = !showRanking && isFirst && maxRank > 1 && hasValidValue && !isRowEqual;
@@ -58,37 +69,45 @@ export const TableCell = memo(function TableCell({
   const inputColor = showRanking ? (isFirst ? "text-green-600 dark:text-green-400" : (isLast ? "text-red-600 dark:text-red-400" : "text-foreground")) : "text-foreground";
   const inputWeight = showRanking ? "font-bold" : "font-normal";
 
-  // Number formatting logic on blur
-  const handleBlur = (e) => {
+  const handleChange = (e) => {
+    setLocalVal(e.target.value);
+  };
+
+  const handleBlur = () => {
     setFocusedCell(null);
     if (showRanking) return;
     
-    const val = e.target.value;
-    if (!val) return;
-    
-    const unitToFormat = unit || "";
-    let cleanStr = val.replace(/\s/g, "");
-    if (unitToFormat) {
-      cleanStr = cleanStr.split(unitToFormat.replace(/\s/g, "")).join("");
-    }
-    cleanStr = cleanStr.replace(",", ".");
-    
-    if (!isNaN(cleanStr) && cleanStr !== "") {
-      const num = Number(cleanStr);
-      let formatted = num.toLocaleString("pl-PL", { maximumFractionDigits: 4 });
-      if (unitToFormat) formatted += ` ${unitToFormat}`;
-      if (formatted !== val) {
-        updateCell(rowIndex, colIndex, formatted);
+    let valToSave = localVal;
+
+    if (localVal) {
+      const unitToFormat = unit || "";
+      let cleanStr = localVal.toString().replace(/\s/g, "");
+      if (unitToFormat) {
+        cleanStr = cleanStr.split(unitToFormat.replace(/\s/g, "")).join("");
       }
+      cleanStr = cleanStr.replace(",", ".");
+      
+      if (!isNaN(cleanStr) && cleanStr !== "") {
+        const num = Number(cleanStr);
+        let formatted = num.toLocaleString("pl-PL", { maximumFractionDigits: 4 });
+        if (unitToFormat) formatted += ` ${unitToFormat}`;
+        valToSave = formatted;
+        
+        setLocalVal(formatted); 
+      }
+    }
+
+    if (valToSave !== globalVal) {
+      updateCell(rowIndex, colIndex, valToSave);
     }
   };
 
   const handleFocus = () => {
     if (!showRanking) {
       setFocusedCell(cellKey);
-      if (unit && currentVal.toString().includes(unit)) {
-        const cleanVal = currentVal.toString().replace(unit, "").trim();
-        updateCell(rowIndex, colIndex, cleanVal);
+      if (unit && localVal.toString().includes(unit)) {
+        const cleanVal = localVal.toString().replace(unit, "").trim();
+        setLocalVal(cleanVal);
       }
     }
   };
@@ -119,12 +138,18 @@ export const TableCell = memo(function TableCell({
             isRowEqual ? "line-through !text-muted-foreground" : ""
           }`}
           value={displayValue}
-          onChange={(e) => updateCell(rowIndex, colIndex, e.target.value)}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          onFocus={handleFocus}
+          onKeyDown={(e) => {
+          
+            if (e.key === 'Enter') {
+              e.currentTarget.blur();
+            }
+          }}
           placeholder={showRanking ? "-" : "wartość"}
           readOnly={showRanking}
           list={!showRanking ? "scale-suggestions" : undefined}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
         />
       </div>
     </td>

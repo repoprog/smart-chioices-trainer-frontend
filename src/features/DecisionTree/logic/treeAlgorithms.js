@@ -1,19 +1,38 @@
+import { NODE_TYPES, EVALUATION_MODES } from '../../../constants/decisionTypes';
+
 /**
  * CORE MECHANIC: Parses string values into numbers for math operations.
  * Handles currency, percentages, and European number formatting (comma to dot).
  */
 export const parseValue = (value) => {
-  if (value == null) return 0;
+  if (value == null || value === '') return 0;
   if (typeof value === 'number') return value;
   if (typeof value !== 'string') return 0;
 
-  const numberString = value
-    .replace(/zł/g, '')
-    .replace(/%/g, '')
-    .replace(/\s/g, '')
-    .replace(',', '.')
-    .replace('−', '-'); 
-  const parsed = parseFloat(numberString);
+  let cleanStr = value.replace(/\s+/g, '');
+
+  cleanStr = cleanStr.replace(/[^\d.,-]/g, '');
+  const lastCommaIndex = cleanStr.lastIndexOf(',');
+  const lastDotIndex = cleanStr.lastIndexOf('.');
+
+  if (lastCommaIndex > -1 && lastDotIndex > -1) {
+    if (lastCommaIndex > lastDotIndex) {
+      cleanStr = cleanStr.replace(/\./g, ''); 
+      cleanStr = cleanStr.replace(',', '.');  
+    } else {
+      cleanStr = cleanStr.replace(/,/g, '');  
+    }
+  } else if (lastCommaIndex > -1) {
+   
+    cleanStr = cleanStr.replace(/,/g, '.');
+  }
+
+  const parts = cleanStr.split('.');
+  if (parts.length > 2) {
+    cleanStr = parts[0] + '.' + parts.slice(1).join('');
+  }
+
+  const parsed = parseFloat(cleanStr);
   return isNaN(parsed) ? 0 : parsed;
 };
 
@@ -21,13 +40,15 @@ export const parseValue = (value) => {
  * CORE MECHANIC: Parses probability percentages into decimals (0.0 to 1.0).
  * Falls back to an even split among unassigned siblings if no value exists.
  */
-export const parseProbability = (prob, allSiblings = [], edge = null) => {
-  if (prob != null) {
+export const parseProbability = (prob, allSiblings = []) => {
+  if (prob != null && prob !== '') {
     return parseValue(prob) / 100;
   }
+  
   const unassignedSiblings = allSiblings.filter(
-    (e) => e.data?.probability == null
+    (e) => e.data?.probability == null || e.data?.probability === ''
   );
+  
   return 1 / (unassignedSiblings.length || 1);
 };
 
@@ -40,7 +61,7 @@ const formatEqNum = (num) => Number.isInteger(num) ? num : parseFloat(num.toFixe
  * Traverses from terminal nodes back to the root, resolving chance nodes (weighted average) 
  * and decision nodes (max/min optimization).
  */
-export function evaluateDecisionTree(nodes, edges, optimizationMode = 'max') {
+export function evaluateDecisionTree(nodes, edges, optimizationMode = EVALUATION_MODES.MAX) {
   if (!nodes || nodes.length === 0) return {};
 
   const outgoingEdges = new Map();
@@ -64,12 +85,12 @@ export function evaluateDecisionTree(nodes, edges, optimizationMode = 'max') {
     let result;
     
     // 1. TERMINAL NODE
-    if (node.type === 'terminal' || childrenEdges.length === 0) {
+    if (node.type === NODE_TYPES.TERMINAL || childrenEdges.length === 0) {
       const payoff = parseValue(node.data?.payoff);
       result = { ev: payoff, steps: 0, equation: `${formatEqNum(payoff)}` }; 
     } 
     // 2. CHANCE NODE (Weighted Average calculation)
-    else if (node.type === 'chance') {
+    else if (node.type === NODE_TYPES.CHANCE) {
       let expectedSteps = 0;
       let equationParts = [];
       
@@ -92,7 +113,7 @@ export function evaluateDecisionTree(nodes, edges, optimizationMode = 'max') {
       };
     } 
     // 3. DECISION NODE (Optimization calculation)
-    else if (node.type === 'decision') {
+    else if (node.type === NODE_TYPES.DECISION) {
       let equationParts = [];
       
       const childValues = childrenEdges.map((edge) => {
@@ -109,7 +130,7 @@ export function evaluateDecisionTree(nodes, edges, optimizationMode = 'max') {
       } else {
         const bestResult = childValues.reduce(
           (best, current) => {
-            if (optimizationMode === 'max') {
+            if (optimizationMode === EVALUATION_MODES.MAX) {
               if (current.ev > best.ev) return current;
               if (current.ev === best.ev && current.steps < best.steps) return current;
             } else {
@@ -118,10 +139,10 @@ export function evaluateDecisionTree(nodes, edges, optimizationMode = 'max') {
             }
             return best;
           },
-          { ev: optimizationMode === 'max' ? -Infinity : Infinity, steps: Infinity, edgeId: null }
+          { ev: optimizationMode === EVALUATION_MODES.MAX ? -Infinity : Infinity, steps: Infinity, edgeId: null }
         );
         
-        const operator = optimizationMode === 'max' ? 'MAX' : 'MIN';
+        const operator = optimizationMode === EVALUATION_MODES.MAX ? EVALUATION_MODES.MAX : EVALUATION_MODES.MIN;
         result = { 
           ev: bestResult.ev, 
           steps: bestResult.steps, 
@@ -204,7 +225,7 @@ export function calculatePathProbabilities(nodes, edges) {
 
     outgoingEdges.forEach(edge => {
       let nextProb = currentProb;
-      if (node?.type === 'chance') {
+      if (node?.type === NODE_TYPES.CHANCE) {
         const edgeP = parseProbability(edge.data?.probability);
         nextProb = currentProb * edgeP;
       }
@@ -225,7 +246,7 @@ export const evaluateAndSetWinningPath = (state) => {
   
   // 1. Validation Step: Check for probability math errors first
   for (const node of nodes) {
-    if (node.type === 'chance') {
+    if (node.type === NODE_TYPES.CHANCE) {
       const outgoingEdges = edges.filter((e) => e.source === node.id);
       if (outgoingEdges.length > 0) {
         const sum = outgoingEdges.reduce((acc, e) => acc + (parseProbability(e.data?.probability) * 100), 0);
@@ -269,7 +290,7 @@ export const evaluateAndSetWinningPath = (state) => {
   
   const winningPathSet = new Set();
   
-  const rootNode = nodesWithEv.find((n) => (n.type === 'decision' || n.type === 'chance') && !edges.some((e) => e.target === n.id));
+  const rootNode = nodesWithEv.find((n) => (n.type === NODE_TYPES.DECISION || n.type === NODE_TYPES.CHANCE) && !edges.some((e) => e.target === n.id));
   if (rootNode) {
     const queue = [rootNode.id];
     winningPathSet.add(rootNode.id);
@@ -279,7 +300,7 @@ export const evaluateAndSetWinningPath = (state) => {
       const currentNode = nodesWithEv.find((n) => n.id === currentNodeId);
       const evaluationResult = evaluationMap[currentNodeId];
 
-      if (currentNode?.type === 'decision' && evaluationResult?.optimalEdgeId) {
+      if (currentNode?.type === NODE_TYPES.DECISION && evaluationResult?.optimalEdgeId) {
         const optimalEdge = edges.find((e) => e.id === evaluationResult.optimalEdgeId);
         if (optimalEdge) {
           winningPathSet.add(optimalEdge.id);
@@ -289,7 +310,7 @@ export const evaluateAndSetWinningPath = (state) => {
       } else {
         const childEdges = edges.filter((e) => e.source === currentNodeId);
         childEdges.forEach((edge) => {
-          if(currentNode?.type === 'chance') {
+          if(currentNode?.type === NODE_TYPES.CHANCE) {
              winningPathSet.add(edge.id);
              winningPathSet.add(edge.target);
              queue.push(edge.target);

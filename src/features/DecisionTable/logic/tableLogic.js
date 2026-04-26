@@ -1,4 +1,5 @@
 import { scalePresets } from '../data/scalePresets'; 
+import { SORT_DIRECTIONS, DOMINATION_TYPES } from '../../../constants/decisionTypes';
 
 // CORE MECHANIC: Check if all active alternatives share the exact same value for a specific objective (Tradeoff elimination)
 export const checkIsRowEqualized = (rowIndex, state) => {
@@ -51,7 +52,7 @@ export const getRowRanks = (rowIndex, state) => {
     return match ? parseFloat(match[0].replace(',', '.')) : NaN;
   };
 
-  const isLowerBetter = sortDirections[rowIndex] === 'lower';
+ const isLowerBetter = sortDirections[rowIndex] === SORT_DIRECTIONS.LOWER;
   const validItems = activeAlts
     .map(colIndex => ({ colIndex, mapped: getMappedValue(cells[`${rowIndex}-${colIndex}`]) }))
     .filter(item => !isNaN(item.mapped))
@@ -118,8 +119,8 @@ export const analyzeDomination = (state, equalizedRowsIndexes, completeAlts, act
       }
     }
     
-    if (strictlyBy) results[a] = { type: 'strict', by: strictlyBy };
-    else if (practicallyBy) results[a] = { type: 'practical', by: practicallyBy, objective: practicalObjName };
+    if (strictlyBy) results[a] = { type: DOMINATION_TYPES.STRICT, by: strictlyBy };
+else if (practicallyBy) results[a] = { type: DOMINATION_TYPES.PRACTICAL, by: practicallyBy, objective: practicalObjName };
   }
   
   return { results, matrix };
@@ -160,7 +161,7 @@ export const getTradeoffResults = (state) => {
       if (perfectAlts.length === 1) {
         winnerIndex = perfectAlts[0];
       } else {
-        const contenders = completeAlts.filter(idx => !dominationResults[idx] || dominationResults[idx].type !== 'strict');
+        const contenders = completeAlts.filter(idx => !dominationResults[idx] || dominationResults[idx].type !== DOMINATION_TYPES.STRICT);
         if (contenders.length === 1) {
           winnerIndex = contenders[0];
         }

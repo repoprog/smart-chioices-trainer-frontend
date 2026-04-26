@@ -1,3 +1,4 @@
+import { NODE_TYPES } from '../../../constants/decisionTypes';
 
 
 export const treeScenarios = {
@@ -6,7 +7,7 @@ export const treeScenarios = {
     description: "Czyste płótno. Zbuduj własne drzewo decyzyjne od podstaw, dodając węzły i określając prawdopodobieństwa.",
     labels: ["Wybór początkowy"],
     nodes: [
-      { id: 'd1', type: 'decision', position: { x: 0, y: 0 }, data: { nodeNumber: 1 } },
+      { id: 'd1', type: NODE_TYPES.DECISION, position: { x: 0, y: 0 }, data: { nodeNumber: 1 } },
     ],
     edges: []
   },
@@ -17,14 +18,14 @@ export const treeScenarios = {
     labels: ["W Co Zainwestować?", "Ryzyko Rynkowe", "Wynik Finansowy"],
     nodes: [
     
-      { id: 'd1', type: 'decision', position: { x: 0, y: 0 }, zIndex: 100, data: { nodeNumber: 1 } },
+      { id: 'd1', type: NODE_TYPES.DECISION, position: { x: 0, y: 0 }, zIndex: 100, data: { nodeNumber: 1 } },
       
   
-      { id: 'c1', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 2 } }, 
+      { id: 'c1', type: NODE_TYPES.CHANCE, position: { x: 0, y: 0 }, data: { nodeNumber: 2 } }, 
      
-      { id: 't1', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '200 000' } }, 
-      { id: 't2', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '20 000' } }, 
-      { id: 't3', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '5 000' } },   
+      { id: 't1', type: NODE_TYPES.TERMINAL, position: { x: 0, y: 0 }, data: { payoff: '200 000' } }, 
+      { id: 't2', type: NODE_TYPES.TERMINAL, position: { x: 0, y: 0 }, data: { payoff: '20 000' } }, 
+      { id: 't3', type: NODE_TYPES.TERMINAL, position: { x: 0, y: 0 }, data: { payoff: '5 000' } },   
     ],
     edges: [
     
@@ -43,14 +44,14 @@ export const treeScenarios = {
     labels: ["Strategia Prawna", "Wyrok Sądu", "Koszty i Kary"],
     nodes: [
    
-      { id: 'd1', type: 'decision', position: { x: 0, y: 0 }, zIndex: 100, data: { nodeNumber: 1 } },
+      { id: 'd1', type: NODE_TYPES.DECISION, position: { x: 0, y: 0 }, zIndex: 100, data: { nodeNumber: 1 } },
       
    
-      { id: 'c1', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 2 } }, 
+      { id: 'c1', type: NODE_TYPES.CHANCE, position: { x: 0, y: 0 }, data: { nodeNumber: 2 } }, 
       
-      { id: 't1', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '-50 000' } }, 
-      { id: 't2', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0' } },      
-      { id: 't3', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '-150 000' } },
+      { id: 't1', type: NODE_TYPES.TERMINAL, position: { x: 0, y: 0 }, data: { payoff: '-50 000' } }, 
+      { id: 't2', type: NODE_TYPES.TERMINAL, position: { x: 0, y: 0 }, data: { payoff: '0' } },      
+      { id: 't3', type: NODE_TYPES.TERMINAL, position: { x: 0, y: 0 }, data: { payoff: '-150 000' } },
     ],
     edges: [
     
@@ -68,14 +69,14 @@ export const treeScenarios = {
     description: "Ryzykowny i drogi viral w Social Mediach czy stabilne, tańsze pozycjonowanie SEO?",
     labels: ["Wybór Kanału", "Reakcja Rynku", "Wynik Finansowy"], 
     nodes: [
-      { id: 'd1', type: 'decision', position: { x: 0, y: 0 }, zIndex: 100, data: { nodeNumber: 1 } },
-      { id: 'c1', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 2 } }, // Niepewność SM
-      { id: 'c2', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 3 } }, // Niepewność SEO
+      { id: 'd1', type: NODE_TYPES.DECISION, position: { x: 0, y: 0 }, zIndex: 100, data: { nodeNumber: 1 } },
+      { id: 'c1', type: NODE_TYPES.CHANCE, position: { x: 0, y: 0 }, data: { nodeNumber: 2 } }, // Niepewność SM
+      { id: 'c2', type: NODE_TYPES.CHANCE, position: { x: 0, y: 0 }, data: { nodeNumber: 3 } }, // Niepewność SEO
       
-      { id: 't1', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '120 000' } }, // Viral
-      { id: 't2', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '5 000' } },   // Brak echa SM
-      { id: 't3', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '40 000' } },  // TOP 3 SEO
-      { id: 't4', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '10 000' } },  // Słabe SEO
+      { id: 't1', type: NODE_TYPES.TERMINAL, position: { x: 0, y: 0 }, data: { payoff: '120 000' } }, // Viral
+      { id: 't2', type: NODE_TYPES.TERMINAL, position: { x: 0, y: 0 }, data: { payoff: '5 000' } },   // Brak echa SM
+      { id: 't3', type: NODE_TYPES.TERMINAL, position: { x: 0, y: 0 }, data: { payoff: '40 000' } },  // TOP 3 SEO
+      { id: 't4', type: NODE_TYPES.TERMINAL, position: { x: 0, y: 0 }, data: { payoff: '10 000' } },  // Słabe SEO
     ],
     edges: [
      
@@ -97,17 +98,17 @@ export const treeScenarios = {
     description: "Finałowy mecz, tracisz 2 punkty. Rzucać bezpieczniej za 2 punkty (i liczyć na wygraną w dogrywce), czy zaryzykować rzut za 3 punkty po natychmiastowe zwycięstwo?",
     labels: ["Jaki rzut?", "Rzut udany?", "Dogrywka (OT)", "Rezultat końcowy"], 
     nodes: [
-      { id: 'd1', type: 'decision', position: { x: 0, y: 0 }, zIndex: 100, data: { nodeNumber: 1 } },
-      { id: 'c1', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 2 } }, 
-      { id: 'c2', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 3 } }, 
-      { id: 'c3', type: 'chance', position: { x: 0, y: 0 }, data: { nodeNumber: 4 } },
+      { id: 'd1', type: NODE_TYPES.DECISION, position: { x: 0, y: 0 }, zIndex: 100, data: { nodeNumber: 1 } },
+      { id: 'c1', type: NODE_TYPES.CHANCE, position: { x: 0, y: 0 }, data: { nodeNumber: 2 } }, 
+      { id: 'c2', type: NODE_TYPES.CHANCE, position: { x: 0, y: 0 }, data: { nodeNumber: 3 } }, 
+      { id: 'c3', type: NODE_TYPES.CHANCE, position: { x: 0, y: 0 }, data: { nodeNumber: 4 } },
       
     
-      { id: 't1', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0 (Przegrana)' } }, 
-      { id: 't2', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '100 (Wygrana)' } }, 
-      { id: 't3', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0 (Przegrana)' } }, 
-      { id: 't4', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '100 (Wygrana)' } }, 
-      { id: 't5', type: 'terminal', position: { x: 0, y: 0 }, data: { payoff: '0 (Przegrana)' } }, 
+      { id: 't1', type: NODE_TYPES.TERMINAL, position: { x: 0, y: 0 }, data: { payoff: '0 (Przegrana)' } }, 
+      { id: 't2', type: NODE_TYPES.TERMINAL, position: { x: 0, y: 0 }, data: { payoff: '100 (Wygrana)' } }, 
+      { id: 't3', type: NODE_TYPES.TERMINAL, position: { x: 0, y: 0 }, data: { payoff: '0 (Przegrana)' } }, 
+      { id: 't4', type: NODE_TYPES.TERMINAL, position: { x: 0, y: 0 }, data: { payoff: '100 (Wygrana)' } }, 
+      { id: 't5', type: NODE_TYPES.TERMINAL, position: { x: 0, y: 0 }, data: { payoff: '0 (Przegrana)' } }, 
     ],
     edges: [
     

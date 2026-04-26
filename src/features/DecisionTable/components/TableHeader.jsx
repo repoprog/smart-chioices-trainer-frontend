@@ -1,4 +1,4 @@
-
+import { DOMINATION_TYPES } from '../../../constants/decisionTypes';
 
 export function TableHeader({
   objectives,
@@ -38,8 +38,8 @@ export function TableHeader({
 
           let headerColor = "text-foreground";
           if (isWinner) headerColor = "text-green-700 dark:text-green-500";
-          else if (domType === "strict") headerColor = "text-red-600 dark:text-red-400";
-          else if (domType === "practical") headerColor = "text-amber-600 dark:text-amber-400";
+          else if (domType === DOMINATION_TYPES.STRICT) headerColor = "text-red-600 dark:text-red-400";
+          else if (domType === DOMINATION_TYPES.PRACTICAL) headerColor = "text-amber-600 dark:text-amber-400";
 
           const winnerClasses = isWinner ? "bg-green-50 dark:bg-green-900/10" : "";
 

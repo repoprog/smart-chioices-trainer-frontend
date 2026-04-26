@@ -1,5 +1,6 @@
 import { useTreeStore } from '../store/useTreeStore.js';
 import { Circle, Square, Triangle, ArrowRightLeft, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { NODE_TYPES, EVALUATION_MODES } from '../../../constants/decisionTypes';
 
 export function NodeMenu({ nodeId, nodeType, hasIncoming }) {
   const addBranch = useTreeStore((s) => s.addBranch);
@@ -12,7 +13,7 @@ export function NodeMenu({ nodeId, nodeType, hasIncoming }) {
   
   const areCostsVisible = outgoingEdges.some((e) => e.data?.showCost === true);
 
-  const isTerminal = nodeType === 'terminal';
+  const isTerminal = nodeType === NODE_TYPES.TERMINAL;
 
   const btnClass = "flex w-full items-center gap-2.5 px-3 py-1.5 text-left font-sans text-[12px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors";
   const iconClass = "w-[15px] h-[15px] shrink-0";
@@ -23,17 +24,17 @@ export function NodeMenu({ nodeId, nodeType, hasIncoming }) {
       
       {!isTerminal && (
         <>
-          <button className={btnClass} onClick={() => addBranch(nodeId, 'chance')}>
+          <button className={btnClass} onClick={() => addBranch(nodeId, NODE_TYPES.CHANCE)}>
             <Circle className={iconClass} />
             Dodaj niepewność
           </button>
           
-          <button className={btnClass} onClick={() => addBranch(nodeId, 'decision')}>
+          <button className={btnClass} onClick={() => addBranch(nodeId, NODE_TYPES.DECISION)}>
             <Square className={iconClass} />
             Dodaj decyzję
           </button>
           
-          <button className={btnClass} onClick={() => addBranch(nodeId, 'terminal')}>
+          <button className={btnClass} onClick={() => addBranch(nodeId, NODE_TYPES.TERMINAL)}>
             <Triangle className={`${iconClass} rotate-90`} />
             Dodaj konsekwencję
           </button>
@@ -42,22 +43,22 @@ export function NodeMenu({ nodeId, nodeType, hasIncoming }) {
         </>
       )}
 
-      {nodeType !== 'chance' && (
-        <button className={btnClass} onClick={() => swapNodeType(nodeId, 'chance')}>
+      {nodeType !== NODE_TYPES.CHANCE && (
+        <button className={btnClass} onClick={() => swapNodeType(nodeId, NODE_TYPES.CHANCE)}>
           <ArrowRightLeft className={iconClass} />
           Zamień na niepewność
         </button>
       )}
 
-      {nodeType !== 'decision' && (
-        <button className={btnClass} onClick={() => swapNodeType(nodeId, 'decision')}>
+      {nodeType !== NODE_TYPES.DECISION && (
+        <button className={btnClass} onClick={() => swapNodeType(nodeId, NODE_TYPES.DECISION)}>
           <ArrowRightLeft className={iconClass} />
           Zamień na decyzję
         </button>
       )}
 
-      {nodeType !== 'terminal' && (
-        <button className={btnClass} onClick={() => swapNodeType(nodeId, 'terminal')}>
+      {nodeType !== NODE_TYPES.TERMINAL && (
+        <button className={btnClass} onClick={() => swapNodeType(nodeId, NODE_TYPES.TERMINAL)}>
           <ArrowRightLeft className={iconClass} />
           Zamień na konsekwencję
         </button>

@@ -1,4 +1,6 @@
 import dagre from 'dagre';
+import { NODE_TYPES } from '../../../constants/decisionTypes';
+
 
 /**
  * CORE MECHANIC: Counter for generating unique DOM-safe IDs for new nodes and edges.
@@ -107,7 +109,7 @@ export function renumberDecisionAndChanceNodes(nodes, edges) {
     visited.add(id);
     const node = byId.get(id);
     if (!node) continue;
-    if (node.type === 'decision' || node.type === 'chance') {
+    if (node.type === NODE_TYPES.DECISION || node.type === NODE_TYPES.CHANCE) {
       orderedIds.push(id);
     }
     for (const e of outgoing.get(id) ?? []) queue.push(e.target);
@@ -118,7 +120,7 @@ export function renumberDecisionAndChanceNodes(nodes, edges) {
   for (const id of orderedIds) idToNumber.set(id, n++);
 
   return nodes.map((node) => {
-    if (node.type !== 'decision' && node.type !== 'chance') return node;
+    if (node.type !== NODE_TYPES.DECISION && node.type !== NODE_TYPES.CHANCE) return node;
     const num = idToNumber.get(node.id) ?? 0;
     return {
       ...node,
@@ -146,7 +148,7 @@ export function getLayoutedElements(nodes, edges) {
   edges.forEach((edge) => {
     const targetNode = nodes.find((n) => n.id === edge.target);
 
-    if (targetNode?.type === 'terminal') {
+    if (targetNode?.type === NODE_TYPES.TERMINAL) {
       const sourceNodeId = edge.source;
       const targetNodeId = edge.target;
       const sourceNodeDepth = depthMap.get(sourceNodeId) ?? 0;
@@ -213,7 +215,7 @@ export function getLayoutedElements(nodes, edges) {
     const finalY = nodeWithPosition.y - 22 + yOffset;
 
     // Terminal nodes are pushed to the max calculated X coordinate
-    if (node.type === 'terminal') finalX = maxLeftX;
+    if (node.type === NODE_TYPES.TERMINAL) finalX = maxLeftX;
 
     return { ...node, position: { x: finalX, y: finalY } };
   });

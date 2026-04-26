@@ -3,6 +3,8 @@ import { temporal } from 'zundo';
 import { persist } from 'zustand/middleware'; // <-- Dodany import
 import { treeScenarios } from '../data/treeScenarios.js';
 import { decisionApi } from '../../../api/decisionApi.js'; 
+import { NODE_TYPES, EVALUATION_MODES } from '../../../constants/decisionTypes.js';
+
 
 // CORE MECHANIC: Visual layout and graph traversal utilities
 import {
@@ -31,7 +33,7 @@ export const useTreeStore = create()(
       nodes: numberedInitial,
       edges: defaultScenario.edges,
       stageColumnLabels: initialStageLabels,
-      evaluationMode: 'max',
+      evaluationMode: EVALUATION_MODES.MAX,
       evaluationMap: {},
       winningPath: new Set(),
       isDirty: false, 
@@ -173,7 +175,7 @@ export const useTreeStore = create()(
           }
 
           
-          const chanceNodeIds = new Set(state.nodes.filter(n => n.type === 'chance').map(n => n.id));
+          const chanceNodeIds = new Set(state.nodes.filter(n => n.type === NODE_TYPES.CHANCE).map(n => n.id));
           let hasChanges = false;
           
           const newEdges = state.edges.map(edge => {
@@ -196,11 +198,11 @@ export const useTreeStore = create()(
       addBranch: (parentId, childKind) =>
         set((state) => {
           const parent = state.nodes.find((n) => n.id === parentId);
-          if (!parent || (parent.type !== 'decision' && parent.type !== 'chance')) return state;
+          if (!parent || (parent.type !== NODE_TYPES.DECISION && parent.type !== NODE_TYPES.CHANCE)) return state;
 
-          const newNodeId = nextDomId(childKind === 'chance' ? 'c' : 't');
+          const newNodeId = nextDomId(childKind === NODE_TYPES.CHANCE ? 'c' : 't');
           const existingOutgoing = state.edges.filter((e) => e.source === parentId);
-          const isFromChance = parent.type === 'chance';
+          const isFromChance = parent.type === NODE_TYPES.CHANCE;
           let edgeData = isFromChance 
             ? { optionLabel: `Zdarzenie ${existingOutgoing.length + 1}`, probability: '0%', isLocked: false }
             : { optionLabel: `Opcja ${existingOutgoing.length + 1}`, probability: null };
@@ -210,7 +212,7 @@ export const useTreeStore = create()(
             type: childKind,
             position: { x: 0, y: 0 }, 
             zIndex: 100,
-            data: childKind === 'terminal' ? { payoff: '0 zł' } : { nodeNumber: 0 },
+            data: childKind === NODE_TYPES.TERMINAL ? { payoff: '0 zł' } : { nodeNumber: 0 },
           };
 
           const newEdge = { id: nextDomId('e'), source: parentId, target: newNodeId, type: 'smartChoices', data: edgeData };
@@ -246,7 +248,7 @@ export const useTreeStore = create()(
           let remainingEdges = state.edges.filter((e) => !removeSet.has(e.source) && !removeSet.has(e.target));
 
           const parent = state.nodes.find((n) => n.id === parentId);
-          if (parent && parent.type === 'chance') {
+          if (parent && parent.type === NODE_TYPES.CHANCE) {
             remainingEdges = rebalanceProbabilities(remainingEdges, parentId);
           }
           
@@ -276,7 +278,7 @@ export const useTreeStore = create()(
           let remainingNodes = [...state.nodes];
           let remainingEdges = [...state.edges];
 
-          if (newType === 'terminal') {
+          if (newType === NODE_TYPES.TERMINAL) {
             const removeSet = collectDescendants(nodeId, state.edges);
             removeSet.delete(nodeId); 
             remainingNodes = remainingNodes.filter((n) => !removeSet.has(n.id));
@@ -288,7 +290,7 @@ export const useTreeStore = create()(
           
           const oldData = remainingNodes[targetIndex].data;
           let newData = { ...oldData };
-          if (newType === 'terminal') {
+          if (newType === NODE_TYPES.TERMINAL) {
             newData = { payoff: oldData.payoff || '0 zł' };
             delete newData.nodeNumber;
           } else {
@@ -298,16 +300,16 @@ export const useTreeStore = create()(
 
           remainingNodes[targetIndex] = { ...remainingNodes[targetIndex], type: newType, data: newData };
 
-          if (newType !== 'terminal') {
+          if (newType !== NODE_TYPES.TERMINAL) {
             remainingEdges = remainingEdges.map((e) => {
               if (e.source === nodeId) {
-                if (newType === 'decision') return { ...e, data: { ...e.data, probability: null, isLocked: false } };
-                if (newType === 'chance') return { ...e, data: { ...e.data, probability: '0%', isLocked: false } };
+                if (newType === NODE_TYPES.DECISION) return { ...e, data: { ...e.data, probability: null, isLocked: false } };
+                if (newType === NODE_TYPES.CHANCE) return { ...e, data: { ...e.data, probability: '0%', isLocked: false } };
               }
               return e;
             });
             
-            if (newType === 'chance') {
+            if (newType === NODE_TYPES.CHANCE) {
               remainingEdges = rebalanceProbabilities(remainingEdges, nodeId);
             }
           }
@@ -363,7 +365,7 @@ export const useTreeStore = create()(
 
           let remainingEdges = state.edges.filter((e) => e.id !== victimEdge.id && !removeSet.has(e.source) && !removeSet.has(e.target));
 
-          if (parent.type === 'chance') {
+          if (parent.type === NODE_TYPES.CHANCE) {
             remainingEdges = rebalanceProbabilities(remainingEdges, parentId);
           }
           

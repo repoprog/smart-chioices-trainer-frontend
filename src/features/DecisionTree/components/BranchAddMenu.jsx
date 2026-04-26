@@ -1,5 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useTreeStore } from '../store/useTreeStore.js'
+import { NODE_TYPES } from '../../../constants/decisionTypes'
+
 
 export function BranchAddMenu({ nodeId }) {
   const addBranch = useTreeStore((s) => s.addBranch)
@@ -47,7 +49,7 @@ export function BranchAddMenu({ nodeId }) {
             type="button"
             role="menuitem"
             className="block w-full px-3 py-2 text-left font-sans text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-            onClick={() => pick('chance')}
+            onClick={() => pick(NODE_TYPES.CHANCE)}
           >
             Niepewność
           </button>
@@ -55,7 +57,7 @@ export function BranchAddMenu({ nodeId }) {
             type="button"
             role="menuitem"
             className="block w-full px-3 py-2 text-left font-sans text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-            onClick={() => pick('terminal')}
+            onClick={() => pick(NODE_TYPES.TERMINAL)}
           >
             Konsekwencja
           </button>

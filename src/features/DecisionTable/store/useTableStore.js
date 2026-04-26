@@ -3,6 +3,8 @@ import { persist } from 'zustand/middleware';
 import { scalePresets } from '../data/scalePresets'; 
 import { tableScenarios } from '../data/tableScenarios.js'; 
 import { decisionApi } from '../../../api/decisionApi.js'; 
+import { NODE_TYPES, EVALUATION_MODES, SORT_DIRECTIONS } from '../../../constants/decisionTypes';
+
 
 
 const starterScenario = tableScenarios.developerHiring;
@@ -78,7 +80,7 @@ export const useTableStore = create()(
       updateUnit: (row, value) => set((state) => ({ objectiveUnits: { ...state.objectiveUnits, [row]: value }, isDirty: true })), 
       
       toggleSortDirection: (row) => set((state) => ({
-        sortDirections: { ...state.sortDirections, [row]: state.sortDirections[row] === 'lower' ? 'higher' : 'lower' },
+        sortDirections: { ...state.sortDirections, [row]: state.sortDirections[row] === SORT_DIRECTIONS.LOWER ? SORT_DIRECTIONS.HIGHER : SORT_DIRECTIONS.LOWER },
         isDirty: true 
       })),
       

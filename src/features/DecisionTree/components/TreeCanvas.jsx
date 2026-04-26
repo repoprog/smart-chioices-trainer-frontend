@@ -15,6 +15,8 @@ import { useTreeStore } from '../store/useTreeStore.js'
 import { StageHeaders } from './StageHeaders.jsx'
 import { TreeToolbar } from './TreeToolbar.jsx'
 import { TreeLegend } from './TreeLegend.jsx' 
+import { NODE_TYPES } from '../../../constants/decisionTypes';
+
 
 export function TreeCanvas() {
   const allNodes = useTreeStore((s) => s.nodes)
@@ -136,9 +138,9 @@ return (
             maskColor="var(--muted)"
             nodeStrokeWidth={1}
             nodeColor={(n) => {
-              if (n.type === 'decision') return 'var(--card)'
-              if (n.type === 'chance') return 'var(--card)'
-              if (n.type === 'terminal') return 'var(--card)'
+              if (n.type === NODE_TYPES.DECISION) return 'var(--card)'
+              if (n.type === NODE_TYPES.CHANCE) return 'var(--card)'
+              if (n.type === NODE_TYPES.TERMINAL) return 'var(--card)'
               return 'var(--muted)'
             }}
           />

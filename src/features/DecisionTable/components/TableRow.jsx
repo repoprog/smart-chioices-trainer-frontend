@@ -1,17 +1,17 @@
 import React, { memo } from 'react';
 import { TableCell } from './TableCell'; 
+import { SORT_DIRECTIONS } from '../../../constants/decisionTypes';
+
 
 // CORE MECHANIC: Renders a single row for an objective. Delegates individual alternative data to TableCell.
 export const TableRow = memo(function TableRow({
   rowIndex,
   objName,
   alternatives,
-  cells,
   objectiveUnits,
   showRanking,
   sortDirections,
   showTradeoffs,
-  originalCells,
   hideEqualizedObjectives,
   rejectedAlternatives,
   showRejected,
@@ -24,11 +24,10 @@ export const TableRow = memo(function TableRow({
   updateObjective,
   updateUnit,
   toggleSortDirection,
-  updateCell,
   onRemoveObjective,
   isLastRow,
 }) {
-  const isLowerBetter = sortDirections[rowIndex] === "lower";
+  const isLowerBetter = sortDirections[rowIndex] === SORT_DIRECTIONS.LOWER;
   let trClass = "hover:bg-muted/20 transition-colors";
   
   if (isRowEqual) {
@@ -88,7 +87,6 @@ export const TableRow = memo(function TableRow({
         </div>
       </td>
 
-    
       {alternatives.map((_, colIndex) => {
         const cellKey = `${rowIndex}-${colIndex}`;
 
@@ -97,8 +95,6 @@ export const TableRow = memo(function TableRow({
             key={cellKey}
             rowIndex={rowIndex}
             colIndex={colIndex}
-            currentVal={cells[cellKey] || ""}
-            originalVal={originalCells[cellKey] || ""}
             unit={objectiveUnits[rowIndex] || ""}
             rankVal={rowRanks[colIndex]}
             maxRank={maxRank}
@@ -113,7 +109,6 @@ export const TableRow = memo(function TableRow({
             isLastCol={colIndex === alternatives.length - 1}
             isFocused={focusedCell === cellKey}
             setFocusedCell={setFocusedCell}
-            updateCell={updateCell}
           />
         );
       })}

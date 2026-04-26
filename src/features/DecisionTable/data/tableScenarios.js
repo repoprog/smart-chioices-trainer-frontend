@@ -1,3 +1,6 @@
+import { SORT_DIRECTIONS } from '../../../constants/decisionTypes';
+
+
 export const tableScenarios = {
   blank: {
     name: "Pusta tabela (Od nowa)",
@@ -14,7 +17,7 @@ export const tableScenarios = {
     alternatives: ["Auto A (Kompakt)", "Auto B (Kombi)", "Auto C (SUV)"],
     objectives: ["Cena zakupu", "Spalanie", "Pojemność bagażnika", "Bezpieczeństwo"],
     objectiveUnits: { 0: "zł", 1: "l/100km", 2: "litry", 3: "pkt" },
-    sortDirections: { 0: "lower", 1: "lower", 2: "higher", 3: "higher" },
+    sortDirections: { 0: SORT_DIRECTIONS.LOWER, 1: SORT_DIRECTIONS.LOWER, 2: SORT_DIRECTIONS.HIGHER, 3: SORT_DIRECTIONS.HIGHER },
     cells: {
       "0-0": "85000", "0-1": "110000", "0-2": "140000",
       "1-0": "5.5",   "1-1": "6.2",    "1-2": "8.5",
@@ -28,7 +31,7 @@ export const tableScenarios = {
     alternatives: ["Korporacja", "Startup", "Freelance"],
     objectives: ["Wynagrodzenie netto", "Praca zdalna", "Możliwość awansu", "Poziom stresu"],
     objectiveUnits: { 0: "zł/msc", 1: "dni/tyg", 2: "pkt", 3: "pkt" },
-    sortDirections: { 0: "higher", 1: "higher", 2: "higher", 3: "lower" },
+    sortDirections: { 0: SORT_DIRECTIONS.HIGHER, 1: SORT_DIRECTIONS.HIGHER, 2: SORT_DIRECTIONS.HIGHER, 3: SORT_DIRECTIONS.LOWER },
     cells: {
       "0-0": "12000", "0-1": "9500", "0-2": "15000",
       "1-0": "2",     "1-1": "4",    "1-2": "5",
@@ -43,7 +46,7 @@ export const tableScenarios = {
     objectives: ["Oczekiwania finansowe", "Znajomość Java/Spring", "Znajomość React", "Doświadczenie z AWS", "Praktyka w CI/CD", "Język Angielski"],
     objectiveUnits: { 0: "zł" }, 
    
-    sortDirections: { 0: "lower", 1: "higher", 2: "higher", 3: "higher", 4: "higher", 5: "higher" },
+    sortDirections: { 0: SORT_DIRECTIONS.LOWER, 1: SORT_DIRECTIONS.HIGHER, 2: SORT_DIRECTIONS.HIGHER, 3: SORT_DIRECTIONS.HIGHER, 4: SORT_DIRECTIONS.HIGHER, 5: SORT_DIRECTIONS.HIGHER },
     cells: {
     
       "0-0": "13000", "0-1": "14000", "0-2": "15000", "0-3": "14500",

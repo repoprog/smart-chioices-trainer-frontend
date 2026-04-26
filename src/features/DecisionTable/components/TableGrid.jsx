@@ -21,10 +21,10 @@ export function TableGrid() {
 
   const {
     alternatives, objectives, cells, objectiveUnits, showRanking, sortDirections,
-    showTradeoffs, originalCells, hideEqualizedObjectives, rejectedAlternatives, showRejected,
+    showTradeoffs, hideEqualizedObjectives, rejectedAlternatives, showRejected,
     customScales, 
     toggleShowRejected, toggleHideEqualized, toggleSortDirection,
-    addAlternative, addObjective, updateAlternative, updateObjective, updateCell, updateUnit,
+    addAlternative, addObjective, updateAlternative, updateObjective, updateUnit,
     rejectAlternative, restoreAlternative,
   } = store;
 
@@ -156,12 +156,10 @@ export function TableGrid() {
                   rowIndex={rowIndex}
                   objName={objName}
                   alternatives={alternatives}
-                  cells={cells}
                   objectiveUnits={objectiveUnits}
                   showRanking={showRanking}
                   sortDirections={sortDirections}
                   showTradeoffs={showTradeoffs}
-                  originalCells={originalCells}
                   hideEqualizedObjectives={hideEqualizedObjectives}
                   rejectedAlternatives={rejectedAlternatives}
                   showRejected={showRejected}
@@ -174,7 +172,6 @@ export function TableGrid() {
                   updateObjective={updateObjective}
                   updateUnit={updateUnit}
                   toggleSortDirection={toggleSortDirection}
-                  updateCell={updateCell}
                   onRemoveObjective={handleRemoveObjective}
                   isLastRow={rowIndex === objectives.length - 1}
                 />
