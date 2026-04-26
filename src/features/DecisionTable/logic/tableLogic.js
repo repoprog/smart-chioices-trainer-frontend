@@ -43,7 +43,8 @@ export const getRowRanks = (rowIndex, state) => {
 
   const getMappedValue = (str) => {
     if (!str) return NaN;
-    const lower = str.toString().trim().toLowerCase();
+  
+    const lower = str.toString().trim().toLowerCase().replace(/−|\u2212/g, '-');
     
     if (lower in activeScaleMap) return activeScaleMap[lower];
     if (lower in globalScaleMap) return globalScaleMap[lower];
@@ -52,7 +53,7 @@ export const getRowRanks = (rowIndex, state) => {
     return match ? parseFloat(match[0].replace(',', '.')) : NaN;
   };
 
- const isLowerBetter = sortDirections[rowIndex] === SORT_DIRECTIONS.LOWER;
+  const isLowerBetter = sortDirections[rowIndex] === SORT_DIRECTIONS.LOWER;
   const validItems = activeAlts
     .map(colIndex => ({ colIndex, mapped: getMappedValue(cells[`${rowIndex}-${colIndex}`]) }))
     .filter(item => !isNaN(item.mapped))
@@ -111,7 +112,7 @@ export const analyzeDomination = (state, equalizedRowsIndexes, completeAlts, act
 
       if (bIsAlwaysBetterOrEqual && bIsStrictlyBetterAtLeastOnce) {
         strictlyBy = alternatives[b];
-        break;
+        break; 
       }
       if (aExceptionsCount === 1 && aExceptionRankDiff === 1 && bIsStrictlyBetterAtLeastOnce) {
         practicallyBy = alternatives[b];
@@ -120,7 +121,7 @@ export const analyzeDomination = (state, equalizedRowsIndexes, completeAlts, act
     }
     
     if (strictlyBy) results[a] = { type: DOMINATION_TYPES.STRICT, by: strictlyBy };
-else if (practicallyBy) results[a] = { type: DOMINATION_TYPES.PRACTICAL, by: practicallyBy, objective: practicalObjName };
+    else if (practicallyBy) results[a] = { type: DOMINATION_TYPES.PRACTICAL, by: practicallyBy, objective: practicalObjName };
   }
   
   return { results, matrix };

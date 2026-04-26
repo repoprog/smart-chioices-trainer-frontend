@@ -3,14 +3,11 @@ import { Handle, Position } from '@xyflow/react';
 import { useTreeStore } from '../../store/useTreeStore.js';
 import { NodeMenu } from '../NodeMenu.jsx';
 import { NodeEquationBadge } from './NodeEquationBadge.jsx'; 
+import { parseProbabilityString } from '../../logic/treeAlgorithms'
 
 const handleClass = '!h-2 !w-2 !min-h-0 !min-w-0 !border !border-slate-900 !bg-white !opacity-80';
 
-// HELPER: Extract probability float value from node string
-const parseProbability = (p) => {
-  if (p == null) return 0;
-  return parseFloat(String(p).replace('%', '')) || 0;
-};
+
 
 export function ChanceNode({ id, data }) {
   const edges = useTreeStore((s) => s.edges);
@@ -23,7 +20,7 @@ export function ChanceNode({ id, data }) {
   
 
   // CORE MECHANIC: Validation of probability sum for Chance Nodes (must equal 100%)
-  const probSum = outgoingEdges.reduce((sum, e) => sum + parseProbability(e.data?.probability), 0);
+  const probSum = outgoingEdges.reduce((sum, e) => sum + parseProbabilityString(e.data?.probability), 0);
   const isError = hasChildren && Math.abs(probSum - 100) > 0.1;
 
   let classes = 'flex h-11 w-11 items-center justify-center rounded-full border shadow-sm transition-colors ';

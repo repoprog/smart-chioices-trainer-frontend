@@ -1,14 +1,12 @@
 import dagre from 'dagre';
 import { NODE_TYPES } from '../../../constants/decisionTypes';
 
-
 /**
- * CORE MECHANIC: Counter for generating unique DOM-safe IDs for new nodes and edges.
+ * CORE MECHANIC: Generate unique DOM-safe IDs for new nodes and edges.
+ * Uses timestamp + random slice to ensure no collisions even after localStorage persist.
  */
-let idCounter = 0;
 export function nextDomId(prefix) {
-  idCounter += 1;
-  return `${prefix}-${idCounter}`;
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
 /**

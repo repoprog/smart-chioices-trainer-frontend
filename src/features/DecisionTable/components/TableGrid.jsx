@@ -19,13 +19,14 @@ export function TableGrid() {
     onConfirm: null,
   });
 
+
   const {
     alternatives, objectives, cells, objectiveUnits, showRanking, sortDirections,
     showTradeoffs, hideEqualizedObjectives, rejectedAlternatives, showRejected,
     customScales, 
     toggleShowRejected, toggleHideEqualized, toggleSortDirection,
     addAlternative, addObjective, updateAlternative, updateObjective, updateUnit,
-    rejectAlternative, restoreAlternative,
+    rejectAlternative, restoreAlternative, removeAlternative, removeObjective
   } = store;
 
   
@@ -42,24 +43,7 @@ export function TableGrid() {
 
   const closeConfirmModal = () => setModalConfig({ ...modalConfig, isOpen: false });
 
-  const executeRemoveAlt = (indexToRemove) => {
-    useTableStore.setState((state) => {
-      const newAlternatives = state.alternatives.filter((_, index) => index !== indexToRemove);
-      const newCells = {};
-      for (let r = 0; r < state.objectives.length; r++) {
-        for (let c = 0; c < state.alternatives.length; c++) {
-          if (c === indexToRemove) continue;
-          const newC = c > indexToRemove ? c - 1 : c;
-          if (state.cells[`${r}-${c}`] !== undefined) newCells[`${r}-${newC}`] = state.cells[`${r}-${c}`];
-        }
-      }
-      return {
-        alternatives: newAlternatives,
-        cells: newCells,
-        rejectedAlternatives: state.rejectedAlternatives.filter((c) => c !== indexToRemove).map((c) => (c > indexToRemove ? c - 1 : c)),
-      };
-    });
-  };
+
 
   const handleRemoveAlternative = (indexToRemove) => {
     const hasData = objectives.some((_, r) => cells[`${r}-${indexToRemove}`] && cells[`${r}-${indexToRemove}`].toString().trim() !== "");
@@ -68,45 +52,11 @@ export function TableGrid() {
         isOpen: true,
         title: "Usuwanie alternatywy",
         message: `Alternatywa "${alternatives[indexToRemove]}" zawiera wpisane dane. Czy na pewno chcesz ją usunąć?`,
-        onConfirm: () => executeRemoveAlt(indexToRemove),
+        onConfirm: () => removeAlternative(indexToRemove), 
       });
     } else {
-      executeRemoveAlt(indexToRemove);
+      removeAlternative(indexToRemove); 
     }
-  };
-
-  const executeRemoveObj = (indexToRemove) => {
-    useTableStore.setState((state) => {
-      const newObjectives = state.objectives.filter((_, index) => index !== indexToRemove);
-      const newCells = {};
-      for (let r = 0; r < state.objectives.length; r++) {
-        if (r === indexToRemove) continue;
-        const newR = r > indexToRemove ? r - 1 : r;
-        for (let c = 0; c < state.alternatives.length; c++) {
-          if (state.cells[`${r}-${c}`] !== undefined) newCells[`${newR}-${c}`] = state.cells[`${r}-${c}`];
-        }
-      }
-      const newSortDirections = {};
-      Object.keys(state.sortDirections).forEach((key) => {
-        const k = parseInt(key);
-        if (k === indexToRemove) return;
-        const newK = k > indexToRemove ? k - 1 : k;
-        newSortDirections[newK] = state.sortDirections[k];
-      });
-      const newObjectiveUnits = {};
-      Object.keys(state.objectiveUnits).forEach((key) => {
-        const k = parseInt(key);
-        if (k === indexToRemove) return;
-        const newK = k > indexToRemove ? k - 1 : k;
-        newObjectiveUnits[newK] = state.objectiveUnits[k];
-      });
-      return {
-        objectives: newObjectives,
-        cells: newCells,
-        sortDirections: newSortDirections,
-        objectiveUnits: newObjectiveUnits,
-      };
-    });
   };
 
   const handleRemoveObjective = (indexToRemove) => {
@@ -116,10 +66,10 @@ export function TableGrid() {
         isOpen: true,
         title: "Usuwanie celu",
         message: `Cel "${objectives[indexToRemove]}" zawiera wpisane dane. Czy na pewno chcesz go usunąć?`,
-        onConfirm: () => executeRemoveObj(indexToRemove),
+        onConfirm: () => removeObjective(indexToRemove), 
       });
     } else {
-      executeRemoveObj(indexToRemove);
+      removeObjective(indexToRemove); 
     }
   };
 

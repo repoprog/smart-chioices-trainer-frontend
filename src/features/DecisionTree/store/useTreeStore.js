@@ -35,7 +35,7 @@ export const useTreeStore = create()(
       stageColumnLabels: initialStageLabels,
       evaluationMode: EVALUATION_MODES.MAX,
       evaluationMap: {},
-      winningPath: new Set(),
+      winningPath: [],
       isDirty: false, 
       isLoading: false, 
       isSimulationMode: false, // <-- NOWY STAN: Domyślnie matematyka jest ukryta

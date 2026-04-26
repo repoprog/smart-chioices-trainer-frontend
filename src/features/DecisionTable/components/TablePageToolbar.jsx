@@ -1,8 +1,9 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { useTableStore } from '../store/useTableStore';
 import { Save, FileText, FolderOpen, Scale, Trophy } from 'lucide-react';
 import { Button } from '../../../components/ui/Button'; 
 import { Tooltip } from '../../../components/ui/Tooltip'; 
+import { useJsonExportImport } from '../../../hooks/useJsonExportImport'; // <-- Importujemy Twój nowy hook
 
 export function TablePageToolbar({ showTemplates, setShowTemplates }) {
   const showTradeoffs = useTableStore(s => s.showTradeoffs);
@@ -10,64 +11,40 @@ export function TablePageToolbar({ showTemplates, setShowTemplates }) {
   const toggleTradeoffs = useTableStore(s => s.toggleTradeoffs);
   const toggleRanking = useTableStore(s => s.toggleRanking);
   const loadScenario = useTableStore(s => s.loadScenario); 
-  
-  const fileInputRef = useRef(null);
 
- 
-  const handleExportJson = () => {
-    const state = useTableStore.getState();
-    const exportData = {
-      name: "Moja Tabela Decyzyjna",
-      description: "Zapisana sesja z aplikacji.",
-      alternatives: state.alternatives,
-      objectives: state.objectives,
-      cells: state.cells,
-      objectiveUnits: state.objectiveUnits,
-      sortDirections: state.sortDirections
-    };
-
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = "tabela-kompromisow.json";
-    document.body.appendChild(link);
-    link.click();
-    
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
-
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const parsedData = JSON.parse(e.target.result);
-        if (parsedData.alternatives && parsedData.objectives && parsedData.cells) {
-          loadScenario(parsedData);
-        } else {
-          alert("To nie wygląda na poprawny plik Tabeli Decyzyjnej.");
-        }
-      } catch (error) {
-        alert("Błąd podczas odczytu pliku. Upewnij się, że to poprawny plik .json.");
+  // Używamy hooka - przekazujemy mu tylko to, co specyficzne dla Tabeli
+  const { 
+    fileInputRef, 
+    handleExport, 
+    handleImportClick, 
+    handleFileChange 
+  } = useJsonExportImport({
+    filename: "tabela-decyzyjna.json",
+    buildExportData: () => {
+      const state = useTableStore.getState();
+      return {
+        name: "Moja Tabela Decyzyjna",
+        description: "Zapisana sesja z aplikacji.",
+        alternatives: state.alternatives,
+        objectives: state.objectives,
+        cells: state.cells,
+        objectiveUnits: state.objectiveUnits,
+        sortDirections: state.sortDirections
+      };
+    },
+    onImport: (parsedData) => {
+      // Logika walidacji specyficzna dla tabeli
+      if (parsedData.alternatives && parsedData.objectives && parsedData.cells) {
+        loadScenario(parsedData);
+      } else {
+        alert("To nie wygląda na poprawny plik Tabeli Decyzyjnej.");
       }
-    };
-    
-    reader.readAsText(file);
-    event.target.value = '';
-  };
+    }
+  });
 
   return (
     <div className="flex gap-3 shrink-0 flex-wrap justify-end relative">
+     
       <input 
         type="file" 
         accept=".json" 
@@ -75,7 +52,6 @@ export function TablePageToolbar({ showTemplates, setShowTemplates }) {
         onChange={handleFileChange} 
         className="hidden" 
       />
-
       <Button variant="secondary" onClick={() => setShowTemplates(!showTemplates)}>
         <FileText className="w-4 h-4 mr-2" /> Przykłady
       </Button>
@@ -83,7 +59,8 @@ export function TablePageToolbar({ showTemplates, setShowTemplates }) {
       <Button variant="secondary" onClick={handleImportClick}>
         <FolderOpen className="w-4 h-4 mr-2" /> Wczytaj
       </Button>
-      <Button variant="secondary" onClick={handleExportJson}>
+      
+      <Button variant="secondary" onClick={handleExport}>
         <Save className="w-4 h-4 mr-2" /> Zapisz 
       </Button>
 
@@ -93,7 +70,6 @@ export function TablePageToolbar({ showTemplates, setShowTemplates }) {
           onClick={toggleTradeoffs}
         >
           <Scale className="w-4 h-4 mr-2" /> Kompromisy
-          
           <Tooltip 
             title="Kompromisy" 
             position="bottom-right"

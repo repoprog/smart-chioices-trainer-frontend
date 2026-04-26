@@ -81,7 +81,7 @@ export const TableCell = memo(function TableCell({
 
     if (localVal) {
       const unitToFormat = unit || "";
-      let cleanStr = localVal.toString().replace(/\s/g, "");
+      let cleanStr = localVal.toString().replace(/\s/g, "").replace(/−|\u2212/g, "-");
       if (unitToFormat) {
         cleanStr = cleanStr.split(unitToFormat.replace(/\s/g, "")).join("");
       }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState} from "react";
 import { useTableStore } from "./store/useTableStore"; 
 import { decisionApi } from "../../api/decisionApi"; 
 
@@ -9,69 +9,42 @@ import { TablePageToolbar } from "./components/TablePageToolbar";
 import { ConfirmModal } from "../../components/ui/ConfirmModal";
 import { Card } from "../../components/ui/Card";       
 import { Button } from "../../components/ui/Button";   
+import { ErrorBoundary } from "../../components/ui/ErrorBoundary"; 
+import { TableErrorFallback } from "../../components/ui/ErrorFallbacks";
+import { useUnsavedChangesWarning } from "../../hooks/useUnsavedChangesWarning"; 
+import { useScenarioLoader } from "../../hooks/useScenarioLoader";
 
 export function DecisionTablePage() {
   const resetAll = useTableStore((s) => s.resetAll);
   const isDirty = useTableStore((s) => s.isDirty);
   const loadRemoteTableScenario = useTableStore((s) => s.loadRemoteTableScenario);
-
-  const [showTemplates, setShowTemplates] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
-  
-const isLoading = useTableStore((s) => s.isLoading);
-  const [scenariosList, setScenariosList] = useState([]);
 
-  const [pendingTemplateId, setPendingTemplateId] = useState(null);
+  const isLoading = useTableStore((s) => s.isLoading);
 
   // CORE MECHANIC: Prevent data loss by intercepting page unload if changes are unsaved
-  useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      if (isDirty) {
-        e.preventDefault();
-        e.returnValue = "";
-      }
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [isDirty]);
+  useUnsavedChangesWarning(isDirty);
 
-  useEffect(() => {
-    decisionApi.getTableScenarios()
-      .then((data) => setScenariosList(data))
-      .catch((err) => console.error("Nie udało się pobrać listy scenariuszy:", err));
-  }, []);
-
-  // CORE MECHANIC: Handle scenario loading from URL parameters on initial mount
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const scenarioKey = params.get("scenario");
-    
-    if (scenarioKey) {
-      loadRemoteTableScenario(scenarioKey);
-    }
-  }, [loadRemoteTableScenario]);
+  // CORE MECHANIC: Handle scenario loading and template UI state
+  const {
+    showTemplates,
+    setShowTemplates,
+    scenariosList,
+    pendingTemplateId,
+    setPendingTemplateId,
+    handleTemplateClick,
+    confirmLoadTemplate
+  } = useScenarioLoader({
+    isDirty,
+    loadFn: loadRemoteTableScenario,
+    fetchFn: decisionApi.getTableScenarios
+  });
 
   const handleResetClick = () => {
     if (isDirty) {
       setIsResetModalOpen(true);
     } else {
       resetAll();
-    }
-  };
-  const handleTemplateClick = (scenarioId) => {
-    if (isDirty) {
-      setPendingTemplateId(scenarioId);
-    } else {
-      loadRemoteTableScenario(scenarioId);
-      setShowTemplates(false);
-    }
-  };
-
-  const confirmLoadTemplate = () => {
-    if (pendingTemplateId) {
-      loadRemoteTableScenario(pendingTemplateId);
-      setPendingTemplateId(null);
-      setShowTemplates(false);
     }
   };
 
@@ -128,7 +101,10 @@ const isLoading = useTableStore((s) => s.isLoading);
             </p>
           </div>
         )}
-        <TableGrid />
+        
+        <ErrorBoundary fallback={<TableErrorFallback />} onReset={resetAll}>
+          <TableGrid />
+        </ErrorBoundary>
        
         <TableSettings />
         

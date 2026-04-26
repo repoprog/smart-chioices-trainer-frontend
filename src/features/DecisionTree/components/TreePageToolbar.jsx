@@ -1,62 +1,35 @@
-import React, { useRef } from 'react';
+import React from 'react'; // Usunięto useRef, hook to obsługuje
 import { useTreeStore } from '../store/useTreeStore.js';
 import { Save, FileText, FolderOpen, SlidersHorizontal , Lock } from 'lucide-react';
 import { Button } from '../../../components/ui/Button'; 
 import { Tooltip } from '../../../components/ui/Tooltip'; 
+import { useJsonExportImport } from '../../../hooks/useJsonExportImport'; // <-- DODANY IMPORT HOOKA
 
 export function TreePageToolbar({ showTemplates, setShowTemplates }) {
-  const fileInputRef = useRef(null);
   const isSimulationMode = useTreeStore((s) => s.isSimulationMode);
   const toggleSimulationMode = useTreeStore((s) => s.toggleSimulationMode);
-  
   const loadScenario = useTreeStore((s) => s.loadScenario);
 
-  const handleExportJson = () => {
-    const state = useTreeStore.getState();
-    const exportData = {
-      type: "DecisionTree",
-      nodes: state.nodes,
-      edges: state.edges,
-      labels: state.stageColumnLabels || [] 
-    };
-
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = "drzewo-decyzyjne.json";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const parsedData = JSON.parse(e.target.result);
-        
-        if (parsedData.nodes && parsedData.edges) {
-          loadScenario(parsedData.nodes, parsedData.edges, parsedData.labels || []);
-        } else {
-          alert("To nie wygląda na poprawny plik Drzewa Decyzyjnego.");
-        }
-      } catch (error) {
-        alert("Błąd odczytu pliku. Upewnij się, że to plik .json.");
+  // CORE MECHANIC: Czysty eksport i import z hooka
+  const { fileInputRef, handleExport, handleImportClick, handleFileChange } = useJsonExportImport({
+    filename: "drzewo-decyzyjne.json",
+    buildExportData: () => {
+      const state = useTreeStore.getState();
+      return {
+        type: "DecisionTree",
+        nodes: state.nodes,
+        edges: state.edges,
+        labels: state.stageColumnLabels || [] 
+      };
+    },
+    onImport: (parsedData) => {
+      if (parsedData.nodes && parsedData.edges) {
+        loadScenario(parsedData.nodes, parsedData.edges, parsedData.labels || []);
+      } else {
+        alert("To nie wygląda na poprawny plik Drzewa Decyzyjnego.");
       }
-    };
-    reader.readAsText(file);
-    event.target.value = '';
-  };
+    }
+  });
 
   return (
     <div className="flex gap-3 shrink-0 flex-wrap justify-end relative z-20">
@@ -69,7 +42,6 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
         className="hidden" 
       />
 
-      
       <Button variant="secondary" onClick={() => setShowTemplates(!showTemplates)}>
         <FileText className="w-4 h-4 mr-2" />
         Przykłady
@@ -80,15 +52,17 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
         Wczytaj
       </Button>
 
-      <Button variant="secondary" onClick={handleExportJson}>
+      {/* Podmieniono onClick z handleExportJson na handleExport */}
+      <Button variant="secondary" onClick={handleExport}>
         <Save className="w-4 h-4 mr-2" />
         Zapisz
       </Button>
+      
       <div className="relative flex">
         <Button 
-        variant={isSimulationMode ? "cyan" : "defaultCyan"}
-       
-        onClick={toggleSimulationMode}>
+          variant={isSimulationMode ? "cyan" : "defaultCyan"}
+          onClick={toggleSimulationMode}
+        >
           <SlidersHorizontal className="w-4 h-4 mr-2" /> Symulacja
           
           <Tooltip 
@@ -130,7 +104,6 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
           </Tooltip>
         </Button>
       </div>
-
 
     </div>
   );

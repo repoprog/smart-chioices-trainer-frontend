@@ -6,16 +6,15 @@ import { decisionApi } from '../../../api/decisionApi.js';
 import { NODE_TYPES, EVALUATION_MODES, SORT_DIRECTIONS } from '../../../constants/decisionTypes';
 
 
+const DEFAULT_SCENARIO = tableScenarios.developerHiring;
 
-const starterScenario = tableScenarios.developerHiring;
-
-const blankState = {
-  alternatives: starterScenario.alternatives,
-  objectives: starterScenario.objectives,
-  cells: starterScenario.cells,
+const initialTableState = {
+  alternatives: DEFAULT_SCENARIO.alternatives,
+  objectives: DEFAULT_SCENARIO.objectives,
+  cells: DEFAULT_SCENARIO.cells,
   originalCells: {},
-  objectiveUnits: starterScenario.objectiveUnits || {},
-  sortDirections: starterScenario.sortDirections || {},
+  objectiveUnits: DEFAULT_SCENARIO.objectiveUnits || {},
+  sortDirections: DEFAULT_SCENARIO.sortDirections || {},
   showRanking: true, 
   showTradeoffs: false,
   hideEqualizedObjectives: false,
@@ -31,7 +30,7 @@ export const useTableStore = create()(
   persist(
     
     (set, get) => ({ 
-      ...blankState,
+      ...initialTableState,
 
       // --- REMOTE DATA FETCHING ---
       loadRemoteTableScenario: async (id) => {
@@ -62,6 +61,73 @@ export const useTableStore = create()(
         const newAlts = [...state.alternatives];
         newAlts[index] = value;
         return { alternatives: newAlts, isDirty: true }; 
+      }),
+
+      removeAlternative: (indexToRemove) => set((state) => {
+        const newAlternatives = state.alternatives.filter((_, i) => i !== indexToRemove);
+        const newCells = {};
+        const newOriginalCells = {};
+        
+        for (let r = 0; r < state.objectives.length; r++) {
+          for (let c = 0; c < state.alternatives.length; c++) {
+            if (c === indexToRemove) continue;
+            const newC = c > indexToRemove ? c - 1 : c;
+            
+            if (state.cells[`${r}-${c}`] !== undefined) newCells[`${r}-${newC}`] = state.cells[`${r}-${c}`];
+            if (state.originalCells[`${r}-${c}`] !== undefined) newOriginalCells[`${r}-${newC}`] = state.originalCells[`${r}-${c}`];
+          }
+        }
+        
+        return {
+          alternatives: newAlternatives,
+          cells: newCells,
+          originalCells: newOriginalCells,
+          rejectedAlternatives: state.rejectedAlternatives
+            .filter((c) => c !== indexToRemove)
+            .map((c) => (c > indexToRemove ? c - 1 : c)),
+          isDirty: true,
+        };
+      }),
+
+      removeObjective: (indexToRemove) => set((state) => {
+        const newObjectives = state.objectives.filter((_, i) => i !== indexToRemove);
+        const newCells = {};
+        const newOriginalCells = {};
+        
+        for (let r = 0; r < state.objectives.length; r++) {
+          if (r === indexToRemove) continue;
+          const newR = r > indexToRemove ? r - 1 : r;
+          
+          for (let c = 0; c < state.alternatives.length; c++) {
+            if (state.cells[`${r}-${c}`] !== undefined) newCells[`${newR}-${c}`] = state.cells[`${r}-${c}`];
+            if (state.originalCells[`${r}-${c}`] !== undefined) newOriginalCells[`${newR}-${c}`] = state.originalCells[`${r}-${c}`];
+          }
+        }
+        
+        const newSortDirections = {};
+        Object.keys(state.sortDirections).forEach((key) => {
+          const k = parseInt(key);
+          if (k === indexToRemove) return;
+          const newK = k > indexToRemove ? k - 1 : k;
+          newSortDirections[newK] = state.sortDirections[k];
+        });
+        
+        const newObjectiveUnits = {};
+        Object.keys(state.objectiveUnits).forEach((key) => {
+          const k = parseInt(key);
+          if (k === indexToRemove) return;
+          const newK = k > indexToRemove ? k - 1 : k;
+          newObjectiveUnits[newK] = state.objectiveUnits[k];
+        });
+        
+        return {
+          objectives: newObjectives,
+          cells: newCells,
+          originalCells: newOriginalCells,
+          sortDirections: newSortDirections,
+          objectiveUnits: newObjectiveUnits,
+          isDirty: true,
+        };
       }),
       updateObjective: (index, value) => set((state) => {
         const newObjs = [...state.objectives];
@@ -129,7 +195,7 @@ export const useTableStore = create()(
         isDirty: false 
       }),
       
-      resetAll: () => set({ ...blankState }), 
+      resetAll: () => set({ ...initialTableState }), 
     }),
     {
       name: 'smart-choices-storage', 

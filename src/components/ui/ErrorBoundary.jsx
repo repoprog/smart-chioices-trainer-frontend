@@ -14,14 +14,29 @@ export class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-   
     console.error('Aplikacja napotkała błąd krytyczny:', error, errorInfo);
   }
 
+  resetError = () => {
+    this.setState({ hasError: false, error: null });
+    if (this.props.onReset) {
+      this.props.onReset();
+    }
+  };
+
   render() {
     if (this.state.hasError) {
+     
+      if (this.props.fallback) {
+        return React.cloneElement(this.props.fallback, {
+          error: this.state.error,
+          resetErrorBoundary: this.resetError
+        });
+      }
+
+      
       return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <div className="min-h-[400px] h-full flex items-center justify-center p-4 bg-background">
           <Card className="max-w-md w-full text-center p-8 border-destructive/20 shadow-lg">
             <div className="mx-auto w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
               <AlertTriangle className="w-6 h-6 text-destructive" />
@@ -33,7 +48,7 @@ export class ErrorBoundary extends React.Component {
             <div className="flex gap-3 justify-center">
               <Button onClick={() => window.location.reload()} variant="default">
                 <RefreshCw className="w-4 h-4 mr-2" />
-                Odśwież aplikację
+                Odśwież stronę
               </Button>
             </div>
           </Card>

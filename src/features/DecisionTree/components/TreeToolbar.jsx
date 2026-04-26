@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useReactFlow, getNodesBounds } from '@xyflow/react';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
@@ -6,6 +6,7 @@ import { useTreeStore, useTemporalTreeStore } from '../store/useTreeStore.js';
 import { FolderOpen, Save, Image as ImageIcon, FileText, Undo2, Redo2, Maximize, Minimize } from 'lucide-react'; 
 
 import { Button } from '../../../components/ui/Button'; 
+import { useJsonExportImport } from '../../../hooks/useJsonExportImport';
 
 export function TreeToolbar() {
   const undo = useTemporalTreeStore((state) => state.undo);
@@ -17,12 +18,10 @@ export function TreeToolbar() {
 
   const { getNodes, setViewport, getViewport } = useReactFlow();
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const fileInputRef = useRef(null);
 
   const canUndo = pastStates.length > 0;
   const canRedo = futureStates.length > 0;
 
- 
   const badgeClass = "absolute -bottom-1.5 right-0 rounded-[4px] bg-background border border-border px-[3px] py-[1px] text-[8px] font-bold text-muted-foreground shadow-sm leading-none z-10 pointer-events-none";
 
   const toggleFullscreen = () => {
@@ -42,44 +41,21 @@ export function TreeToolbar() {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  const handleExportJson = () => {
-    const state = useTreeStore.getState();
-    const exportData = {
-      type: "DecisionTree",
-      nodes: state.nodes,
-      edges: state.edges,
-      labels: state.stageColumnLabels || [] 
-    };
-
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = "drzewo-decyzyjne.json";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target?.result;
-      if (typeof content === 'string') {
-        importJson(content);
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  };
+  const { fileInputRef, handleExport, handleImportClick, handleFileChange } = useJsonExportImport({
+    filename: "drzewo-decyzyjne.json",
+    buildExportData: () => {
+      const state = useTreeStore.getState();
+      return {
+        type: "DecisionTree",
+        nodes: state.nodes,
+        edges: state.edges,
+        labels: state.stageColumnLabels || [] 
+      };
+    },
+    onImport: (parsedData) => {
+      importJson(JSON.stringify(parsedData));
+    }
+  });
 
   const exportGraph = async (format) => {
      const nodes = getNodes();
@@ -118,11 +94,30 @@ export function TreeToolbar() {
          zoom: 1 
        });
  
-       const exportStyles = document.createElement('style');
+      const exportStyles = document.createElement('style');
+       exportStyles.id = 'react-flow-export-style';
        exportStyles.innerHTML = `
          .react-flow * {
            transition: none !important;
          }
+         
+         .hide-on-export-img { display: none !important; }
+         .show-on-export-img { display: block !important; }
+         
+         /* ---> NOWE: NAPRAWA LEGENDY <--- */
+         .export-force-light-legend {
+           background-color: #ffffff !important; /* Sztywny biały kolor, zero przezroczystości */
+           backdrop-filter: none !important; /* Zabijamy blur, który psuje tło */
+           border-color: #e2e8f0 !important; /* Sztywny jasny border (Tailwind slate-200) */
+           color: #64748b !important; /* Sztywny jasny muted-foreground (Tailwind slate-500) */
+         }
+         
+         .export-force-light-legend svg {
+           color: #0f172a !important; /* Sztywny jasny text-foreground (Tailwind slate-900) */
+           fill: #ffffff !important; /* Jasne wypełnienie środka ikonek */
+         }
+        
+
          input[placeholder^="Etap"], input[placeholder="Konsekwencje"] {
            color: #1e293b !important;
          }
@@ -136,7 +131,6 @@ export function TreeToolbar() {
          }
        `;
        document.head.appendChild(exportStyles);
- 
        await new Promise((resolve) => setTimeout(resolve, 50));
  
        const dataUrl = await toPng(flowWrapper, {
@@ -214,7 +208,7 @@ export function TreeToolbar() {
         <FolderOpen className="w-[18px] h-[18px] text-muted-foreground" />
       </Button>
 
-      <Button variant="ghost" size="icon" onClick={handleExportJson} title="Zapisz projekt jako plik (JSON)">
+      <Button variant="ghost" size="icon" onClick={handleExport} title="Zapisz projekt jako plik (JSON)">
         <Save className="w-[18px] h-[18px] text-muted-foreground" />
       </Button>
       

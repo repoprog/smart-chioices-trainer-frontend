@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTreeStore } from './store/useTreeStore.js';
 import { decisionApi } from '../../api/decisionApi'; 
 
@@ -8,66 +8,38 @@ import { ConfirmModal } from '../../components/ui/ConfirmModal';
 import { Tooltip } from '../../components/ui/Tooltip'; 
 import { Card } from '../../components/ui/Card'; 
 import { Lock } from 'lucide-react'; 
+import { ErrorBoundary } from "../../components/ui/ErrorBoundary"; 
+import { TreeErrorFallback } from "../../components/ui/ErrorFallbacks";
+import { useUnsavedChangesWarning } from "../../hooks/useUnsavedChangesWarning"; 
+import { useScenarioLoader } from "../../hooks/useScenarioLoader";
+
 
 export function DecisionTreePage() {
-
   const resetTree = useTreeStore((s) => s.resetTree);
   const isDirty = useTreeStore((s) => s.isDirty);
   const loadRemoteTreeScenario = useTreeStore((s) => s.loadRemoteTreeScenario);
 
-  const [showTemplates, setShowTemplates] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const isLoading = useTreeStore((s) => s.isLoading);
   
- 
-  const [scenariosList, setScenariosList] = useState([]);
-  const [pendingTemplateId, setPendingTemplateId] = useState(null);
-
   // CORE MECHANIC: Prevent data loss by intercepting page unload if changes are unsaved
-  useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      if (isDirty) {
-        e.preventDefault();
-        e.returnValue = ''; 
-      }
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [isDirty]);
+ useUnsavedChangesWarning(isDirty);
 
+// CORE MECHANIC: Handle scenario loading and template UI state
+  const {
+    showTemplates,
+    setShowTemplates,
+    scenariosList,
+    pendingTemplateId,
+    setPendingTemplateId,
+    handleTemplateClick,
+    confirmLoadTemplate
+  } = useScenarioLoader({
+    isDirty,
+    loadFn: loadRemoteTreeScenario,
+    fetchFn: decisionApi.getTreeScenarios
+  });
 
-  useEffect(() => {
-    decisionApi.getTreeScenarios()
-      .then((data) => setScenariosList(data))
-      .catch((err) => console.error("Nie udało się pobrać listy scenariuszy drzewa:", err));
-  }, []);
-
-  // CORE MECHANIC: Handle scenario loading from URL parameters
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const scenarioKey = params.get('scenario'); 
-    if (scenarioKey) {
-      loadRemoteTreeScenario(scenarioKey);
-    }
-  }, [loadRemoteTreeScenario]);
-
- 
-  const handleTemplateClick = (scenarioId) => {
-    if (isDirty) {
-      setPendingTemplateId(scenarioId); 
-    } else {
-      loadRemoteTreeScenario(scenarioId);
-      setShowTemplates(false);
-    }
-  };
-
-  const confirmLoadTemplate = () => {
-    if (pendingTemplateId) {
-      loadRemoteTreeScenario(pendingTemplateId);
-      setPendingTemplateId(null);
-      setShowTemplates(false);
-    }
-  };
 
   return (
     <div className="flex flex-col h-full space-y-6">
@@ -77,8 +49,6 @@ export function DecisionTreePage() {
           
           <div className="text-muted-foreground mt-1 text-sm flex flex-wrap items-center gap-1 leading-relaxed">
             <span>Najedź na węzeł, aby dodać gałąź. Zmieniaj prawdopodobieństwa i obserwuj wyniki w czasie rzeczywistym </span>
-            
-          
           </div>
         </div>
         
@@ -88,7 +58,6 @@ export function DecisionTreePage() {
         />
       </div>
 
-   
       {showTemplates && (
         <Card noPadding className="p-4 bg-muted/20 animate-in fade-in slide-in-from-top-2 relative z-10">
           <h3 className="font-medium mb-3 text-sm text-foreground">Predefiniowane szablony</h3>
@@ -112,7 +81,6 @@ export function DecisionTreePage() {
         </Card>
       )}
 
-  
       <Card noPadding className="flex-1 min-h-[600px] overflow-hidden relative z-0 flex flex-col">
         {isLoading && (
           <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/50 backdrop-blur-sm animate-in fade-in duration-200">
@@ -122,7 +90,12 @@ export function DecisionTreePage() {
             </p>
           </div>
         )}
-        <TreeCanvas />
+        
+       
+        <ErrorBoundary fallback={<TreeErrorFallback />} onReset={resetTree}>
+          <TreeCanvas />
+        </ErrorBoundary>
+
       </Card>
 
       <ConfirmModal
@@ -136,7 +109,6 @@ export function DecisionTreePage() {
       />
 
       <ConfirmModal
-
         isOpen={pendingTemplateId !== null}
         onClose={() => setPendingTemplateId(null)}
         onConfirm={confirmLoadTemplate}

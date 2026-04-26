@@ -41,7 +41,7 @@ export function DecisionNode({ id, data }) {
 
      {hasExpectedValue && (
         <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 flex justify-center">
-           <div className="relative flex items-center justify-center">
+           <div className="relative flex items-center gap-0.5">
              
              <NodeEquationBadge 
                equation={data.equation} 

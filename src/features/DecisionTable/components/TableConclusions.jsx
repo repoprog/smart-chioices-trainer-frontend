@@ -95,7 +95,7 @@ export function TableConclusions({
         if (!dom) return <td key={`dom-${colIndex}`} className={`p-1.5 align-middle border-b border-r border-border bg-card ${isLastCell ? 'rounded-br-xl' : ''}`}></td>;
 
         // 5. STATE: STRICT DOMINATION
-        if (dom.type === "DOMINATION_TYPES.STRICT") {
+        if (dom.type === DOMINATION_TYPES.STRICT) {
           return (
             <td key={`dom-${colIndex}`} className={`p-3 align-middle border-b border-r border-border bg-red-50 dark:bg-red-950/30 text-[11px] text-center ${isLastCell ? 'rounded-br-xl' : ''}`}>
               <Badge variant="danger" className="mb-2">Zdominowana</Badge>

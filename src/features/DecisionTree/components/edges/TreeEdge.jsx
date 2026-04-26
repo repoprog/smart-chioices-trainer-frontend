@@ -3,12 +3,9 @@ import { BaseEdge, EdgeLabelRenderer, getStraightPath } from "@xyflow/react";
 import { useTreeStore } from '../../store/useTreeStore.js';
 import { FloatingToolbar } from "../../../../components/ui/FloatingToolbar.jsx";
 import { useClipboardActions } from "../../../../hooks/useClipboardActions.js";
+import { parseProbabilityString } from '../../logic/treeAlgorithms'
 import { EyeOff } from "lucide-react";
 
-const parseProbability = (p) => {
-  if (p == null) return 0;
-  return parseFloat(String(p).replace("%", "")) || 0;
-};
 
 export function SmartChoicesEdge({
   id, source, sourceX, sourceY, targetX, targetY, data, style,
@@ -24,7 +21,7 @@ export function SmartChoicesEdge({
   const sourceNode = nodes.find((n) => n.id === source);
   const opt = data?.optionLabel ?? "";
   const cost = data?.cost ?? "";
-  const displayProb = parseProbability(data?.probability);
+  const displayProb = parseProbabilityString(data?.probability);
 
   const handleProbChange = (e) => {
     const newProb = parseFloat(e.target.value);
@@ -198,8 +195,12 @@ export function SmartChoicesEdge({
                     if (e.key === 'Enter') e.currentTarget.blur();
                   }}
                   onPointerDown={(e) => e.stopPropagation()}
-                  className="w-9 bg-transparent text-right text-xs font-medium text-orange-400 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-9 bg-transparent text-right text-xs font-medium text-orange-400 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none hide-on-export-img"
                 />
+
+                <div className="hidden show-on-export-img w-9 text-right text-xs font-medium text-orange-400">
+                  {isNaN(displayProb) ? "" : displayProb}
+                </div>
               
                 <span className="text-xs text-slate-400 ml-0.5">%</span>
              

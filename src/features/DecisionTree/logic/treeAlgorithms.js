@@ -9,21 +9,20 @@ export const parseValue = (value) => {
   if (typeof value === 'number') return value;
   if (typeof value !== 'string') return 0;
 
-  let cleanStr = value.replace(/\s+/g, '');
-
+  let cleanStr = value.replace(/\s+/g, '').replace(/−|\u2212/g, '-');
   cleanStr = cleanStr.replace(/[^\d.,-]/g, '');
+
   const lastCommaIndex = cleanStr.lastIndexOf(',');
   const lastDotIndex = cleanStr.lastIndexOf('.');
 
   if (lastCommaIndex > -1 && lastDotIndex > -1) {
     if (lastCommaIndex > lastDotIndex) {
-      cleanStr = cleanStr.replace(/\./g, ''); 
-      cleanStr = cleanStr.replace(',', '.');  
+      cleanStr = cleanStr.replace(/\./g, '');
+      cleanStr = cleanStr.replace(',', '.'); 
     } else {
-      cleanStr = cleanStr.replace(/,/g, '');  
+      cleanStr = cleanStr.replace(/,/g, '');
     }
   } else if (lastCommaIndex > -1) {
-   
     cleanStr = cleanStr.replace(/,/g, '.');
   }
 
@@ -34,6 +33,13 @@ export const parseValue = (value) => {
 
   const parsed = parseFloat(cleanStr);
   return isNaN(parsed) ? 0 : parsed;
+  
+};
+
+// CORE MECHANIC: Universal probability parser from string (e.g., "50%" → 50)
+export const parseProbabilityString = (p) => {
+  if (p == null) return 0;
+  return parseFloat(String(p).replace('%', '').replace(',', '.')) || 0; 
 };
 
 /**
