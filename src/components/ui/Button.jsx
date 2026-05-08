@@ -17,6 +17,7 @@ export const Button = forwardRef(({
     secondary: "bg-muted text-foreground hover:bg-muted/80",
     ghost: "hover:bg-muted hover:text-foreground text-muted-foreground",
     dangerGhost: "text-destructive/80 hover:bg-destructive/10 hover:text-destructive",
+    ghostDestructive: "bg-transparent text-muted-foreground hover:bg-destructive/10 hover:text-destructive",
     
     purple: "bg-purple-500 text-white shadow-sm hover:bg-purple-600",
     cyan: "bg-cyan-500  text-white shadow-sm hover:bg-cyan-600 hover:text-white",

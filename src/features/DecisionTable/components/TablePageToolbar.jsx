@@ -3,7 +3,7 @@ import { useTableStore } from '../store/useTableStore';
 import { Save, FileText, FolderOpen, Scale, Trophy } from 'lucide-react';
 import { Button } from '../../../components/ui/Button'; 
 import { Tooltip } from '../../../components/ui/Tooltip'; 
-import { useJsonExportImport } from '../../../hooks/useJsonExportImport'; // <-- Importujemy Twój nowy hook
+import { useJsonExportImport } from '../../../hooks/useJsonExportImport'; 
 
 export function TablePageToolbar({ showTemplates, setShowTemplates }) {
   const showTradeoffs = useTableStore(s => s.showTradeoffs);
@@ -12,7 +12,7 @@ export function TablePageToolbar({ showTemplates, setShowTemplates }) {
   const toggleRanking = useTableStore(s => s.toggleRanking);
   const loadScenario = useTableStore(s => s.loadScenario); 
 
-  // Używamy hooka - przekazujemy mu tylko to, co specyficzne dla Tabeli
+
   const { 
     fileInputRef, 
     handleExport, 

@@ -9,14 +9,14 @@ const features = [
         title: 'Tabela decyzyjna (Smart Choices)',
         desc: 'Porównuj opcje według wielu kryteriów. Nadaj im wagi i zobacz, która wygrywa w rankingu.',
         Icon: Table2,
-        wrapperClass: 'md:col-span-2 hover:border-cyan-500/20',
+        wrapperClass: 'md:col-span-2 hover:border-purple-500/20',
     },
     {
         id: 'tree',
         title: 'Drzewo decyzyjne',
         desc: 'Rozpisz scenariusze i ich prawdopodobieństwa. System pokaże najlepszą decyzję na podstawie wartości oczekiwanej (EV).',
         Icon: Network,
-        wrapperClass: 'md:row-span-2 hover:border-purple-500/20',
+        wrapperClass: 'md:row-span-2 hover:border-cyan-500/20',
         iconContainerClass: 'mb-auto mt-2'
     },
     {

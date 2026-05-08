@@ -23,7 +23,7 @@ export function BranchAddMenu({ nodeId }) {
       onMouseLeave={() => setOpen(false)}
       onPointerDown={(e) => e.stopPropagation()}
     >
-      {/* REFACTOR: bg-card, border-border, hover:bg-muted */}
+    
       <button
         type="button"
         title="Dodaj gałąź"

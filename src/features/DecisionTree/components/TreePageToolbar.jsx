@@ -3,14 +3,14 @@ import { useTreeStore } from '../store/useTreeStore.js';
 import { Save, FileText, FolderOpen, SlidersHorizontal , Lock } from 'lucide-react';
 import { Button } from '../../../components/ui/Button'; 
 import { Tooltip } from '../../../components/ui/Tooltip'; 
-import { useJsonExportImport } from '../../../hooks/useJsonExportImport'; // <-- DODANY IMPORT HOOKA
+import { useJsonExportImport } from '../../../hooks/useJsonExportImport'; 
 
 export function TreePageToolbar({ showTemplates, setShowTemplates }) {
   const isSimulationMode = useTreeStore((s) => s.isSimulationMode);
   const toggleSimulationMode = useTreeStore((s) => s.toggleSimulationMode);
   const loadScenario = useTreeStore((s) => s.loadScenario);
 
-  // CORE MECHANIC: Czysty eksport i import z hooka
+
   const { fileInputRef, handleExport, handleImportClick, handleFileChange } = useJsonExportImport({
     filename: "drzewo-decyzyjne.json",
     buildExportData: () => {

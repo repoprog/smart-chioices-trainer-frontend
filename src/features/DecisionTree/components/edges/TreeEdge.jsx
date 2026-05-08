@@ -188,8 +188,8 @@ export function SmartChoicesEdge({
                   type="number"
                   value={isNaN(displayProb) ? "" : displayProb}
                   onChange={handleProbChange}
-                  onFocus={handleInteractionStart} // Pauza Zundo
-                  onBlur={handleInteractionEnd}    // Wznowienie Zundo
+                  onFocus={handleInteractionStart} 
+                  onBlur={handleInteractionEnd}   
                   onKeyDown={(e) => {
                     e.stopPropagation();
                     if (e.key === 'Enter') e.currentTarget.blur();

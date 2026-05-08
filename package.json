@@ -12,6 +12,7 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
     "@xyflow/react": "^12.10.2",
+    "axios": "^1.16.0",
     "dagre": "^0.8.5",
     "framer-motion": "^12.38.0",
     "html-to-image": "^1.11.13",
