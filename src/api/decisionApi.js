@@ -28,42 +28,32 @@ export const decisionApi = {
     }));
   },
 
-  async getTreeById(id) {
-    if (id.length > 20) {
-      // PROJEKT Z BACKENDU
-      const response = await apiClient.get(`/api/v1/projects/${id}`);
-      const data = response.data.content;
-      if (!data) throw new Error("Projekt jest pusty");
-      return JSON.parse(JSON.stringify(data));
-    } else {
-      // SZABLON Z FRONTENDU
-      await sleep(500); // 500ms by nacieszyć oko loaderem ładowania planszy
-      const data = treeScenarios[id];
-      if (!data) throw new Error("Nie znaleziono szablonu drzewa");
-      return JSON.parse(JSON.stringify(data));
-    }
+  // NOWE: Dedykowana metoda tylko dla szablonów drzewa
+  async getTreeTemplate(templateId) {
+    await sleep(500); // 500ms by nacieszyć oko loaderem ładowania planszy
+    const data = treeScenarios[templateId];
+    if (!data) throw new Error("Nie znaleziono szablonu drzewa");
+    return JSON.parse(JSON.stringify(data));
   },
 
-  async getTableById(id) {
-    if (id.length > 20) {
-      // PROJEKT Z BACKENDU
-      const response = await apiClient.get(`/api/v1/projects/${id}`);
-      const data = response.data.content;
-      if (!data) throw new Error("Projekt jest pusty");
-      return JSON.parse(JSON.stringify(data));
-    } else {
-      // SZABLON Z FRONTENDU
-      await sleep(500); // 500ms opóźnienia
-      const data = tableScenarios[id];
-      if (!data) throw new Error("Nie znaleziono szablonu tabeli");
-      return JSON.parse(JSON.stringify(data));
-    }
+  // NOWE: Dedykowana metoda tylko dla szablonów tabeli
+  async getTableTemplate(templateId) {
+    await sleep(500);
+    const data = tableScenarios[templateId];
+    if (!data) throw new Error("Nie znaleziono szablonu tabeli");
+    return JSON.parse(JSON.stringify(data));
   },
 
   // ==========================================
   // 2. PROJEKTY UŻYTKOWNIKA (Z BACKENDU)
-  // (Prawdziwe opóźnienie zależy od serwera, tu nie dajemy sleep)
   // ==========================================
+
+  // JEDNA uniwersalna funkcja do pobierania dowolnego projektu
+  async getProject(projectId) {
+    const response = await apiClient.get(`/api/v1/projects/${projectId}`);
+    if (!response.data) throw new Error("Nie znaleziono projektu");
+    return response.data; // Zwracamy cały ProjectDetailDTO
+  },
 
   async getUserProjects(type) {
     const url = type ? `/api/v1/projects?type=${type}&size=50` : '/api/v1/projects?size=50';
@@ -109,5 +99,23 @@ export const decisionApi = {
   async deleteProject(id) {
     const response = await apiClient.delete(`/api/v1/projects/${id}`);
     return response.data;
+  },
+  // Wewnątrz obiektu decisionApi:
+  async createSnapshot(projectId, label) {
+    // Zakładam, że Twój endpoint przyjmuje body z polem "label"
+    const response = await apiClient.post(`/api/v1/projects/${projectId}/snapshots`, { label });
+    return response.data; 
+  },
+
+ // Metoda do pobierania listy snapshotów dla danego projektu
+  async getSnapshots(projectId) {
+    const response = await apiClient.get(`/api/v1/projects/${projectId}/snapshots`);
+    return response.data; // Zwraca listę obiektów snapshotów
+  },
+
+  // NOWE: Metoda do pobierania zawartości konkretnego, JEDNEGO snapshotu
+  async getSnapshot(projectId, snapshotId) {
+    const response = await apiClient.get(`/api/v1/projects/${projectId}/snapshots/${snapshotId}`);
+    return response.data; 
   }
 };

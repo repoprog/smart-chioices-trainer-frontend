@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTreeStore } from './store/useTreeStore.js';
 import { decisionApi } from '../../api/decisionApi'; 
 
@@ -7,25 +7,54 @@ import { TreePageToolbar } from './components/TreePageToolbar.jsx';
 import { ConfirmModal } from '../../components/ui/ConfirmModal'; 
 import { Tooltip } from '../../components/ui/Tooltip'; 
 import { Card } from '../../components/ui/Card'; 
-import { Lock } from 'lucide-react'; 
+import { Lock, CheckCircle2, Loader2, AlertCircle, Edit3 } from 'lucide-react'; 
 import { ErrorBoundary } from "../../components/ui/ErrorBoundary"; 
 import { TreeErrorFallback } from "../../components/ui/ErrorFallbacks";
 import { useUnsavedChangesWarning } from "../../hooks/useUnsavedChangesWarning"; 
 import { useScenarioLoader } from "../../hooks/useScenarioLoader";
+import { Button } from '../../components/ui/Button';
+
 
 
 export function DecisionTreePage() {
   const resetTree = useTreeStore((s) => s.resetTree);
   const isDirty = useTreeStore((s) => s.isDirty);
-  const loadRemoteTreeScenario = useTreeStore((s) => s.loadRemoteTreeScenario);
+  const loadTemplateScenario = useTreeStore((s) => s.loadTemplateScenario);
+
+  const currentProjectId = useTreeStore((s) => s.currentProjectId);
+  const isSaving = useTreeStore((s) => s.isSaving);
+  const saveError = useTreeStore((s) => s.saveError);
+  const saveToBackend = useTreeStore((s) => s.saveToBackend);
+  const nodes = useTreeStore((s) => s.nodes);
+  const edges = useTreeStore((s) => s.edges);
 
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const isLoading = useTreeStore((s) => s.isLoading);
   
   // CORE MECHANIC: Prevent data loss by intercepting page unload if changes are unsaved
- useUnsavedChangesWarning(isDirty);
+  useUnsavedChangesWarning(isDirty);
 
-// CORE MECHANIC: Handle scenario loading and template UI state
+  // CORE MECHANIC: Auto-save with 2000ms debounce
+  useEffect(() => {
+    if (!isDirty || !currentProjectId) return;
+    
+    const timer = setTimeout(() => {
+      saveToBackend();
+    }, 2000);
+    
+    return () => clearTimeout(timer);
+  }, [isDirty, nodes, edges, currentProjectId, saveToBackend]);
+
+  const handleResetClick = () => {
+    // Jeśli na planszy coś jest, pokaż modal z pytaniem. W przeciwnym razie po prostu zresetuj.
+    if (nodes.length > 0) {
+      setIsResetModalOpen(true);
+    } else {
+      resetTree();
+    }
+  };
+
+  // CORE MECHANIC: Handle scenario loading and template UI state
   const {
     showTemplates,
     setShowTemplates,
@@ -36,16 +65,32 @@ export function DecisionTreePage() {
     confirmLoadTemplate
   } = useScenarioLoader({
     isDirty,
-    loadFn: loadRemoteTreeScenario,
+    loadFn: loadTemplateScenario,
     fetchFn: decisionApi.getTreeScenarios
   });
-
 
   return (
     <div className="flex flex-col h-full space-y-6">
       <div className="flex flex-wrap md:flex-nowrap items-start md:items-center justify-between gap-4 relative z-50">
         <div className="flex-1">
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">Drzewo decyzyjne</h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-2xl font-semibold tracking-tight text-foreground">Drzewo decyzyjne</h2>
+            
+            {/* Status indicator */}
+            {currentProjectId && (
+              <div className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-muted/30 rounded-full border border-border text-xs font-medium transition-all">
+                {isSaving ? (
+                  <><Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" /> <span className="text-muted-foreground">Zapisywanie...</span></>
+                ) : saveError ? (
+                  <><AlertCircle className="w-3.5 h-3.5 text-destructive" /> <span className="text-destructive">Błąd zapisu</span></>
+                ) : isDirty ? (
+                  <><Edit3 className="w-3.5 h-3.5 text-amber-500" /> <span className="text-amber-500">Niezapisane zmiany</span></>
+                ) : (
+                  <><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> <span className="text-emerald-500">Zapisano w chmurze</span></>
+                )}
+              </div>
+            )}
+          </div>
           
           <div className="text-muted-foreground mt-1 text-sm flex flex-wrap items-center gap-1 leading-relaxed">
             <span>Najedź na węzeł, aby dodać gałąź. Zmieniaj prawdopodobieństwa i obserwuj wyniki w czasie rzeczywistym </span>
@@ -95,6 +140,18 @@ export function DecisionTreePage() {
         <ErrorBoundary fallback={<TreeErrorFallback />} onReset={resetTree}>
           <TreeCanvas />
         </ErrorBoundary>
+
+        {/* NOWY ELEMENT - Przycisk wyczyszczenia planszy */}
+        <div className="absolute bottom-6 right-6 z-50">
+          <Button
+            variant="dangerGhost"
+            size="sm"
+            onClick={handleResetClick}
+            className="bg-background/80 backdrop-blur-sm border border-border shadow-sm hover:bg-destructive/10"
+          >
+            Wyczyść planszę
+          </Button>
+        </div>
 
       </Card>
 

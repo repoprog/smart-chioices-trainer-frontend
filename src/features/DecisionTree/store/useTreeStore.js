@@ -5,7 +5,6 @@ import { treeScenarios } from '../data/treeScenarios.js';
 import { decisionApi } from '../../../api/decisionApi.js'; 
 import { NODE_TYPES, EVALUATION_MODES } from '../../../constants/decisionTypes.js';
 
-
 // CORE MECHANIC: Visual layout and graph traversal utilities
 import {
   collectDescendants,
@@ -38,16 +37,68 @@ export const useTreeStore = create()(
       winningPath: [],
       isDirty: false, 
       isLoading: false, 
-      isSimulationMode: false, // <-- NOWY STAN: Domyślnie matematyka jest ukryta
+      isSimulationMode: false, 
 
+      // --- AUTO-SAVE STATE ---
+      currentProjectId: null,
+      isSaving: false,
+      saveError: null,
+
+      setCurrentProject: (id) => set({ currentProjectId: id }),
+
+      saveToBackend: async () => {
+        const state = get();
+        if (!state.currentProjectId) return;
+
+        set({ isSaving: true, saveError: null });
+        try {
+          await decisionApi.saveTree(state.currentProjectId, {
+            nodes: state.nodes,
+            edges: state.edges,
+            stageColumnLabels: state.stageColumnLabels,
+            evaluationMode: state.evaluationMode
+          });
+          set({ isDirty: false, isSaving: false });
+        } catch (error) {
+          set({ saveError: error.message || "Błąd zapisu", isSaving: false });
+        }
+      },
       
-      loadRemoteTreeScenario: async (id) => {
+      // --- REMOTE DATA FETCHING ---
+      
+      // Droga A: Szablony z frontendu
+      loadTemplateScenario: async (templateId) => {
         set({ isLoading: true });
         try {
-          const data = await decisionApi.getTreeById(id);
+          const data = await decisionApi.getTreeTemplate(templateId);
           get().loadScenario(data.nodes || [], data.edges || [], data.labels || []);
+          set({ currentProjectId: null }); // Zawsze null, auto-zapis wyłączony
         } catch (error) {
-          console.error("Błąd podczas ładowania scenariusza drzewa:", error);
+          console.error("Błąd ładowania szablonu drzewa:", error);
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+     // Droga B: Prawdziwe projekty z chmury
+      loadCloudProject: async (projectId) => {
+        set({ isLoading: true });
+        try {
+          const project = await decisionApi.getProject(projectId);
+          const safeContent = project.content || {}; // Kuloodporność!
+          
+          const nodes = safeContent.nodes || [];
+          const edges = safeContent.edges || [];
+          const stageColumnLabels = safeContent.stageColumnLabels || safeContent.labels || [];
+
+          // UWAGA: loadScenario nie zeruje już ID, więc jest bezpiecznie
+          get().loadScenario(nodes, edges, stageColumnLabels);
+          
+          // Ale dla pewności przypisujemy je jeszcze raz
+          set({ currentProjectId: projectId });
+
+        } catch (error) {
+          console.error("Krytyczny błąd ładowania projektu z bazy:", error);
         } finally {
           set({ isLoading: false });
         }
@@ -65,13 +116,15 @@ export const useTreeStore = create()(
             nodes: renumbered,
             edges: newEdges,
             stageColumnLabels,
+            
             isDirty: false
           };
           return evaluateAndSetWinningPath(newState);
         }),
 
       resetTree: () => set((state) => {
-        const newState = { ...state, nodes: [], edges: [], stageColumnLabels: [], isDirty: false };
+        const newState = { ...state, nodes: [], edges: [], stageColumnLabels: [], isDirty: false, currentProjectId: null, 
+          saveError: null     };    
         return evaluateAndSetWinningPath(newState);
       }),
 
@@ -329,7 +382,8 @@ export const useTreeStore = create()(
             if (parsed.nodes && parsed.edges) {
               const layoutedNodes = getLayoutedElements(parsed.nodes, parsed.edges);
               const renumbered = renumberDecisionAndChanceNodes(layoutedNodes, parsed.edges);
-              const stageColumnLabels = syncColumnLabels(renumbered, parsed.edges, parsed.stageColumnLabels || []);
+              const labelsToLoad = parsed.stageColumnLabels || parsed.labels || [];
+              const stageColumnLabels = syncColumnLabels(renumbered, parsed.edges, labelsToLoad || []);
 
               const newState = {
                 ...state,

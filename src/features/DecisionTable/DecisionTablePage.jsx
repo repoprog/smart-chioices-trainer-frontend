@@ -1,4 +1,4 @@
-import React, { useState} from "react";
+import React, { useState, useEffect } from "react";
 import { useTableStore } from "./store/useTableStore"; 
 import { decisionApi } from "../../api/decisionApi"; 
 
@@ -13,17 +13,37 @@ import { ErrorBoundary } from "../../components/ui/ErrorBoundary";
 import { TableErrorFallback } from "../../components/ui/ErrorFallbacks";
 import { useUnsavedChangesWarning } from "../../hooks/useUnsavedChangesWarning"; 
 import { useScenarioLoader } from "../../hooks/useScenarioLoader";
+import { CheckCircle2, Loader2, AlertCircle, Edit3 } from 'lucide-react';
 
 export function DecisionTablePage() {
   const resetAll = useTableStore((s) => s.resetAll);
   const isDirty = useTableStore((s) => s.isDirty);
-  const loadRemoteTableScenario = useTableStore((s) => s.loadRemoteTableScenario);
+  const loadTemplateScenario = useTableStore((s) => s.loadTemplateScenario);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+
+  const currentProjectId = useTableStore((s) => s.currentProjectId);
+  const isSaving = useTableStore((s) => s.isSaving);
+  const saveError = useTableStore((s) => s.saveError);
+  const saveToBackend = useTableStore((s) => s.saveToBackend);
+  const cells = useTableStore((s) => s.cells);
+  const alternatives = useTableStore((s) => s.alternatives);
+  const objectives = useTableStore((s) => s.objectives);
 
   const isLoading = useTableStore((s) => s.isLoading);
 
   // CORE MECHANIC: Prevent data loss by intercepting page unload if changes are unsaved
   useUnsavedChangesWarning(isDirty);
+
+  // CORE MECHANIC: Auto-save with 2000ms debounce
+  useEffect(() => {
+    if (!isDirty || !currentProjectId) return;
+    
+    const timer = setTimeout(() => {
+      saveToBackend();
+    }, 2000);
+    
+    return () => clearTimeout(timer);
+  }, [isDirty, cells, alternatives, objectives, currentProjectId, saveToBackend]);
 
   // CORE MECHANIC: Handle scenario loading and template UI state
   const {
@@ -36,7 +56,7 @@ export function DecisionTablePage() {
     confirmLoadTemplate
   } = useScenarioLoader({
     isDirty,
-    loadFn: loadRemoteTableScenario,
+    loadFn: loadTemplateScenario,
     fetchFn: decisionApi.getTableScenarios
   });
 
@@ -54,9 +74,26 @@ export function DecisionTablePage() {
       {/* HEADER SECTION */}
       <div className="flex flex-wrap md:flex-nowrap items-start md:items-center justify-between gap-4 relative z-50">
         <div className="flex-1">
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Tabela Smart Choices
-          </h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+              Tabela Smart Choices
+            </h2>
+            
+            {/* Status indicator */}
+            {currentProjectId && (
+              <div className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-muted/30 rounded-full border border-border text-xs font-medium transition-all">
+                {isSaving ? (
+                  <><Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" /> <span className="text-muted-foreground">Zapisywanie...</span></>
+                ) : saveError ? (
+                  <><AlertCircle className="w-3.5 h-3.5 text-destructive" /> <span className="text-destructive">Błąd zapisu</span></>
+                ) : isDirty ? (
+                  <><Edit3 className="w-3.5 h-3.5 text-amber-500" /> <span className="text-amber-500">Niezapisane zmiany</span></>
+                ) : (
+                  <><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> <span className="text-emerald-500">Zapisano w chmurze</span></>
+                )}
+              </div>
+            )}
+          </div>
           <p className="text-muted-foreground mt-1 text-sm leading-relaxed max-w-3xl">
             Wypisz cele (kryteria) i alternatywy, oceń każdą opcję i wyeliminuj zdominowane w rankingu, dokonuj kompromisów między celami, aż wyłoni się najlepsza decyzja.
           </p>

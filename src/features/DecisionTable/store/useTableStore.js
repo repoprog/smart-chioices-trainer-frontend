@@ -5,7 +5,6 @@ import { tableScenarios } from '../data/tableScenarios.js';
 import { decisionApi } from '../../../api/decisionApi.js'; 
 import { NODE_TYPES, EVALUATION_MODES, SORT_DIRECTIONS } from '../../../constants/decisionTypes';
 
-
 const DEFAULT_SCENARIO = tableScenarios.developerHiring;
 
 const initialTableState = {
@@ -24,6 +23,11 @@ const initialTableState = {
   customScales: [...scalePresets['jakość / standard']], 
   isDirty: false, 
   isLoading: false, 
+
+  // --- AUTO-SAVE STATE ---
+  currentProjectId: null,
+  isSaving: false,
+  saveError: null,
 };
 
 export const useTableStore = create()(
@@ -32,14 +36,58 @@ export const useTableStore = create()(
     (set, get) => ({ 
       ...initialTableState,
 
-      // --- REMOTE DATA FETCHING ---
-      loadRemoteTableScenario: async (id) => {
+      setCurrentProject: (id) => set({ currentProjectId: id }),
+
+      saveToBackend: async () => {
+        const state = get();
+        if (!state.currentProjectId) return;
+
+        set({ isSaving: true, saveError: null });
+        try {
+          await decisionApi.saveTable(state.currentProjectId, {
+            alternatives: state.alternatives,
+            objectives: state.objectives,
+            cells: state.cells,
+            objectiveUnits: state.objectiveUnits,
+            sortDirections: state.sortDirections
+          });
+          set({ isDirty: false, isSaving: false });
+        } catch (error) {
+          set({ saveError: error.message || "Błąd zapisu", isSaving: false });
+        }
+      },
+
+     // --- REMOTE DATA FETCHING ---
+      
+      loadTemplateScenario: async (templateId) => {
         set({ isLoading: true });
         try {
-          const data = await decisionApi.getTableById(id);
+          const data = await decisionApi.getTableTemplate(templateId);
           get().loadScenario(data); 
+          set({ currentProjectId: null }); // Tu czyścimy ręcznie, bo to szablon
         } catch (error) {
-          console.error("Błąd podczas ładowania scenariusza tabeli:", error);
+          console.error("Błąd ładowania szablonu tabeli:", error);
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      loadCloudProject: async (projectId) => {
+        set({ isLoading: true });
+        try {
+          const project = await decisionApi.getProject(projectId);
+          
+          let rawContent = project.content;
+          if (typeof rawContent === 'string') {
+            try { rawContent = JSON.parse(rawContent); } 
+            catch (e) { console.warn("Nie udało się sparsować contentu", e); }
+          }
+          const safeContent = rawContent || {};
+
+          get().loadScenario(safeContent); 
+          set({ currentProjectId: projectId }); // Podpinamy do chmury, auto-zapis włączony
+        } catch (error) {
+          console.error("Błąd ładowania projektu tabeli z bazy:", error);
         } finally {
           set({ isLoading: false });
         }
