@@ -2,30 +2,30 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Search, Edit2, Trash2, Calendar, MessageSquare, X, Tag, 
-  FolderPlus, Network, Table2, Play, Filter 
+  ExternalLink, Filter, Plus 
 } from "lucide-react";
 
 import { decisionApi } from "../api/decisionApi";
 import { useTreeStore } from "../features/DecisionTree/store/useTreeStore";
 import { useTableStore } from "../features/DecisionTable/store/useTableStore";
+import { useToastStore } from "../store/useToastStore";
 
 import { Button } from "../components/ui/Button"; 
-import { Input } from "../components/ui/Input";   
 import { Badge } from "../components/ui/Badge";   
 import { Card } from "../components/ui/Card";
 import { ConfirmModal } from "../components/ui/ConfirmModal";     
 
 export default function UserPanel() {
   const navigate = useNavigate();
+  const addToast = useToastStore(s => s.addToast);
 
   // --- STANY APLIKACJI ---
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Filtry
+  // Filtry (Zmienione na zgodne z Figmą)
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState("ALL");
-  const [filterStatus, setFilterStatus] = useState("ALL");
+  const [typeFilter, setTypeFilter] = useState("ALL"); 
   const [selectedTags, setSelectedTags] = useState([]);
   
   // Edycja
@@ -36,9 +36,6 @@ export default function UserPanel() {
 
   // Modale
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, projectId: null });
-  const [newProjectModal, setNewProjectModal] = useState(false);
-  const [newProjectForm, setNewProjectForm] = useState({ title: '', type: 'TREE' });
-  const [isCreating, setIsCreating] = useState(false);
 
   // --- POBIERANIE DANYCH ---
   const fetchProjects = async () => {
@@ -47,7 +44,8 @@ export default function UserPanel() {
       const data = await decisionApi.getUserProjects();
       setProjects(data);
     } catch (error) {
-      console.error("Błąd podczas pobierania projektów:", error);
+      console.error("Błąd pobierania:", error);
+      addToast("Nie udało się pobrać decyzji z serwera.", "error");
     } finally {
       setIsLoading(false);
     }
@@ -62,22 +60,18 @@ export default function UserPanel() {
 
   const filteredProjects = useMemo(() => {
     return projects.filter((p) => {
-      // Filtr wyszukiwania
       const matchesSearch = 
         p.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
         p.notes?.toLowerCase().includes(searchQuery.toLowerCase());
       
-      // Filtr typu i statusu
-      const matchesType = filterType === "ALL" || p.type === filterType;
-      const matchesStatus = filterStatus === "ALL" || p.status === filterStatus;
+      const matchesType = typeFilter === "ALL" || p.type === typeFilter;
       
-      // Filtr tagów
       const pTags = p.tags || [];
       const matchesTags = selectedTags.length === 0 || selectedTags.some(tag => pTags.includes(tag));
       
-      return matchesSearch && matchesType && matchesStatus && matchesTags;
+      return matchesSearch && matchesType && matchesTags;
     }).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-  }, [projects, searchQuery, filterType, filterStatus, selectedTags]);
+  }, [projects, searchQuery, typeFilter, selectedTags]);
 
   // --- AKCJE ---
   const startEditing = (project) => {
@@ -88,7 +82,6 @@ export default function UserPanel() {
 
   const saveNotesAndTags = async (id) => {
     try {
-      // API zakłada updateProjectMeta dla tagów i notatek
       const projectToUpdate = projects.find(p => p.id === id);
       await decisionApi.updateProjectMeta(id, {
         title: projectToUpdate.title,
@@ -101,8 +94,9 @@ export default function UserPanel() {
       setProjects(projects.map((p) => 
         p.id === id ? { ...p, notes: editedNotes, tags: editingTags } : p
       ));
+      addToast("Zmiany zostały zapisane.", "success"); 
     } catch (error) {
-      console.error("Błąd zapisu:", error);
+      addToast("Błąd podczas zapisywania zmian.", "error"); 
     } finally {
       setEditingId(null);
       setEditingTags(null);
@@ -113,45 +107,27 @@ export default function UserPanel() {
     try {
       await decisionApi.deleteProject(deleteModal.projectId);
       setProjects(projects.filter((p) => p.id !== deleteModal.projectId));
+      addToast("Decyzja została usunięta.", "success"); 
     } catch (error) {
-      console.error("Błąd usuwania:", error);
+      addToast("Nie udało się usunąć decyzji.", "error"); 
     } finally {
       setDeleteModal({ isOpen: false, projectId: null });
     }
   };
 
   const openProject = async (project) => {
-    if (project.type === 'TREE') {
-      await useTreeStore.getState().loadCloudProject(project.id);
-      navigate('/app/tree');
-    } else {
-      await useTableStore.getState().loadCloudProject(project.id);
-      navigate('/app/table');
-    }
-  };
-
-  const handleCreateProject = async (e) => {
-    e.preventDefault();
-    if (!newProjectForm.title.trim()) return;
-    
-    setIsCreating(true);
     try {
-      const res = await decisionApi.createProject(newProjectForm.title, newProjectForm.type);
-      
-      if (newProjectForm.type === 'TREE') {
-        useTreeStore.getState().resetTree();
-        useTreeStore.getState().setCurrentProject(res.id);
+      if (project.type === 'TREE') {
+        useTreeStore.getState().exitPreviewMode();
+        await useTreeStore.getState().loadCloudProject(project.id);
         navigate('/app/tree');
       } else {
-        useTableStore.getState().resetAll();
-        useTableStore.getState().setCurrentProject(res.id);
+        useTableStore.getState().exitPreviewMode();
+        await useTableStore.getState().loadCloudProject(project.id);
         navigate('/app/table');
       }
     } catch (error) {
-      console.error("Błąd tworzenia projektu:", error);
-    } finally {
-      setIsCreating(false);
-      setNewProjectModal(false);
+      addToast("Nie udało się otworzyć decyzji.", "error"); 
     }
   };
 
@@ -169,46 +145,57 @@ export default function UserPanel() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Panel użytkownika</h2>
           <p className="text-muted-foreground mt-1">Przeglądaj i zarządzaj swoimi decyzjami</p>
         </div>
-        <Button onClick={() => setNewProjectModal(true)} className="shrink-0">
-          <FolderPlus className="w-4 h-4 mr-2" />
-          Nowy projekt
-        </Button>
       </div>
 
-      {/* FILTRY */}
-      <div className="flex flex-col md:flex-row gap-3">
-        <div className="flex-1">
-          <Input 
-            icon={Search}
+      {/* Pasek wyszukiwania i ZAKŁADKI (Wizualnie z Figmy) */}
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
             placeholder="Szukaj decyzji po tytule lub notatkach..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 bg-muted/30 border border-border rounded-lg outline-none focus:border-primary transition-colors text-sm"
           />
         </div>
+
         <div className="flex gap-2 shrink-0">
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="px-4 py-2 bg-card border border-border rounded-lg text-sm outline-none focus:border-primary transition-colors cursor-pointer"
+          <button
+            onClick={() => setTypeFilter("ALL")}
+            className={`px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+              typeFilter === "ALL"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
           >
-            <option value="ALL">Wszystkie typy</option>
-            <option value="TREE">Drzewo decyzyjne</option>
-            <option value="TABLE">Tabela Smart Choices</option>
-          </select>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 bg-card border border-border rounded-lg text-sm outline-none focus:border-primary transition-colors cursor-pointer"
+            Wszystko
+          </button>
+          <button
+            onClick={() => setTypeFilter("TABLE")}
+            className={`px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+              typeFilter === "TABLE"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
           >
-            <option value="ALL">Wszystkie statusy</option>
-            <option value="DRAFT">Draft</option>
-            <option value="FINALIZED">Zakończone</option>
-          </select>
+            Tabela
+          </button>
+          <button
+            onClick={() => setTypeFilter("TREE")}
+            className={`px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+              typeFilter === "TREE"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            Drzewo
+          </button>
         </div>
       </div>
 
@@ -223,8 +210,7 @@ export default function UserPanel() {
             {allTags.map((tag) => (
               <Badge
                 key={tag}
-                variant={selectedTags.includes(tag) ? "default" : "outline"} // Dostosuj do swoich wariantów Badge
-                className="cursor-pointer hover:bg-primary/10 transition-colors"
+                variant={selectedTags.includes(tag) ? "active" : "interactive"} 
                 onClick={() => toggleTagFilter(tag)}
               >
                 {tag}
@@ -243,7 +229,7 @@ export default function UserPanel() {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
           <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4" />
-          Pobieranie projektów...
+          Pobieranie decyzji...
         </div>
       ) : filteredProjects.length === 0 ? (
         <Card className="flex flex-col items-center justify-center text-center py-16 bg-muted/10 border-dashed border-2 shadow-none">
@@ -258,30 +244,35 @@ export default function UserPanel() {
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
                     <h3 className="font-semibold text-lg">{project.title}</h3>
-                    <Badge variant={project.type === "TABLE" ? "success" : "primary"}>
-                      {project.type === "TABLE" ? "Tabela" : "Drzewo"}
-                    </Badge>
-                    {project.status === 'DRAFT' && <Badge variant="outline">Draft</Badge>}
+                    
+                  {/* CUSTOMOWE KOLORY BADGY DLA TABELI I DRZEWA */}
+                    {project.type === "TABLE" ? (
+                      <Badge variant="table">Tabela</Badge>
+                    ) : (
+                      <Badge variant="tree">Drzewo</Badge>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
                     <Calendar className="w-4 h-4" />
                     {new Date(project.updatedAt || project.createdAt).toLocaleDateString("pl-PL", { year: "numeric", month: "long", day: "numeric" })}
                   </div>
                 </div>
+                
+                {/* AKCJE */}
                 <div className="flex gap-2 w-full md:w-auto justify-end">
-                  <Button variant="outline" size="sm" onClick={() => openProject(project)}>
-                    <Play className="w-4 h-4 mr-2" /> Otwórz
+                  <Button variant="ghost" size="icon" onClick={() => openProject(project)} title="Otwórz w module" className="text-primary hover:bg-primary/10">
+                    <ExternalLink className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => startEditing(project)} title="Edytuj meta">
+                  <Button variant="ghost" size="icon" onClick={() => startEditing(project)} title="Edytuj meta" className="text-primary hover:bg-primary/10">
                     <Edit2 className="w-4 h-4" />
                   </Button>
-                  <Button variant="dangerGhost" size="icon" onClick={() => setDeleteModal({ isOpen: true, projectId: project.id })} title="Usuń">
+                  <Button variant="dangerGhost" size="icon" onClick={() => setDeleteModal({ isOpen: true, projectId: project.id })} title="Usuń decyzję" >
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
 
-              {/* TAGI */}
+              {/* TAGI W KARTACH */}
               <div className="mb-4">
                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
                   <Tag className="w-4 h-4" />
@@ -291,28 +282,42 @@ export default function UserPanel() {
                 {editingId === project.id && editingTags ? (
                   <div className="flex flex-wrap items-center gap-2">
                     {editingTags.map((tag) => (
-                      <Badge key={tag} className="pr-1">
+                      <Badge key={tag} variant="primary" className="pr-1">
                         {tag}
-                        <button onClick={() => setEditingTags(editingTags.filter((t) => t !== tag))} className="hover:bg-primary/20 rounded-full p-0.5 ml-1 transition-colors">
+                        <button 
+                          onClick={() => setEditingTags(editingTags.filter((t) => t !== tag))} 
+                          className="hover:bg-primary/20 rounded-full p-0.5 ml-1 transition-colors"
+                        >
                           <X className="w-3 h-3" />
                         </button>
                       </Badge>
                     ))}
-                    <div className="flex items-center gap-1 ml-2">
+                    
+                    {/* INPUT DLA NOWEGO TAGU Z IDEALNIE OKRĄGŁYM PLUSEM */}
+                    <div className="flex items-center gap-1.5 ml-2">
                       <input
                         type="text"
                         value={newTagInput}
                         onChange={(e) => setNewTagInput(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && addTagToEditing()}
                         placeholder="Dodaj tag..."
-                        className="px-3 py-1 bg-background border border-border rounded-full text-sm outline-none focus:border-primary transition-colors w-32"
+                        className="px-3 py-1.5 bg-background border border-border rounded-full text-sm outline-none focus:border-primary transition-colors w-32"
                       />
+                      <button
+                        onClick={addTagToEditing}
+                        className="w-8 h-8 flex items-center justify-center bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors shrink-0"
+                        title="Dodaj"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {project.tags && project.tags.length > 0 ? (
-                      project.tags.map((tag) => <Badge key={tag}>{tag}</Badge>)
+                      project.tags.map((tag) => (
+                        <Badge key={tag} variant="default">{tag}</Badge>
+                      ))
                     ) : (
                       <span className="text-sm text-muted-foreground italic">Brak tagów</span>
                     )}
@@ -356,57 +361,11 @@ export default function UserPanel() {
         isOpen={deleteModal.isOpen}
         onClose={() => setDeleteModal({ isOpen: false, projectId: null })}
         onConfirm={confirmDelete}
-        title="Usuwanie projektu"
-        message="Czy na pewno chcesz usunąć ten projekt? Ta operacja jest nieodwracalna."
+        title="Usuwanie decyzji"
+        message="Czy na pewno chcesz usunąć tę decyzję? Ta operacja jest nieodwracalna."
         variant="danger"
-        confirmText="Usuń projekt"
+        confirmText="Usuń decyzję"
       />
-
-      {/* MODAL NOWEGO PROJEKTU */}
-      {newProjectModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
-          <Card className="w-full max-w-md p-6 shadow-xl border-border animate-in fade-in zoom-in-95">
-            <h2 className="text-xl font-semibold mb-4">Utwórz nowy projekt</h2>
-            <form onSubmit={handleCreateProject} className="space-y-5">
-              <Input
-                label="Nazwa projektu"
-                placeholder="Np. Wybór samochodu..."
-                value={newProjectForm.title}
-                onChange={(e) => setNewProjectForm({ ...newProjectForm, title: e.target.value })}
-                required
-                autoFocus
-              />
-              
-              <div>
-                <label className="block text-sm font-medium mb-3">Narzędzie analityczne</label>
-                <div className="grid grid-cols-2 gap-3">
-                  <div 
-                    onClick={() => setNewProjectForm({ ...newProjectForm, type: 'TREE' })}
-                    className={`p-4 border rounded-xl cursor-pointer flex flex-col items-center justify-center gap-2 transition-all ${newProjectForm.type === 'TREE' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border hover:bg-muted'}`}
-                  >
-                    <Network className={`w-8 h-8 ${newProjectForm.type === 'TREE' ? 'text-primary' : 'text-muted-foreground'}`} />
-                    <span className="text-sm font-medium text-center mt-1">Drzewo decyzyjne</span>
-                  </div>
-                  <div 
-                    onClick={() => setNewProjectForm({ ...newProjectForm, type: 'TABLE' })}
-                    className={`p-4 border rounded-xl cursor-pointer flex flex-col items-center justify-center gap-2 transition-all ${newProjectForm.type === 'TABLE' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border hover:bg-muted'}`}
-                  >
-                    <Table2 className={`w-8 h-8 ${newProjectForm.type === 'TABLE' ? 'text-primary' : 'text-muted-foreground'}`} />
-                    <span className="text-sm font-medium text-center mt-1">Tabela Smart Choices</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 mt-8">
-                <Button type="button" variant="ghost" onClick={() => setNewProjectModal(false)}>Anuluj</Button>
-                <Button type="submit" disabled={isCreating || !newProjectForm.title.trim()}>
-                  {isCreating ? 'Tworzenie...' : 'Utwórz projekt'}
-                </Button>
-              </div>
-            </form>
-          </Card>
-        </div>
-      )}
     </div>
   );
 }

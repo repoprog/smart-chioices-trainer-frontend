@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTreeStore } from './store/useTreeStore.js';
 import { decisionApi } from '../../api/decisionApi'; 
 
@@ -14,12 +15,12 @@ import { useUnsavedChangesWarning } from "../../hooks/useUnsavedChangesWarning";
 import { useScenarioLoader } from "../../hooks/useScenarioLoader";
 import { Button } from '../../components/ui/Button';
 
-
-
 export function DecisionTreePage() {
   const resetTree = useTreeStore((s) => s.resetTree);
   const isDirty = useTreeStore((s) => s.isDirty);
   const loadTemplateScenario = useTreeStore((s) => s.loadTemplateScenario);
+  const navigate = useNavigate();
+  const loadError = useTreeStore((s) => s.loadError);
 
   const currentProjectId = useTreeStore((s) => s.currentProjectId);
   const isSaving = useTreeStore((s) => s.isSaving);
@@ -27,7 +28,8 @@ export function DecisionTreePage() {
   const saveToBackend = useTreeStore((s) => s.saveToBackend);
   const nodes = useTreeStore((s) => s.nodes);
   const edges = useTreeStore((s) => s.edges);
-
+  const isPreviewMode = useTreeStore((s) => s.isPreviewMode);
+  
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const isLoading = useTreeStore((s) => s.isLoading);
   
@@ -70,6 +72,7 @@ export function DecisionTreePage() {
   });
 
   return (
+    
     <div className="flex flex-col h-full space-y-6">
       <div className="flex flex-wrap md:flex-nowrap items-start md:items-center justify-between gap-4 relative z-50">
         <div className="flex-1">
@@ -126,7 +129,11 @@ export function DecisionTreePage() {
         </Card>
       )}
 
-      <Card noPadding className="flex-1 min-h-[600px] overflow-hidden relative z-0 flex flex-col">
+      <Card 
+        noPadding 
+        className="flex-1 min-h-[600px] overflow-hidden relative z-0 flex flex-col"
+      >
+        
         {isLoading && (
           <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/50 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="w-10 h-10 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin mb-4" />
@@ -135,18 +142,34 @@ export function DecisionTreePage() {
             </p>
           </div>
         )}
+
+        {/* --- EKRAN KRYTYCZNEGO BŁĘDU ŁADOWANIA --- */}
+        {loadError && (
+          <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-background/95 backdrop-blur-md p-6 animate-in zoom-in-95 duration-300">
+            <Card className="max-w-md w-full border-destructive/30 bg-destructive/5 p-8 flex flex-col items-center text-center gap-4 shadow-2xl">
+              <div className="w-14 h-14 bg-destructive/10 rounded-full flex items-center justify-center mb-2">
+                <AlertCircle className="w-7 h-7 text-destructive" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-foreground mb-2">Błąd ładowania decyzji</h3>
+                <p className="text-sm text-muted-foreground">{loadError}</p>
+              </div>
+              <Button variant="default" onClick={() => navigate('/app/panel')} className="mt-4 w-full sm:w-auto px-8">
+                Wróć do panelu
+              </Button>
+            </Card>
+          </div>
+        )}
         
-       
         <ErrorBoundary fallback={<TreeErrorFallback />} onReset={resetTree}>
           <TreeCanvas />
         </ErrorBoundary>
-
-        {/* NOWY ELEMENT - Przycisk wyczyszczenia planszy */}
         <div className="absolute bottom-6 right-6 z-50">
           <Button
             variant="dangerGhost"
             size="sm"
             onClick={handleResetClick}
+            disabled={isPreviewMode}
             className="bg-background/80 backdrop-blur-sm border border-border shadow-sm hover:bg-destructive/10"
           >
             Wyczyść planszę

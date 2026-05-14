@@ -1,11 +1,12 @@
 // src/pages/auth/LoginPage.jsx
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom"; 
 import useAuthStore from "../../store/useAuthStore";
 import { LogIn, AlertCircle, Mail, Lock, UserCheck } from "lucide-react";
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card"; 
+import { APP_ROUTES } from "../../constants/appConstants"; 
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -15,6 +16,7 @@ export default function LoginPage() {
   
   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
+  const location = useLocation(); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,7 +25,11 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      navigate("/app/panel");
+      
+      const params = new URLSearchParams(location.search);
+     
+      const returnTo = params.get('returnTo') || APP_ROUTES.PANEL;
+      navigate(returnTo);
     } catch (err) {
       setError("Nieprawidłowy email lub hasło");
     } finally {
@@ -35,9 +41,12 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      // Automatyczne logowanie danymi demo
+      
       await login("janek@wp.pl", "12341234");
-      navigate("/app/panel");
+     
+      const params = new URLSearchParams(location.search);
+      const returnTo = params.get('returnTo') || APP_ROUTES.PANEL;
+      navigate(returnTo);
     } catch (err) {
       setError("Błąd logowania demo. Spróbuj ręcznie.");
     } finally {
@@ -104,7 +113,8 @@ export default function LoginPage() {
           </Button>
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
-            Nie masz konta? <Link to="/register" className="text-primary font-medium hover:underline">Zarejestruj się</Link>
+            
+            Nie masz konta? <Link to={`${APP_ROUTES.REGISTER}${location.search}`} className="text-primary font-medium hover:underline">Zarejestruj się</Link>
           </div>
         </Card>
       </div>

@@ -18,10 +18,16 @@ export function SmartChoicesEdge({
 
   const [isInteracting, setIsInteracting] = useState(false);
 
+  const [localOpt, setLocalOpt] = useState(null);
+  const [localCost, setLocalCost] = useState(null);
+
   const sourceNode = nodes.find((n) => n.id === source);
   const opt = data?.optionLabel ?? "";
   const cost = data?.cost ?? "";
   const displayProb = parseProbabilityString(data?.probability);
+
+  const displayOpt = localOpt !== null ? localOpt : opt;
+  const displayCost = localCost !== null ? localCost : cost;
 
   const handleProbChange = (e) => {
     const newProb = parseFloat(e.target.value);
@@ -101,12 +107,21 @@ export function SmartChoicesEdge({
           }}
         >
           <div className="relative flex items-center group/opt">
-            <input
+           <input
               className={`${baseInputClassName} text-sky-700 ${!opt ? 'hide-on-export' : ''} ${isHighlighted ? "border-emerald-400/60 !text-emerald-700" : ""}`}
-              value={opt}
-              onChange={(e) => updateEdgeData(id, { optionLabel: e.target.value })}
+              value={displayOpt} 
+              onChange={(e) => setLocalOpt(e.target.value)} 
+              onBlur={() => { 
+                if (localOpt !== null) {
+                  updateEdgeData(id, { optionLabel: localOpt });
+                  setLocalOpt(null);
+                }
+              }}
               onPointerDown={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
+              onKeyDown={(e) => { 
+                e.stopPropagation();
+                if (e.key === 'Enter') e.currentTarget.blur();
+              }}
               placeholder="Opcja"
             />
             <div className="opacity-0 group-hover/opt:opacity-100 transition-opacity hide-on-export">
@@ -139,12 +154,21 @@ export function SmartChoicesEdge({
           >
             {showFullInput ? (
               <div className="relative flex items-center group/cost">
-                <input
+               <input
                   className={`${baseInputClassName} ${costColorClass} ${!cost ? 'hide-on-export' : ''}`}
-                  value={cost}
-                  onChange={(e) => updateEdgeData(id, { cost: e.target.value })}
+                  value={displayCost} 
+                  onChange={(e) => setLocalCost(e.target.value)} 
+                  onBlur={() => { 
+                    if (localCost !== null) {
+                      updateEdgeData(id, { cost: localCost });
+                      setLocalCost(null);
+                    }
+                  }}
                   onPointerDown={(e) => e.stopPropagation()}
-                  onKeyDown={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => { 
+                    e.stopPropagation();
+                    if (e.key === 'Enter') e.currentTarget.blur();
+                  }}
                   placeholder="np. -1000"
                   autoFocus={!globalShowCost}
                 />

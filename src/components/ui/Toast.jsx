@@ -1,17 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { CheckCircle, XCircle, Info, AlertTriangle, X } from "lucide-react";
 
-export  function Toast({ message, type = "info", duration = 3000, onClose }) {
+export function Toast({ id, message, type = "info", duration = 3000, onClose }) {
   const [isVisible, setIsVisible] = useState(true);
 
+  // Automatyczne znikanie i wywołanie onClose (z ID), aby usunąć go ze Store'a
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(false);
-      setTimeout(onClose, 300); // Czeka na zakończenie animacji wyjazdu
+      setTimeout(() => onClose(id), 300); // Czeka na animację CSS
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [duration, onClose]);
+  }, [duration, onClose, id]);
+
+  const handleManualClose = () => {
+    setIsVisible(false);
+    setTimeout(() => onClose(id), 300);
+  };
 
   const icons = {
     success: <CheckCircle className="w-5 h-5" />,
@@ -28,9 +34,9 @@ export  function Toast({ message, type = "info", duration = 3000, onClose }) {
   };
 
   return (
+    // UWAGA: Usunięto 'fixed bottom-4 right-4'. To teraz zwykły div z animacją wjazdu!
     <div
-      // Z-index ustawiony na 150, żeby wyświetlał się NAD modalami (które mają 110)
-      className={`fixed bottom-4 right-4 z-[150] transition-all duration-300 ${
+      className={`transition-all duration-300 pointer-events-auto ${
         isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
       }`}
     >
@@ -38,10 +44,7 @@ export  function Toast({ message, type = "info", duration = 3000, onClose }) {
         {icons[type]}
         <span className="flex-1 text-sm font-medium">{message}</span>
         <button
-          onClick={() => {
-            setIsVisible(false);
-            setTimeout(onClose, 300);
-          }}
+          onClick={handleManualClose}
           className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded transition-colors"
         >
           <X className="w-4 h-4" />

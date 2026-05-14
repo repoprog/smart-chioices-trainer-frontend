@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; 
 import { useTableStore } from "./store/useTableStore"; 
 import { decisionApi } from "../../api/decisionApi"; 
 
@@ -21,6 +22,9 @@ export function DecisionTablePage() {
   const loadTemplateScenario = useTableStore((s) => s.loadTemplateScenario);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
 
+  const navigate = useNavigate();
+  const loadError = useTableStore((s) => s.loadError); 
+
   const currentProjectId = useTableStore((s) => s.currentProjectId);
   const isSaving = useTableStore((s) => s.isSaving);
   const saveError = useTableStore((s) => s.saveError);
@@ -28,7 +32,7 @@ export function DecisionTablePage() {
   const cells = useTableStore((s) => s.cells);
   const alternatives = useTableStore((s) => s.alternatives);
   const objectives = useTableStore((s) => s.objectives);
-
+  const isPreviewMode = useTableStore((s) => s.isPreviewMode);
   const isLoading = useTableStore((s) => s.isLoading);
 
   // CORE MECHANIC: Prevent data loss by intercepting page unload if changes are unsaved
@@ -138,18 +142,40 @@ export function DecisionTablePage() {
             </p>
           </div>
         )}
+
+        {/* --- EKRAN KRYTYCZNEGO BŁĘDU ŁADOWANIA --- */}
+        {loadError && (
+          <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-background/95 backdrop-blur-md p-6 animate-in zoom-in-95 duration-300 rounded-lg">
+            <Card className="max-w-md w-full border-destructive/30 bg-destructive/5 p-8 flex flex-col items-center text-center gap-4 shadow-2xl">
+              <div className="w-14 h-14 bg-destructive/10 rounded-full flex items-center justify-center mb-2">
+                <AlertCircle className="w-7 h-7 text-destructive" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-foreground mb-2">Błąd ładowania decyzji</h3>
+                <p className="text-sm text-muted-foreground">{loadError}</p>
+              </div>
+              <Button variant="default" onClick={() => navigate('/app/panel')} className="mt-4 w-full sm:w-auto px-8">
+                Wróć do panelu
+              </Button>
+            </Card>
+          </div>
+        )}
         
-        <ErrorBoundary fallback={<TableErrorFallback />} onReset={resetAll}>
-          <TableGrid />
-        </ErrorBoundary>
-       
-        <TableSettings />
+        {/* --- WRAPPER BLOKUJĄCY KLIKNIĘCIA W TABELĘ --- */}
+        <div className={`flex flex-col flex-1 transition-all duration-300 ${isPreviewMode ? "pointer-events-none opacity-85 grayscale-[0.15]" : ""}`}>
+          <ErrorBoundary fallback={<TableErrorFallback />} onReset={resetAll}>
+            <TableGrid />
+          </ErrorBoundary>
+          
+          <TableSettings />
+        </div>
         
         <div className="mt-4 border-t border-border pt-4 flex justify-end">
           <Button
             variant="dangerGhost"
             size="sm"
             onClick={handleResetClick}
+            disabled={isPreviewMode} // <-- DODANO BLOKADĘ
           >
             Resetuj wszystko
           </Button>

@@ -5,6 +5,7 @@ import { Table2, Network, User, Settings as SettingsIcon, LogOut, LogIn, UserPlu
 import useAuthStore from "../../store/useAuthStore";
 import { Button } from "../ui/Button";
 import { ConfirmModal } from "../ui/ConfirmModal";
+import { APP_ROUTES } from "../../constants/appConstants"; 
 
 export function Layout() {
   const location = useLocation();
@@ -17,17 +18,17 @@ export function Layout() {
   const handleLogout = async () => {
     setShowLogoutModal(false);
     await logout();
-    navigate("/");
+    navigate(APP_ROUTES.HOME); 
   };
 
   const publicMenuItems = [
-    { path: "/app/table", label: "Tabela", icon: Table2 },
-    { path: "/app/tree", label: "Drzewo", icon: Network },
+    { path: APP_ROUTES.TABLE, label: "Tabela", icon: Table2 }, 
+    { path: APP_ROUTES.TREE, label: "Drzewo", icon: Network }, 
   ];
 
   const privateMenuItems = [
-    { path: "/app/panel", label: "Panel", icon: User },
-    { path: "/app/settings", label: "Ustawienia", icon: SettingsIcon },
+    { path: APP_ROUTES.PANEL, label: "Panel", icon: User }, 
+    { path: APP_ROUTES.SETTINGS, label: "Ustawienia", icon: SettingsIcon }, 
   ];
 
   return (
@@ -35,9 +36,9 @@ export function Layout() {
       <header className="border-b border-border px-6 py-4 bg-card">
         <div className="flex items-center justify-between max-w-[1400px] mx-auto w-full">
           
-          {/* Lewa strona: Logo + Info o Userze bez pionowej kreski */}
+          {/* Loged user info */}
           <div className="flex items-center gap-4">
-            <Link to="/" className="text-xl font-bold tracking-tight text-foreground">
+            <Link to={APP_ROUTES.HOME} className="text-xl font-bold tracking-tight text-foreground">
               Decidely.
             </Link>
             {isAuthenticated && user && (
@@ -47,7 +48,7 @@ export function Layout() {
             )}
           </div>
 
-          {/* Prawa strona: Dynamiczna nawigacja */}
+          {/* Navigation */}
           <nav className="flex items-center gap-1">
             {publicMenuItems.map(({ path, label, icon: Icon }) => (
               <Link
@@ -75,7 +76,7 @@ export function Layout() {
               </Link>
             ))}
 
-            {/* Usunięto pionową kreskę oddzielającą */}
+          
 
             {isAuthenticated ? (
               <Button
@@ -88,14 +89,18 @@ export function Layout() {
               </Button>
             ) : (
               <div className="flex gap-1 ml-1">
-                {/* Usunięto size="sm", aby domyślnie używało text-sm (jak reszta nawigacji) */}
-                <Button variant="ghost" onClick={() => navigate("/login")}>
+                
+                <Button 
+                  variant="ghost" 
+                  onClick={() => navigate(`${APP_ROUTES.LOGIN}?returnTo=${encodeURIComponent(location.pathname)}`)}
+                >
                   <LogIn className="w-4 h-4 mr-2" /> Zaloguj
                 </Button>
-                {/* Użycie wariantu dangerGhost wg wskazówek */}
-                <Button variant="dangerGhost"
-                 className="border border-destructive/40 hover:border-destructive/70"
-                  onClick={() => navigate("/register")}>
+                <Button 
+                  variant="dangerGhost"
+                  className="border border-destructive/40 hover:border-destructive/70"
+                  onClick={() => navigate(`${APP_ROUTES.REGISTER}?returnTo=${encodeURIComponent(location.pathname)}`)}
+                >
                   <UserPlus className="w-4 h-4 mr-2" /> Dołącz
                 </Button>
               </div>

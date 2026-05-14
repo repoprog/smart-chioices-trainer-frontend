@@ -1,10 +1,12 @@
+// src/pages/auth/RegisterPage.jsx
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom"; 
 import useAuthStore from "../../store/useAuthStore";
 import { UserPlus, AlertCircle, Mail, Lock } from "lucide-react";
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { APP_ROUTES } from "../../constants/appConstants"; 
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -15,6 +17,7 @@ export default function RegisterPage() {
   
   const register = useAuthStore((state) => state.register);
   const navigate = useNavigate();
+  const location = useLocation(); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,7 +44,11 @@ export default function RegisterPage() {
 
     try {
       await register(email, password);
-      navigate("/app/panel");
+     
+      const params = new URLSearchParams(location.search);
+    
+      const returnTo = params.get('returnTo') || APP_ROUTES.PANEL;
+      navigate(returnTo);
     } catch (err) {
       setError("Użytkownik z tym adresem email prawdopodobnie już istnieje");
     } finally {
@@ -109,7 +116,7 @@ export default function RegisterPage() {
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
             Masz już konto?{" "}
-            <Link to="/login" className="text-primary font-medium hover:underline">
+            <Link to={`${APP_ROUTES.LOGIN}${location.search}`} className="text-primary font-medium hover:underline">
               Zaloguj się
             </Link>
           </div>

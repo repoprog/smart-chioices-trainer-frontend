@@ -1,3 +1,4 @@
+import { useState } from 'react'; 
 import { Handle, Position } from '@xyflow/react'
 import { NodeMenu } from '../NodeMenu.jsx'
 import { useTreeStore } from '../../store/useTreeStore.js'
@@ -9,10 +10,8 @@ const handleClass = '!h-2 !w-2 !min-h-0 !min-w-0 !border !border-slate-900 !bg-w
 export function TerminalNode({ id, data }) {
   const updateNodeData = useTreeStore((s) => s.updateNodeData);
   const isHighlighted = data?.isHighlighted;
-
-  const handlePayoffChange = (e) => {
-    updateNodeData(id, { payoff: e.target.value });
-  };
+  
+  const [localPayoff, setLocalPayoff] = useState(null); 
 
   const { executeCopy, executePaste, executeDelete } = useClipboardActions(id, false);
 
@@ -23,7 +22,10 @@ export function TerminalNode({ id, data }) {
   const fillColor = isHighlighted ? '#ecfdf5' : '#ffffff'; 
   const strokeColor = isHighlighted ? '#10b981' : '#0f172a'; 
 
-  const rawPayoff = String(data.payoff || '');
+  
+  const displayPayoff = localPayoff !== null ? localPayoff : (data.payoff || '');
+
+  const rawPayoff = String(displayPayoff); 
   const numericPayoff = parseFloat(rawPayoff.replace(/zł|%|\s/g, '').replace(',', '.').replace('−', '-'));
   
   let textColorClass = 'text-slate-900'; 
@@ -69,10 +71,19 @@ export function TerminalNode({ id, data }) {
         <div className="relative flex items-center group/input">
           <input
             type="text"
-            value={data.payoff || ''}
-            onChange={handlePayoffChange}
+            value={displayPayoff} 
+            onChange={(e) => setLocalPayoff(e.target.value)} 
+            onBlur={() => { 
+              if (localPayoff !== null) {
+                updateNodeData(id, { payoff: localPayoff });
+                setLocalPayoff(null);
+              }
+            }}
             onPointerDown={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
+            onKeyDown={(e) => { 
+              e.stopPropagation();
+              if (e.key === 'Enter') e.currentTarget.blur();
+            }}
             placeholder="np. 120 000 zł"
             className={inputClasses}
           />
@@ -80,7 +91,7 @@ export function TerminalNode({ id, data }) {
             <FloatingToolbar
               positionClass="bottom-full pb-1"
               title="wynik"
-              onCopy={(e) => executeCopy(e, data.payoff)}
+              onCopy={(e) => executeCopy(e, displayPayoff)} 
               onPaste={(e) => executePaste(e, "payoff")}
               onDelete={(e) => executeDelete(e, "payoff")}
             />

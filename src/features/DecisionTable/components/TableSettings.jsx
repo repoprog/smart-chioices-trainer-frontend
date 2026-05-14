@@ -9,12 +9,17 @@ import { Card } from '../../../components/ui/Card';
 import { Badge } from '../../../components/ui/Badge'; 
 import { useJsonExportImport } from '../../../hooks/useJsonExportImport';
 
+import { useToastStore } from '../../../store/useToastStore'; 
+
 export function TableSettings() {
     const presetKeys = Object.keys(scalePresets);
     const [showScalesSettings, setShowScalesSettings] = useState(false);
     const [newScaleWord, setNewScaleWord] = useState('');
     const [newScaleRank, setNewScaleRank] = useState('');
+   
     
+
+    const addToast = useToastStore(s => s.addToast);
     const [isClearModalOpen, setIsClearModalOpen] = useState(false);
 
     const {
@@ -46,11 +51,15 @@ export function TableSettings() {
         onImport: (parsedData) => {
             if (parsedData.alternatives && parsedData.objectives && parsedData.cells) {
                 loadScenario(parsedData);
-                setCurrentProject(null); // Odpinamy od bazy przy imporcie z dysku
+                setCurrentProject(null); 
+                addToast("Tabela została wczytana poprawnie.", "success");
             } else {
-                alert("To nie wygląda na poprawny plik Tabeli Decyzyjnej.");
+               
+                addToast('To nie wygląda na poprawny plik Tabeli Decyzyjnej.', 'error');
             }
-        }
+        },
+       
+        onError: (msg) => addToast(msg, 'error') 
     });
 
     const handleLoadPreset = (presetKey) => {
@@ -203,7 +212,7 @@ export function TableSettings() {
                     size="icon" 
                     className="relative" 
                     onClick={handleImportClick} 
-                    title="Wczytaj projekt z pliku (JSON)"
+                    title="Wczytaj decyzję z pliku (JSON)"
                 >
                     <FolderOpen className="w-[18px] h-[18px] text-muted-foreground" />
                     <span className={badgeClass}>JSON</span>
@@ -230,6 +239,7 @@ export function TableSettings() {
                 variant="danger"
                 confirmText="Wyczyść"
             />
+        
         </div>
     );
 }

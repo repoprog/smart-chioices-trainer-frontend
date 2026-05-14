@@ -1,6 +1,7 @@
 import apiClient from './apiClient';
 import { treeScenarios } from '../features/DecisionTree/data/treeScenarios';
 import { tableScenarios } from '../features/DecisionTable/data/tableScenarios';
+import { API_PATHS, PROJECT_STATUS } from '../constants/apiConstants'; // <--- DODANY IMPORT
 
 // Pomocnicza funkcja do imitowania opóźnienia
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -28,7 +29,6 @@ export const decisionApi = {
     }));
   },
 
-  // NOWE: Dedykowana metoda tylko dla szablonów drzewa
   async getTreeTemplate(templateId) {
     await sleep(500); // 500ms by nacieszyć oko loaderem ładowania planszy
     const data = treeScenarios[templateId];
@@ -36,7 +36,6 @@ export const decisionApi = {
     return JSON.parse(JSON.stringify(data));
   },
 
-  // NOWE: Dedykowana metoda tylko dla szablonów tabeli
   async getTableTemplate(templateId) {
     await sleep(500);
     const data = tableScenarios[templateId];
@@ -48,40 +47,43 @@ export const decisionApi = {
   // 2. PROJEKTY UŻYTKOWNIKA (Z BACKENDU)
   // ==========================================
 
-  // JEDNA uniwersalna funkcja do pobierania dowolnego projektu
   async getProject(projectId) {
-    const response = await apiClient.get(`/api/v1/projects/${projectId}`);
-    if (!response.data) throw new Error("Nie znaleziono projektu");
-    return response.data; // Zwracamy cały ProjectDetailDTO
+    // Używamy dynamicznej stałej-funkcji
+    const response = await apiClient.get(API_PATHS.PROJECTS.BY_ID(projectId));
+    if (!response.data) throw new Error("Nie znaleziono decyzji");
+    return response.data; 
   },
 
   async getUserProjects(type) {
-    const url = type ? `/api/v1/projects?type=${type}&size=50` : '/api/v1/projects?size=50';
+    // Budujemy URL na bazie stałej
+    const url = type 
+      ? `${API_PATHS.PROJECTS.BASE}?type=${type}&size=50` 
+      : `${API_PATHS.PROJECTS.BASE}?size=50`;
     const response = await apiClient.get(url);
     return response.data.content || response.data || [];
   },
 
   async saveTree(id, treeData) {
-    await apiClient.patch(`/api/v1/projects/${id}/content`, { content: treeData });
+    await apiClient.patch(API_PATHS.PROJECTS.CONTENT(id), { content: treeData });
     return { status: "success", timestamp: new Date().toISOString() };
   },
 
   async saveTable(id, tableData) {
-    await apiClient.patch(`/api/v1/projects/${id}/content`, { content: tableData });
+    await apiClient.patch(API_PATHS.PROJECTS.CONTENT(id), { content: tableData });
     return { status: "success", timestamp: new Date().toISOString() };
   },
 
   async createProject(title, type) {
-    const response = await apiClient.post('/api/v1/projects', {
+    const response = await apiClient.post(API_PATHS.PROJECTS.BASE, {
       title,
       type,
-      status: 'DRAFT'
+      status: PROJECT_STATUS.DRAFT // Używamy stałej statusu!
     });
     return response.data;
   },
 
   async updateProjectMeta(id, { title, status, tags, category, notes }) {
-    const response = await apiClient.put(`/api/v1/projects/${id}`, {
+    const response = await apiClient.put(API_PATHS.PROJECTS.BY_ID(id), {
       title,
       status,
       tags,
@@ -92,30 +94,34 @@ export const decisionApi = {
   },
 
   async patchNotes(id, notes) {
-    const response = await apiClient.patch(`/api/v1/projects/${id}/notes`, { notes });
+    const response = await apiClient.patch(API_PATHS.PROJECTS.NOTES(id), { notes });
     return response.data;
   },
 
   async deleteProject(id) {
-    const response = await apiClient.delete(`/api/v1/projects/${id}`);
+    const response = await apiClient.delete(API_PATHS.PROJECTS.BY_ID(id));
     return response.data;
   },
-  // Wewnątrz obiektu decisionApi:
+
   async createSnapshot(projectId, label) {
-    // Zakładam, że Twój endpoint przyjmuje body z polem "label"
-    const response = await apiClient.post(`/api/v1/projects/${projectId}/snapshots`, { label });
+    const response = await apiClient.post(API_PATHS.PROJECTS.SNAPSHOTS(projectId), {label});
     return response.data; 
   },
 
- // Metoda do pobierania listy snapshotów dla danego projektu
   async getSnapshots(projectId) {
-    const response = await apiClient.get(`/api/v1/projects/${projectId}/snapshots`);
-    return response.data; // Zwraca listę obiektów snapshotów
+    try {
+      const response = await apiClient.get(API_PATHS.PROJECTS.SNAPSHOTS(projectId));
+      return Array.isArray(response.data) 
+        ? response.data 
+        : response.data?.content ?? [];
+    } catch (error) {
+      console.error(`Błąd podczas pobierania snapshotów dla decyzji ${projectId}:`, error);
+      throw error;
+    }
   },
 
-  // NOWE: Metoda do pobierania zawartości konkretnego, JEDNEGO snapshotu
   async getSnapshot(projectId, snapshotId) {
-    const response = await apiClient.get(`/api/v1/projects/${projectId}/snapshots/${snapshotId}`);
+    const response = await apiClient.get(API_PATHS.PROJECTS.SNAPSHOT(projectId, snapshotId));
     return response.data; 
   }
 };

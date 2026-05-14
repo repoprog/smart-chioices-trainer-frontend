@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useState, useMemo } from 'react' // <-- DODANO useState
 import { ViewportPortal } from '@xyflow/react'
 import { ArrowUp, ArrowDown } from 'lucide-react';
 
@@ -6,7 +6,6 @@ import { useTreeStore } from '../store/useTreeStore.js'
 import { computeStageHeaderRowY, getUniqueColumnXs } from '../logic/treeUtils.js'
 import { Button } from '../../../components/ui/Button'; 
 import { EVALUATION_MODES } from '../../../constants/decisionTypes';
-
 
 export function StageHeaders() {
   const nodes = useTreeStore((s) => s.nodes)
@@ -16,8 +15,9 @@ export function StageHeaders() {
   const evaluationMode = useTreeStore((s) => s.evaluationMode);
   const setEvaluationMode = useTreeStore((s) => s.setEvaluationMode);
 
-  const rowY = useMemo(() => computeStageHeaderRowY(nodes), [nodes])
+  const [localLabels, setLocalLabels] = useState({}); 
 
+  const rowY = useMemo(() => computeStageHeaderRowY(nodes), [nodes])
 
   const columnXs = useMemo(() => {
     return getUniqueColumnXs(nodes, edges).map(x => x + 22);
@@ -33,28 +33,45 @@ export function StageHeaders() {
 
   return (
     <ViewportPortal>
-     
+      
       {columnXs.map((centerX, i) => {
         const text = labels[i] || ''; 
         const isLast = i === columnXs.length - 1;
+        
+        const displayValue = localLabels[i] !== undefined ? localLabels[i] : text;
 
         return (
           <div
             key={i}
-            className="pointer-events-auto"
+            className="pointer-events-auto nodrag nopan"
             style={{
               position: 'absolute',
               transform: `translate(${centerX - headerWidth / 2}px, ${rowY}px)`,
               width: `${headerWidth}px`,
               zIndex: -1,
             }}
+            onPointerDown={(e) => e.stopPropagation()}
           >
             <div className='relative w-full'>
               <input
                 type="text"
-                value={text}
-                onChange={(e) => setStageColumnLabel(i, e.target.value)}
+                value={displayValue} 
+                onChange={(e) => setLocalLabels(prev => ({ ...prev, [i]: e.target.value }))} 
+                onBlur={() => { 
+                  if (localLabels[i] !== undefined) {
+                    setStageColumnLabel(i, localLabels[i]);
+                    setLocalLabels(prev => {
+                      const next = { ...prev };
+                      delete next[i];
+                      return next;
+                    });
+                  }
+                }}
+                onKeyDown={(e) => { 
+                  if (e.key === 'Enter') e.currentTarget.blur();
+                }}
                 placeholder={isLast ? "Konsekwencje" : `Etap ${i + 1}`}
+                onPointerDown={(e) => e.stopPropagation()}
                 className="box-border h-8 w-full rounded border backdrop-blur-sm border-slate-400 bg-transparent px-1.5 text-center text-[11px] font-semibold text-slate-800 shadow-sm outline-none backdrop-blur-sm placeholder:text-slate-400  focus-visible:border-slate-900 dark:border-slate-500 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus-visible:border-slate-300"
               />
               

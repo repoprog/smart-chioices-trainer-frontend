@@ -1,6 +1,6 @@
 import { create, useStore } from 'zustand';
 import { temporal } from 'zundo';
-import { persist } from 'zustand/middleware'; // <-- Dodany import
+import { persist } from 'zustand/middleware'; 
 import { treeScenarios } from '../data/treeScenarios.js';
 import { decisionApi } from '../../../api/decisionApi.js'; 
 import { NODE_TYPES, EVALUATION_MODES } from '../../../constants/decisionTypes.js';
@@ -43,12 +43,22 @@ export const useTreeStore = create()(
       currentProjectId: null,
       isSaving: false,
       saveError: null,
+      loadError: null,
+
+      
+      // --- TIME MACHINE (PREVIEW) STATE ---
+      isPreviewMode: false,
+      previewingSnapshotId: null,
+
+      enterPreviewMode: (snapshotId) => set({ isPreviewMode: true, previewingSnapshotId: snapshotId, isDirty: false }),
+      exitPreviewMode: () => set({ isPreviewMode: false, previewingSnapshotId: null }),
 
       setCurrentProject: (id) => set({ currentProjectId: id }),
 
       saveToBackend: async () => {
         const state = get();
-        if (!state.currentProjectId) return;
+        // ← guard (DODANO state.isPreviewMode)
+        if (!state.currentProjectId || state.isSaving || state.isPreviewMode) return; 
 
         set({ isSaving: true, saveError: null });
         try {
@@ -71,8 +81,12 @@ export const useTreeStore = create()(
         set({ isLoading: true });
         try {
           const data = await decisionApi.getTreeTemplate(templateId);
-          get().loadScenario(data.nodes || [], data.edges || [], data.labels || []);
-          set({ currentProjectId: null }); // Zawsze null, auto-zapis wyłączony
+          get().loadScenario(
+            data.nodes || [], 
+            data.edges || [], 
+            data.labels || [], 
+            { clearProjectId: true } 
+          );
         } catch (error) {
           console.error("Błąd ładowania szablonu drzewa:", error);
         } finally {
@@ -81,31 +95,35 @@ export const useTreeStore = create()(
       },
 
      // Droga B: Prawdziwe projekty z chmury
-      loadCloudProject: async (projectId) => {
-        set({ isLoading: true });
+     loadCloudProject: async (projectId) => {
+        set({ isLoading: true, loadError: null }); // <-- Resetujemy błąd przed próbą
         try {
           const project = await decisionApi.getProject(projectId);
-          const safeContent = project.content || {}; // Kuloodporność!
+          const safeContent = project.content || {}; 
           
           const nodes = safeContent.nodes || [];
           const edges = safeContent.edges || [];
           const stageColumnLabels = safeContent.stageColumnLabels || safeContent.labels || [];
 
-          // UWAGA: loadScenario nie zeruje już ID, więc jest bezpiecznie
           get().loadScenario(nodes, edges, stageColumnLabels);
-          
-          // Ale dla pewności przypisujemy je jeszcze raz
           set({ currentProjectId: projectId });
 
         } catch (error) {
-          console.error("Krytyczny błąd ładowania projektu z bazy:", error);
+          console.error("Krytyczny błąd ładowania decyzji z bazy:", error);
+          // <-- NOWE: Mapowanie błędu z backendu na czytelny komunikat dla UI
+          const message = error.response?.status === 403
+            ? 'Brak dostępu do tej decyzji.'
+            : error.response?.status === 404
+              ? 'Decyzja nie istnieje lub została usunięta.'
+              : 'Błąd połączenia z serwerem.';
+          set({ loadError: message });
         } finally {
           set({ isLoading: false });
         }
       },
 
       // --- LOAD & RESET ---
-      loadScenario: (newNodes, newEdges, newLabels = []) =>
+      loadScenario: (newNodes, newEdges, newLabels = [], { clearProjectId = false } = {}) =>
         set((state) => {
           const layoutedNodes = getLayoutedElements(newNodes, newEdges);
           const renumbered = renumberDecisionAndChanceNodes(layoutedNodes, newEdges);
@@ -116,15 +134,15 @@ export const useTreeStore = create()(
             nodes: renumbered,
             edges: newEdges,
             stageColumnLabels,
-            
-            isDirty: false
+            isDirty: false,
+            ...(clearProjectId && { currentProjectId: null }) // <-- Bezpieczne czyszczenie
           };
           return evaluateAndSetWinningPath(newState);
         }),
 
       resetTree: () => set((state) => {
         const newState = { ...state, nodes: [], edges: [], stageColumnLabels: [], isDirty: false, currentProjectId: null, 
-          saveError: null     };    
+          saveError: null, loadError: null   };    
         return evaluateAndSetWinningPath(newState);
       }),
 
@@ -448,13 +466,16 @@ export const useTreeStore = create()(
         stageColumnLabels: state.stageColumnLabels,
         evaluationMode: state.evaluationMode,
         evaluationMap: state.evaluationMap,
-        winningPath: Array.from(state.winningPath), 
-        
+        winningPath: state.winningPath, 
       }),
+      // --- History guard for redo/undo ---
+      equality: (pastState, currentState) => {
+        return JSON.stringify(pastState) === JSON.stringify(currentState);
+      },
     }
    ),
    {
-     name: 'decision-tree-storage',
+     name: 'tree-storage',
      partialize: (state) => ({
        nodes: state.nodes,
        edges: state.edges,

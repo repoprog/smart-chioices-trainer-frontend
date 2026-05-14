@@ -15,6 +15,7 @@ export function useScenarioLoader({ isDirty, loadFn, fetchFn }) {
     
     if (scenarioKey) {
       loadFn(scenarioKey);
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [loadFn]);
 

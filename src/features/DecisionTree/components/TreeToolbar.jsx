@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useReactFlow, getNodesBounds } from '@xyflow/react';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
@@ -7,13 +7,21 @@ import { FolderOpen, Save, Image as ImageIcon, FileText, Undo2, Redo2, Maximize,
 
 import { Button } from '../../../components/ui/Button'; 
 import { useJsonExportImport } from '../../../hooks/useJsonExportImport';
+// IMPORTUJEMY STORE ZAMIAST KOMPONENTU TOAST
+import { useToastStore } from '../../../store/useToastStore';
 
 export function TreeToolbar() {
   const undo = useTemporalTreeStore((state) => state.undo);
   const redo = useTemporalTreeStore((state) => state.redo);
   const pastStates = useTemporalTreeStore((state) => state.pastStates);
   const futureStates = useTemporalTreeStore((state) => state.futureStates);
+  
 
+  const addToast = useToastStore((s) => s.addToast);
+  
+  // USUNIĘTO: const [toastMessage, setToastMessage] = useState(null);
+  
+  const isPreviewMode = useTreeStore((s) => s.isPreviewMode); 
   const importJson = useTreeStore((state) => state.importJson);
 
   const { getNodes, setViewport, getViewport } = useReactFlow();
@@ -21,6 +29,48 @@ export function TreeToolbar() {
 
   const canUndo = pastStates.length > 0;
   const canRedo = futureStates.length > 0;
+
+  // --- UNDO/REDO LOGIC ---
+  const handleUndo = useCallback(() => {
+    if (useTreeStore.getState().isPreviewMode) return; 
+    undo();
+    setTimeout(() => {
+      useTreeStore.setState({ isDirty: true });
+    }, 10);
+  }, [undo]);
+
+  const handleRedo = useCallback(() => {
+    if (useTreeStore.getState().isPreviewMode) return; 
+    redo();
+    setTimeout(() => {
+      useTreeStore.setState({ isDirty: true });
+    }, 10);
+  }, [redo]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (useTreeStore.getState().isPreviewMode) return; 
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        if (e.shiftKey) {
+          e.preventDefault();
+          if (canRedo) handleRedo();
+        } else {
+          e.preventDefault();
+          if (canUndo) handleUndo();
+        }
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        if (canRedo) handleRedo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleUndo, handleRedo, canUndo, canRedo]);
+ 
 
   const badgeClass = "absolute -bottom-1.5 right-0 rounded-[4px] bg-background border border-border px-[3px] py-[1px] text-[8px] font-bold text-muted-foreground shadow-sm leading-none z-10 pointer-events-none";
 
@@ -41,6 +91,7 @@ export function TreeToolbar() {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
+  // --- IMPORT/EXPORT LOGIC ---
   const { fileInputRef, handleExport, handleImportClick, handleFileChange } = useJsonExportImport({
     filename: "drzewo-decyzyjne.json",
     buildExportData: () => {
@@ -53,14 +104,25 @@ export function TreeToolbar() {
       };
     },
     onImport: (parsedData) => {
-      importJson(JSON.stringify(parsedData));
-    }
+      if (useTreeStore.getState().isPreviewMode) return; 
+      
+      // Prosta walidacja (tak jak w Tabeli)
+      if (parsedData.nodes && parsedData.edges) {
+          importJson(JSON.stringify(parsedData));
+           addToast("Drzewo zostało wczytane poprawnie.", "success");
+      } else {
+     
+          addToast("To nie wygląda na poprawny plik Drzewa Decyzyjnego.", "error");
+      }
+    },
+  
+    onError: (msg) => addToast(msg, "error") 
   });
 
   const exportGraph = async (format) => {
      const nodes = getNodes();
      if (nodes.length === 0) {
-       alert("Plansza jest pusta. Brak danych do eksportu.");
+       addToast("Plansza jest pusta. Brak danych do eksportu.", "warning");
        return;
      }
  
@@ -106,18 +168,17 @@ export function TreeToolbar() {
          
          /* ---> NOWE: NAPRAWA LEGENDY <--- */
          .export-force-light-legend {
-           background-color: #ffffff !important; /* Sztywny biały kolor, zero przezroczystości */
-           backdrop-filter: none !important; /* Zabijamy blur, który psuje tło */
-           border-color: #e2e8f0 !important; /* Sztywny jasny border (Tailwind slate-200) */
-           color: #64748b !important; /* Sztywny jasny muted-foreground (Tailwind slate-500) */
+           background-color: #ffffff !important; 
+           backdrop-filter: none !important; 
+           border-color: #e2e8f0 !important; 
+           color: #64748b !important; 
          }
          
          .export-force-light-legend svg {
-           color: #0f172a !important; /* Sztywny jasny text-foreground (Tailwind slate-900) */
-           fill: #ffffff !important; /* Jasne wypełnienie środka ikonek */
+           color: #0f172a !important; 
+           fill: #ffffff !important; 
          }
         
-
          input[placeholder^="Etap"], input[placeholder="Konsekwencje"] {
            color: #1e293b !important;
          }
@@ -178,13 +239,14 @@ export function TreeToolbar() {
    };
 
   return (
+   
     <div className="tree-toolbar-export absolute top-3 left-3 z-10 flex items-center gap-1 rounded-lg border border-border bg-card/95 p-1.5 shadow-sm backdrop-blur-sm">
       
-      <Button variant="ghost" size="icon" onClick={() => undo()} disabled={!canUndo} title="Cofnij (Ctrl+Z)">
+      <Button variant="ghost" size="icon" onClick={handleUndo} disabled={!canUndo || isPreviewMode} title="Cofnij (Ctrl+Z)">
         <Undo2 className="w-[18px] h-[18px]" />
       </Button>
       
-      <Button variant="ghost" size="icon" onClick={() => redo()} disabled={!canRedo} title="Ponów (Ctrl+Y)">
+      <Button variant="ghost" size="icon" onClick={handleRedo} disabled={!canRedo || isPreviewMode} title="Ponów (Ctrl+Y)">
         <Redo2 className="w-[18px] h-[18px]" />
       </Button>
 
@@ -204,11 +266,21 @@ export function TreeToolbar() {
         className="hidden" 
       />
 
-      <Button variant="ghost" size="icon" onClick={handleImportClick} title="Wczytaj projekt z pliku (JSON)">
+      {/* POPRAWKA: Zabezpieczenie onClick na imporcie (gdyby komponent Button puszczał kliknięcia pomimo disabled) */}
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={(e) => {
+          if (isPreviewMode) return;
+          handleImportClick(e);
+        }} 
+        disabled={isPreviewMode}
+        title="Wczytaj decuzje z pliku (JSON)"
+      >
         <FolderOpen className="w-[18px] h-[18px] text-muted-foreground" />
       </Button>
 
-      <Button variant="ghost" size="icon" onClick={handleExport} title="Zapisz projekt jako plik (JSON)">
+      <Button variant="ghost" size="icon" onClick={handleExport} title="Zapisz decyzję jako plik (JSON)">
         <Save className="w-[18px] h-[18px] text-muted-foreground" />
       </Button>
       
@@ -223,6 +295,9 @@ export function TreeToolbar() {
         <FileText className="w-[18px] h-[18px]" />
         <span className={badgeClass}>PDF</span>
       </Button>
+      
     </div>
+    
+    
   );
 }

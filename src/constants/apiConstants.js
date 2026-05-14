@@ -1,0 +1,30 @@
+
+export const PROJECT_STATUS = {
+  DRAFT: 'DRAFT',
+  FINALIZED: 'FINALIZED',
+  ARCHIVED: 'ARCHIVED',
+};
+
+export const SNAPSHOT_TRIGGERS = {
+  MANUAL: 'MANUAL',
+  AUTO: 'AUTO',
+  PRE_REJECTION: 'PRE_REJECTION',
+  PRE_RESTORE: 'PRE_RESTORE',
+};
+
+export const API_PATHS = {
+  AUTH: {
+    LOGIN: '/api/v1/auth/login',
+    REGISTER: '/api/v1/auth/register',
+    LOGOUT: '/api/v1/auth/logout',
+    REFRESH: '/api/v1/auth/refresh',
+  },
+  PROJECTS: {
+    BASE: '/api/v1/projects',
+    BY_ID: (id) => `/api/v1/projects/${id}`,
+    CONTENT: (id) => `/api/v1/projects/${id}/content`,
+    NOTES: (id) => `/api/v1/projects/${id}/notes`,
+    SNAPSHOTS: (id) => `/api/v1/projects/${id}/snapshots`,
+    SNAPSHOT: (id, snapId) => `/api/v1/projects/${id}/snapshots/${snapId}`,
+  },
+};

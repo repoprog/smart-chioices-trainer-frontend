@@ -22,6 +22,8 @@ export function TreeCanvas() {
   const allNodes = useTreeStore((s) => s.nodes)
   const allEdges = useTreeStore((s) => s.edges)
   const storeWinningPath = useTreeStore((s) => s.winningPath);
+    const isPreviewMode = useTreeStore((s) => s.isPreviewMode);
+
 
   const winningPath = useMemo(() => {
     return storeWinningPath instanceof Set 
@@ -96,9 +98,22 @@ export function TreeCanvas() {
 return (
     <div 
       id="tree-canvas-container" 
-    
-      className="relative flex-1 w-full h-full min-h-[560px] bg-background transition-colors"
+      className={`relative flex-1 w-full h-full min-h-[560px] bg-background transition-colors ${
+        isPreviewMode ? "opacity-90 grayscale-[0.1]" : ""
+      }`}
     >
+      {/* --- MAGICZNY CSS SNAJPER --- */}
+      {/* Odbiera kliknięcia tylko elementom na płótnie, przepuszczając je do tła (dzięki czemu działa przesuwanie planszy i przyciski z CustomControls) */}
+      {isPreviewMode && (
+        <style>{`
+          .react-flow__node *,
+          .react-flow__edgelabel-renderer *,
+          .react-flow__viewport-portal * {
+            pointer-events: none !important;
+          }
+        `}</style>
+      )}
+
       <div className="relative min-h-0 flex-1 h-full [&_.react-flow__node:hover]:!z-[10000] [&_.react-flow__node.selected]:!z-[9999] [&_.react-flow__node]:z-10">
         <ReactFlow
           className="h-full w-full"
@@ -110,9 +125,12 @@ return (
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           defaultEdgeOptions={{ type: 'smartChoices' }}
-          nodesDraggable
-          nodesConnectable={false}
-          elementsSelectable
+          
+          /* --- NATYWNE BLOKADY REACT FLOW --- */
+          nodesDraggable={!isPreviewMode}
+          nodesConnectable={!isPreviewMode}
+          elementsSelectable={!isPreviewMode}
+
           minZoom={0.35}
           maxZoom={1.75}
           proOptions={{ hideAttribution: true }}
@@ -150,5 +168,4 @@ return (
       </div>
     </div>
   )
-
 }

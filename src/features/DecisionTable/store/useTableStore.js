@@ -28,6 +28,10 @@ const initialTableState = {
   currentProjectId: null,
   isSaving: false,
   saveError: null,
+
+  // --- TIME MACHINE (PREVIEW) STATE ---
+  isPreviewMode: false,
+  previewingSnapshotId: null,
 };
 
 export const useTableStore = create()(
@@ -36,11 +40,15 @@ export const useTableStore = create()(
     (set, get) => ({ 
       ...initialTableState,
 
+      enterPreviewMode: (snapshotId) => set({ isPreviewMode: true, previewingSnapshotId: snapshotId, isDirty: false }),
+      exitPreviewMode: () => set({ isPreviewMode: false, previewingSnapshotId: null }),
+
       setCurrentProject: (id) => set({ currentProjectId: id }),
 
       saveToBackend: async () => {
         const state = get();
-        if (!state.currentProjectId) return;
+        // ← guard (DODANO state.isPreviewMode)
+        if (!state.currentProjectId || state.isSaving || state.isPreviewMode) return; 
 
         set({ isSaving: true, saveError: null });
         try {
@@ -64,7 +72,7 @@ export const useTableStore = create()(
         try {
           const data = await decisionApi.getTableTemplate(templateId);
           get().loadScenario(data); 
-          set({ currentProjectId: null }); // Tu czyścimy ręcznie, bo to szablon
+         get().loadScenario(data, { clearProjectId: true })
         } catch (error) {
           console.error("Błąd ładowania szablonu tabeli:", error);
         } finally {
@@ -73,7 +81,7 @@ export const useTableStore = create()(
       },
 
       loadCloudProject: async (projectId) => {
-        set({ isLoading: true });
+        set({ isLoading: true, loadError: null }); // <-- Reset błędu
         try {
           const project = await decisionApi.getProject(projectId);
           
@@ -85,14 +93,19 @@ export const useTableStore = create()(
           const safeContent = rawContent || {};
 
           get().loadScenario(safeContent); 
-          set({ currentProjectId: projectId }); // Podpinamy do chmury, auto-zapis włączony
+          set({ currentProjectId: projectId });
         } catch (error) {
           console.error("Błąd ładowania projektu tabeli z bazy:", error);
+          const message = error.response?.status === 403
+            ? 'Brak dostępu do tej decyzji.'
+            : error.response?.status === 404
+              ? 'Decuzja nie istnieje lub została usunięta.'
+              : 'Błąd połączenia z serwerem.';
+          set({ loadError: message }); // <-- USTAWIANIE BŁĘDU
         } finally {
           set({ isLoading: false });
         }
       },
-
       // --- UI & State Actions ---
       toggleTradeoffs: () => set((state) => {
         if (!state.showTradeoffs) return { showTradeoffs: true, originalCells: { ...state.cells }, showRanking: false };
@@ -230,7 +243,7 @@ export const useTableStore = create()(
       clearScales: () => set({ customScales: [], activePreset: null }),
       
       // --- LOAD & RESET ---
-      loadScenario: (scenario) => set({
+      loadScenario: (scenario, { clearProjectId = false } = {}) => set((state) => ({
         alternatives: scenario.alternatives || [],
         objectives: scenario.objectives || [],
         cells: scenario.cells || {},
@@ -239,14 +252,27 @@ export const useTableStore = create()(
         rejectedAlternatives: [],
         showTradeoffs: false,
         showRanking: false,
-        winnerIndex: null,
-        isDirty: false 
-      }),
+        isDirty: false,
+        ...(clearProjectId && { currentProjectId: null }) // Clear safe
+      })),
       
       resetAll: () => set({ ...initialTableState }), 
     }),
     {
-      name: 'smart-choices-storage', 
+      name: 'table-storage', 
+      // DODANE PARTIALIZE - chroni przed zapisywaniem currentProjectId!
+      partialize: (state) => ({
+        alternatives: state.alternatives,
+        objectives: state.objectives,
+        cells: state.cells,
+        objectiveUnits: state.objectiveUnits,
+        sortDirections: state.sortDirections,
+        customScales: state.customScales,
+        activePreset: state.activePreset,
+        showTradeoffs: state.showTradeoffs,
+        showRanking: state.showRanking,
+        hideEqualizedObjectives: state.hideEqualizedObjectives,
+      }),
     }
   )
 );

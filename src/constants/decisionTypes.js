@@ -21,3 +21,8 @@ export const EVALUATION_MODES = {
   MAX: 'max',
   MIN: 'min',
 };
+
+export const PROJECT_TYPES = {
+  TREE: 'TREE',
+  TABLE: 'TABLE',
+};

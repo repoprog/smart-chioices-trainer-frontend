@@ -1,4 +1,17 @@
 import { DOMINATION_TYPES } from '../../../constants/decisionTypes';
+import { useState } from 'react'; 
+
+
+const getPluralForm = (count, forms) => {
+  // forms = ['single', 'plural_2_3_4', 'plural_5_do_21']
+  if (count === 1) return forms[0];
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) {
+    return forms[1];
+  }
+  return forms[2];
+};
 
 export function TableHeader({
   objectives,
@@ -13,6 +26,12 @@ export function TableHeader({
   updateAlternative,
   onRemoveAlternative,
 }) {
+  const [localAlts, setLocalAlts] = useState({}); 
+
+
+  const objectivesText = getPluralForm(objectives.length, ['Cel', 'Cele', 'Celów']);
+  const alternativesText = getPluralForm(alternatives.length, ['Alternatywa', 'Alternatywy', 'Alternatyw']);
+
   return (
     <thead>
       <tr>
@@ -22,7 +41,10 @@ export function TableHeader({
               <span className="inline-flex items-center text-primary bg-primary/10 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-dashed border-primary/30">Dodaj cel →</span>
             )}
             <button className="inline-flex justify-center items-center bg-card text-muted-foreground font-bold cursor-pointer transition-all border border-border w-7 h-7 rounded-lg text-lg leading-none enabled:hover:border-primary/50 enabled:hover:text-foreground enabled:hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed shrink-0" onClick={addObjective} title="Dodaj cel" disabled={showRanking}>+</button>
-            <span>{objectives.length} Cele / {alternatives.length} Alternatywy</span>
+            
+            {/* ZASTOSOWANIE INTELIGENTNEJ ODMIANY */}
+            <span>{objectives.length} {objectivesText} / {alternatives.length} {alternativesText}</span>
+            
             <button className="inline-flex justify-center items-center bg-card text-muted-foreground font-bold cursor-pointer transition-all border border-border w-7 h-7 rounded-lg text-lg leading-none enabled:hover:border-primary/50 enabled:hover:text-foreground enabled:hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed shrink-0" onClick={addAlternative} title="Dodaj alternatywę" disabled={showRanking}>+</button>
             {alternatives.length === 0 && (
               <span className="inline-flex items-center text-primary bg-primary/10 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-dashed border-primary/30">← Dodaj opcję</span>
@@ -42,6 +64,9 @@ export function TableHeader({
           else if (domType === DOMINATION_TYPES.PRACTICAL) headerColor = "text-amber-600 dark:text-amber-400";
 
           const winnerClasses = isWinner ? "bg-green-50 dark:bg-green-900/10" : "";
+          
+    
+          const displayValue = localAlts[colIndex] !== undefined ? localAlts[colIndex] : alt;
 
           return (
             <th
@@ -53,8 +78,21 @@ export function TableHeader({
                 {isWinner}
                 <input
                   className={`w-full py-2 px-1 border border-transparent bg-transparent rounded-md text-sm transition-all box-border [&:not(:read-only)]:hover:bg-card/80 [&:not(:read-only)]:focus:outline-none [&:not(:read-only)]:focus:bg-card [&:not(:read-only)]:focus:border-primary [&:not(:read-only)]:focus:ring-2 [&:not(:read-only)]:focus:ring-primary/20 uppercase font-bold tracking-wide text-center ${headerColor}`}
-                  value={alt}
-                  onChange={(e) => updateAlternative(colIndex, e.target.value)}
+                  value={displayValue}
+                  onChange={(e) => setLocalAlts(prev => ({ ...prev, [colIndex]: e.target.value }))}
+                  onBlur={() => {
+                    if (localAlts[colIndex] !== undefined) {
+                      updateAlternative(colIndex, localAlts[colIndex]);
+                      setLocalAlts(prev => {
+                        const next = { ...prev };
+                        delete next[colIndex];
+                        return next;
+                      });
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') e.currentTarget.blur();
+                  }}
                   disabled={showRanking}
                 />
                 <button

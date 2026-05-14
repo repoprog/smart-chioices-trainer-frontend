@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { API_PATHS } from '../constants/apiConstants';
+import { STORAGE_KEYS } from '../constants/appConstants';
 
 // 1. Inicjalizacja klienta
 const apiClient = axios.create({
@@ -9,7 +11,8 @@ const apiClient = axios.create({
 // 2. Request Interceptor - doklejanie tokena "do każdej paczki"
 apiClient.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('sc_access_token');
+       
+        const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -36,7 +39,7 @@ apiClient.interceptors.response.use(
             try {
                 // Próba odświeżenia tokena. Zwykły axios, nie apiClient, żeby nie wpaść w pętlę interceptorów!
                 const refreshResponse = await axios.post(
-                    `${import.meta.env.VITE_API_URL}/api/v1/auth/refresh`,
+                    `${import.meta.env.VITE_API_URL}${API_PATHS.AUTH.REFRESH}`,
                     {},
                     { withCredentials: true }
                 );
@@ -44,8 +47,8 @@ apiClient.interceptors.response.use(
                 // Pobieramy nowy token z odpowiedzi
                 const newAccessToken = refreshResponse.data.accessToken;
 
-                // Zapisujemy nowy token w localStorage
-                localStorage.setItem('sc_access_token', newAccessToken);
+                // Zapisujemy nowy token w localStorage 
+                localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken);
 
                 // Aktualizujemy nagłówek w oryginalnym zapytaniu i ponawiamy je
                 originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
@@ -53,8 +56,9 @@ apiClient.interceptors.response.use(
 
             } catch (refreshError) {
                 // Odświeżanie się nie udało (np. wygasł również Refresh Token)
-                localStorage.removeItem('sc_access_token');
-                window.location.href = '/login'; // Brutalne przekierowanie na login
+              
+                localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+                
                 return Promise.reject(refreshError);
             }
         }

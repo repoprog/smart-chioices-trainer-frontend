@@ -1,60 +1,85 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import apiClient from '../api/apiClient'; 
+import { API_PATHS } from '../constants/apiConstants';
+import { STORAGE_KEYS } from '../constants/appConstants';
 
 const useAuthStore = create(
     persist(
         (set, get) => ({
             user: null,
-            accessToken: null,
             isAuthenticated: false,
+            isLoading: false,
+            error: null,
 
             login: async (email, password) => {
+                set({ isLoading: true, error: null });
+                try {
                 // Używamy apiClient (wykona POST na http://localhost:8080/api/v1/auth/login)
-                const response = await apiClient.post('/api/v1/auth/login', { email, password });
+               const response = await apiClient.post(API_PATHS.AUTH.LOGIN, { email, password });
                 
                 // Zakładamy, że backend zwraca taki obiekt: { accessToken: "...", user: { id, email, role } }
                 const { accessToken, user } = response.data;
                 
-                // Zapisujemy token ręcznie do localStorage, bo apiClient z Kroku 1 stamtąd go czyta
-                localStorage.setItem('sc_access_token', accessToken);
+                // Zapisujemy token WYŁĄCZNIE do localStorage jako jedyne źródło prawdy (Single Source of Truth)
+               localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
 
-                // Aktualizujemy stan globalny
-                set({ user, accessToken, isAuthenticated: true });
+                // Aktualizujemy stan globalny (bez tokena!)
+                set({ user, isAuthenticated: true, isLoading: false });
+                } catch (error) {
+                    set({ isLoading: false, error: error.response?.data?.message || 'Błąd logowania' });
+                    throw error;
+                }
+                
             },
 
             register: async (email, password) => {
-                await apiClient.post('/api/v1/auth/register', { email, password });
+                set({ isLoading: true, error: null });
+                try {
+                await apiClient.post(API_PATHS.AUTH.REGISTER, { email, password });
                 // Po udanej rejestracji od razu automatycznie logujemy użytkownika
                 await get().login(email, password);
+                } catch (error) {
+                    set({ isLoading: false, error: error.response?.data?.message || 'Błąd rejestracji' });
+                    throw error;
+                }
             },
 
             logout: async () => {
+                set({ isLoading: true });
                 try {
                     // Próbujemy powiadomić backend, żeby usunął ciasteczko z Refresh Tokenem
-                    await apiClient.post('/api/v1/auth/logout');
+                  await apiClient.post(API_PATHS.AUTH.LOGOUT);
                 } catch (error) {
                     console.error("Błąd podczas wylogowywania na backendzie", error);
                 } finally {
                     // Niezależnie od backendu, czyścimy frontend
-                    localStorage.removeItem('sc_access_token');
-                    set({ user: null, accessToken: null, isAuthenticated: false });
+                   localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+                   set({ user: null, isAuthenticated: false, isLoading: false, error: null });
                 }
             },
 
             refreshToken: async () => {
                 // Ciasteczko HttpOnly z Refresh Tokenem leci automatycznie dzięki withCredentials: true
-                const response = await apiClient.post('/api/v1/auth/refresh');
+                // Zwykle to interceptor w apiClient robi to w tle, ale zostawiamy to jako funkcję pomocniczą
+                const response = await apiClient.post(API_PATHS.AUTH.REFRESH);
                 const { accessToken } = response.data;
                 
-                localStorage.setItem('sc_access_token', accessToken);
-                set({ accessToken, isAuthenticated: true });
+                // Token ląduje tylko w localStorage
+               localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
+                set({ isAuthenticated: true });
                 
                 return accessToken;
             }
         }),
         {
-            name: 'auth-storage', // Zustand automatycznie zapisze stan 'user' i 'isAuthenticated' pod tym kluczem w localStorage
+            name: STORAGE_KEYS.AUTH,
+            // ZABEZPIECZENIE: Zustand zapisze na dysku TYLKO usera i flagę 'isAuthenticated'
+            // Ignoruje isLoading i error, dzięki czemu po (F5) stany błędów i ładowania się resetują!
+            partialize: (state) => ({
+                user: state.user,
+                isAuthenticated: state.isAuthenticated,
+            }),
         }
     )
 );

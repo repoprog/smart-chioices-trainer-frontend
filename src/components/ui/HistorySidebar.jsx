@@ -1,5 +1,5 @@
 import React from "react";
-import { X, Calendar, FileText } from "lucide-react";
+import { X, Calendar, FileText, History, Eye } from "lucide-react";
 
 export function HistorySidebar({
   isOpen,
@@ -24,7 +24,8 @@ export function HistorySidebar({
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between p-4 border-b border-border">
             <div className="flex items-center gap-2">
-              <span className="text-xl">🕒</span>
+            
+              <History className="w-5 h-5 text-muted-foreground" />
               <h3 className="font-medium">Historia wersji</h3>
             </div>
             <button
@@ -55,10 +56,11 @@ export function HistorySidebar({
                     }}
                     className="w-full text-left p-3 border border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-colors group"
                   >
-                    <div className="font-medium mb-2 group-hover:text-primary transition-colors line-clamp-2 leading-tight">
+                    <div className="font-medium mb-1.5 group-hover:text-primary transition-colors line-clamp-2 leading-tight">
                       {item.title}
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+                    
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
                       <Calendar className="w-3 h-3" />
                       {new Date(item.date).toLocaleDateString("pl-PL", {
                         year: "numeric",
@@ -68,23 +70,32 @@ export function HistorySidebar({
                         minute: "2-digit"
                       })}
                     </div>
+                    
                     {item.tags && item.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
+                      <div className="flex flex-wrap gap-1">
                         {item.tags.slice(0, 3).map((tag) => (
                           <span
                             key={tag}
-                            className="px-2 py-0.5 bg-muted text-muted-foreground text-[10px] uppercase font-bold rounded-full"
+                            // Zmniejszony padding i tekst dla tagów (px-1.5 py-[2px] text-[9px])
+                            className="px-1.5 py-[2px] bg-muted text-muted-foreground text-[9px] uppercase font-bold rounded-full leading-none"
                           >
                             {tag}
                           </span>
                         ))}
                         {item.tags.length > 3 && (
-                          <span className="px-2 py-0.5 text-muted-foreground text-[10px] font-bold">
+                          <span className="px-1.5 py-[2px] text-muted-foreground text-[9px] font-bold leading-none">
                             +{item.tags.length - 3}
                           </span>
                         )}
                       </div>
+                      
                     )}
+
+                    {/* ANIMOWANY FADE-IN: Bez zmiany wysokości (h-4 rezerwuje miejsce) */}
+                    <div className="flex items-center gap-1.5 text-[11px] font-medium text-primary mt-2 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <Eye className="w-3.5 h-3.5" />
+                      Kliknij, aby podejrzeć wersję
+                    </div>
                   </button>
                 ))}
               </div>
