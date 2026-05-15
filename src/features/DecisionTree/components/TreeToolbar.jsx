@@ -19,7 +19,6 @@ export function TreeToolbar() {
 
   const addToast = useToastStore((s) => s.addToast);
   
-  // USUNIĘTO: const [toastMessage, setToastMessage] = useState(null);
   
   const isPreviewMode = useTreeStore((s) => s.isPreviewMode); 
   const importJson = useTreeStore((state) => state.importJson);
@@ -275,7 +274,7 @@ export function TreeToolbar() {
           handleImportClick(e);
         }} 
         disabled={isPreviewMode}
-        title="Wczytaj decuzje z pliku (JSON)"
+        title="Wczytaj decyzje z pliku (JSON)"
       >
         <FolderOpen className="w-[18px] h-[18px] text-muted-foreground" />
       </Button>

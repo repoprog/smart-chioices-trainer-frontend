@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { decisionApi } from '../api/decisionApi';
 import { useToastStore } from '../store/useToastStore'; 
+import { NODE_TYPES } from '../constants/decisionTypes';
 
 import { APP_ROUTES, STORAGE_KEYS } from '../constants/appConstants';
-import { SNAPSHOT_TRIGGERS } from '../constants/apiConstants';
 
 export function useCloudProjectActions({
   projectType,
@@ -14,11 +14,10 @@ export function useCloudProjectActions({
   loadScenarioFn,
   enterPreviewMode,
   exitPreviewMode,
-  setGlobalDirty
+  getCurrentStateFn
 }) {
   const navigate = useNavigate();
   const addToast = useToastStore(s => s.addToast); 
-
 
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -26,9 +25,8 @@ export function useCloudProjectActions({
 
   // Data States
   const [historyItems, setHistoryItems] = useState([]);
-  const [newProjectData, setNewProjectData] = useState({ title: '', notes: '' });
-  const [snapshotLabel, setSnapshotLabel] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [previewCache, setPreviewCache] = useState(null);
 
   // --- FETCH HISTORY FROM BACKEND ---
   useEffect(() => {
@@ -43,6 +41,7 @@ export function useCloudProjectActions({
           id: s.id,
           title: s.label,
           date: s.createdAt,
+          tags: s.smartTags || [] 
         }));
         setHistoryItems(mappedHistory);
       } catch (error) {
@@ -58,23 +57,22 @@ export function useCloudProjectActions({
     else setIsSnapshotModalOpen(true);
   }, [currentProjectId]);
 
-  const handleCreateProject = async (e) => {
-    e.preventDefault();
-    if (!newProjectData.title.trim()) return;
+
+  const handleCreateProject = async ({ title, notes }) => {
+    if (!title.trim()) return;
     
     setIsSaving(true);
     try {
-      const res = await decisionApi.createProject(newProjectData.title, projectType);
-      if (newProjectData.notes.trim()) {
-        await decisionApi.patchNotes(res.id, newProjectData.notes);
+      const res = await decisionApi.createProject(title, projectType);
+      if (notes.trim()) {
+        await decisionApi.patchNotes(res.id, notes);
       }
       
       setCurrentProject(res.id);
       await saveToBackend(); 
       
-      addToast("Decuzja została utworzona!", "success"); 
+      addToast("Decyzja została utworzona!", "success"); 
       setIsCreateModalOpen(false);
-      setNewProjectData({ title: '', notes: '' });
     } catch (error) {
       console.error("Błąd tworzenia decyzji:", error);
       const isUnauthorized = error.response?.status === 401;
@@ -82,8 +80,8 @@ export function useCloudProjectActions({
       
       if (isUnauthorized) {
         sessionStorage.setItem(STORAGE_KEYS.PENDING_SAVE, JSON.stringify({
-          title: newProjectData.title,
-          notes: newProjectData.notes,
+          title: title, 
+          notes: notes, 
           type: projectType 
         }));
         
@@ -93,10 +91,10 @@ export function useCloudProjectActions({
       
       addToast(
         isUnauthorized 
-          ? "Zaloguj się, aby zapisać decuzje w chmurze." 
+          ? "Zaloguj się, aby zapisać decyzje w chmurze." 
           : isNetworkError
             ? "Brak połączenia z serwerem. Sprawdź internet lub spróbuj później."
-            : "Wystąpił błąd podczas tworzenia decuzji.", 
+            : "Wystąpił błąd podczas tworzenia decyzji.", 
         "error"
       );
     } finally {
@@ -104,25 +102,23 @@ export function useCloudProjectActions({
     }
   };
 
-  const handleCreateSnapshot = async (e) => {
-    e.preventDefault();
-    if (!snapshotLabel.trim() || !currentProjectId) return;
+const handleCreateSnapshot = async (label) => {
+    if (!label.trim() || !currentProjectId) return;
 
     setIsSaving(true);
     try {
       await saveToBackend();
-      const newSnapshot = await decisionApi.createSnapshot(currentProjectId, snapshotLabel);
+      const newSnapshot = await decisionApi.createSnapshot(currentProjectId, label);
       
       setHistoryItems(prev => [{
         id: newSnapshot.id, 
         title: newSnapshot.label,
         date: newSnapshot.createdAt,
-        tags: ['RĘCZNY']
+        tags: newSnapshot.smartTags || [] // Używamy tagów wyliczonych przez backend
       }, ...prev]);
 
-      addToast(`Wersja "${snapshotLabel}" zapisana.`, "success");
+      addToast(`Wersja "${label}" zapisana.`, "success");
       setIsSnapshotModalOpen(false);
-      setSnapshotLabel('');
     } catch (error) {
       console.error("Błąd snapshotu:", error);
       const isUnauthorized = error.response?.status === 401;
@@ -142,9 +138,19 @@ export function useCloudProjectActions({
   };
 
   const handleSelectHistoryItem = async (id) => {
+  
+    if (!currentProjectId) {
+      addToast('Zapisz projekt w chmurze, aby przeglądać historię.', 'warning');
+      setIsHistoryOpen(false);
+      return;
+    }
+
     setIsSaving(true);
     try {
       await saveToBackend();
+      if (getCurrentStateFn) {
+        setPreviewCache(getCurrentStateFn());
+      }
       const snapshot = await decisionApi.getSnapshot(currentProjectId, id);
       let rawContent = snapshot.content;
       if (typeof rawContent === 'string') {
@@ -164,37 +170,51 @@ export function useCloudProjectActions({
     }
   };
 
-  const handleRestoreVersion = async () => {
-    exitPreviewMode();
-    setGlobalDirty(true);
-    await saveToBackend();
-    addToast("Wersja została przywrócona.", "success");
-  };
-
-  const handleClosePreview = async () => {
+ const handleRestoreVersion = async () => {
+    setIsSaving(true); 
     try {
-      const original = await decisionApi.getProject(currentProjectId);
-      let rawContent = original.content;
-      if (typeof rawContent === 'string') {
-        try { rawContent = JSON.parse(rawContent); } catch(e){}
-      }
       
-      loadScenarioFn(rawContent || {});
+      await saveToBackend();
+      
       exitPreviewMode();
-    } catch(e) {
-       addToast("Błąd podczas wracania do aktualnej wersji.", "error");
+      
+      addToast("Wersja przywrócona i zapisana w chmurze.", "success");
+    } catch (error) {
+      console.error("Błąd przywracania wersji:", error);
+      addToast("Błąd połączenia. Nie udało się zapisać przywróconej wersji.", "error");
+    } finally {
+      setIsSaving(false);
     }
   };
 
+  const handleClosePreview = async () => {
+    if (previewCache) {
+      loadScenarioFn(previewCache);
+      setPreviewCache(null);
+      exitPreviewMode();
+      return;
+    } 
+      try {
+        const original = await decisionApi.getProject(currentProjectId);
+        let rawContent = original.content;
+        if (typeof rawContent === 'string') {
+          try { rawContent = JSON.parse(rawContent); } catch(e){}
+        }
+        
+        loadScenarioFn(rawContent || {});
+        exitPreviewMode();
+      } catch(e) {
+         addToast("Błąd połączenia. Przywrócono lokalny stan.", "error");
+      }
+  };
+    
   return {
     isHistoryOpen, setIsHistoryOpen,
     isCreateModalOpen, setIsCreateModalOpen,
     isSnapshotModalOpen, setIsSnapshotModalOpen,
-    // toast, setToast zostały usunięte z return
     historyItems,
     isSaving, setIsSaving,
-    newProjectData, setNewProjectData,
-    snapshotLabel, setSnapshotLabel,
+   
     handleSaveClick,
     handleCreateProject,
     handleCreateSnapshot,

@@ -3,6 +3,11 @@ import { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Table2, Network, User, Settings as SettingsIcon, LogOut, LogIn, UserPlus } from "lucide-react";
 import useAuthStore from "../../store/useAuthStore";
+
+
+import {useTableStore} from "../../features/DecisionTable/store/useTableStore";
+import {useTreeStore} from "../../features/DecisionTree/store/useTreeStore";
+
 import { Button } from "../ui/Button";
 import { ConfirmModal } from "../ui/ConfirmModal";
 import { APP_ROUTES } from "../../constants/appConstants"; 
@@ -12,6 +17,11 @@ export function Layout() {
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuthStore();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+
+  const isTablePreview = useTableStore(s => s.isPreviewMode);
+  const isTreePreview = useTreeStore(s => s.isPreviewMode);
+  const isAnyPreview = isTablePreview || isTreePreview;
 
   const isActive = (path) => location.pathname.startsWith(path);
 
@@ -48,8 +58,10 @@ export function Layout() {
             )}
           </div>
 
-          {/* Navigation */}
-          <nav className="flex items-center gap-1">
+          {/* Navigation  */}
+          <nav className={`flex items-center gap-1 transition-all duration-300 ${
+            isAnyPreview ? "pointer-events-none opacity-40 grayscale" : ""
+          }`}>
             {publicMenuItems.map(({ path, label, icon: Icon }) => (
               <Link
                 key={path}

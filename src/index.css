@@ -14,6 +14,9 @@
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --radius-lg: 0.5rem;
+
+  --color-feature-table: #a855f7; /* purple-500 */
+  --color-feature-tree: #06b6d4;  /* cyan-500 */
 }
 
 html {

@@ -71,7 +71,6 @@ export const useTableStore = create()(
         set({ isLoading: true });
         try {
           const data = await decisionApi.getTableTemplate(templateId);
-          get().loadScenario(data); 
          get().loadScenario(data, { clearProjectId: true })
         } catch (error) {
           console.error("Błąd ładowania szablonu tabeli:", error);
@@ -99,7 +98,7 @@ export const useTableStore = create()(
           const message = error.response?.status === 403
             ? 'Brak dostępu do tej decyzji.'
             : error.response?.status === 404
-              ? 'Decuzja nie istnieje lub została usunięta.'
+              ? 'Decyzja nie istnieje lub została usunięta.'
               : 'Błąd połączenia z serwerem.';
           set({ loadError: message }); // <-- USTAWIANIE BŁĘDU
         } finally {
@@ -253,7 +252,10 @@ export const useTableStore = create()(
         showTradeoffs: false,
         showRanking: false,
         isDirty: false,
-        ...(clearProjectId && { currentProjectId: null }) // Clear safe
+        ...(clearProjectId && { 
+          currentProjectId: null,
+           isPreviewMode: false,
+          previewingSnapshotId: null}) // Clear safe
       })),
       
       resetAll: () => set({ ...initialTableState }), 

@@ -4,7 +4,7 @@ import { Save, FileText, Scale, Trophy, History, Camera } from 'lucide-react';
 import { Button } from '../../../components/ui/Button'; 
 import { Tooltip } from '../../../components/ui/Tooltip'; 
 import { HistorySidebar } from '../../../components/ui/HistorySidebar';
-import { useToastStore } from '../../../store/useToastStore'; 
+
 import { HistoryPreviewBanner } from '../../../components/ui/HistoryPreviewBanner'; 
 import { usePendingProjectSave } from '../../../hooks/usePendingProjectSave';
 import { useCloudProjectActions } from '../../../hooks/useCloudProjectActions';
@@ -24,8 +24,6 @@ export function TablePageToolbar({ showTemplates, setShowTemplates }) {
   const toggleRanking = useTableStore(s => s.toggleRanking);
   const setCurrentProject = useTableStore(s => s.setCurrentProject);
 
-  const addToast = useToastStore(s => s.addToast);
-
   const actions = useCloudProjectActions({
     projectType: PROJECT_TYPES.TABLE, 
     currentProjectId,
@@ -34,7 +32,17 @@ export function TablePageToolbar({ showTemplates, setShowTemplates }) {
     enterPreviewMode: useTableStore.getState().enterPreviewMode,
     exitPreviewMode: useTableStore.getState().exitPreviewMode,
     setGlobalDirty: (val) => useTableStore.setState({ isDirty: val }),
-    loadScenarioFn: (safeContent) => useTableStore.getState().loadScenario(safeContent)
+    loadScenarioFn: (safeContent) => useTableStore.getState().loadScenario(safeContent),
+    getCurrentStateFn: () => {
+      const state = useTableStore.getState();
+      return {
+        alternatives: state.alternatives,
+        objectives: state.objectives,
+        cells: state.cells,
+        objectiveUnits: state.objectiveUnits,
+        sortDirections: state.sortDirections
+      };
+    }
   });
 
   usePendingProjectSave({
@@ -42,8 +50,6 @@ export function TablePageToolbar({ showTemplates, setShowTemplates }) {
     setCurrentProject, 
     saveToBackend: useTableStore.getState().saveToBackend,
     setIsSaving: actions.setIsSaving,
-    // Bezpośrednie przekazanie globalnego Toasta
-    setToast: (t) => addToast(t.message, t.type) 
   });
 
   const previewedItem = actions.historyItems.find(item => item.id === previewingSnapshotId);
@@ -150,18 +156,14 @@ export function TablePageToolbar({ showTemplates, setShowTemplates }) {
           onClose={() => actions.setIsCreateModalOpen(false)}
           title="Zapisz tabelę decyzyjną"
           placeholder="np. Wybór dostawcy IT dla projektu X"
-          newProjectData={actions.newProjectData}
-          setNewProjectData={actions.setNewProjectData}
-          handleCreateProject={actions.handleCreateProject}
+          onSubmit={actions.handleCreateProject}
           isSaving={actions.isSaving}
         />
 
         <SaveVersionModal
           isOpen={actions.isSnapshotModalOpen}
           onClose={() => actions.setIsSnapshotModalOpen(false)}
-          snapshotLabel={actions.snapshotLabel}
-          setSnapshotLabel={actions.setSnapshotLabel}
-          handleCreateSnapshot={actions.handleCreateSnapshot}
+          onSubmit={actions.handleCreateSnapshot}
           isSaving={actions.isSaving}
         />
 

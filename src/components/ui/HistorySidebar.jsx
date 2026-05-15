@@ -71,24 +71,23 @@ export function HistorySidebar({
                       })}
                     </div>
                     
-                    {item.tags && item.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {item.tags.slice(0, 3).map((tag) => (
+                   {item.tags && item.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {item.tags.slice(0, 3).map((tag, index) => (
                           <span
-                            key={tag}
-                            // Zmniejszony padding i tekst dla tagów (px-1.5 py-[2px] text-[9px])
-                            className="px-1.5 py-[2px] bg-muted text-muted-foreground text-[9px] uppercase font-bold rounded-full leading-none"
+                            key={`${item.id}-${tag}-${index}`}
+                            // Zmieniono na większe, czytelniejsze pigułki: text-[11px], py-0.5, px-2
+                            className="px-2 py-0.5 bg-muted text-muted-foreground text-xs font-semibold rounded-full leading-none"
                           >
                             {tag}
                           </span>
                         ))}
                         {item.tags.length > 3 && (
-                          <span className="px-1.5 py-[2px] text-muted-foreground text-[9px] font-bold leading-none">
+                          <span className="px-2 py-0.5 text-muted-foreground text-xs font-semibold leading-none">
                             +{item.tags.length - 3}
                           </span>
                         )}
                       </div>
-                      
                     )}
 
                     {/* ANIMOWANY FADE-IN: Bez zmiany wysokości (h-4 rezerwuje miejsce) */}

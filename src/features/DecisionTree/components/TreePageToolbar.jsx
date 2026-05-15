@@ -5,7 +5,6 @@ import { Button } from '../../../components/ui/Button';
 import { Tooltip } from '../../../components/ui/Tooltip'; 
 import { HistorySidebar } from '../../../components/ui/HistorySidebar';
 
-import { useToastStore } from '../../../store/useToastStore'; 
 import { HistoryPreviewBanner } from '../../../components/ui/HistoryPreviewBanner'; 
 import { usePendingProjectSave } from '../../../hooks/usePendingProjectSave';
 import { useCloudProjectActions } from '../../../hooks/useCloudProjectActions';
@@ -21,7 +20,7 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
     isPreviewMode, previewingSnapshotId, setCurrentProject, 
     saveToBackend, enterPreviewMode, exitPreviewMode 
   } = useTreeStore();
-  const addToast = useToastStore(s => s.addToast);
+ 
 
   const actions = useCloudProjectActions({
     projectType: PROJECT_TYPES.TREE, 
@@ -35,7 +34,15 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
       safeContent.nodes || [], 
       safeContent.edges || [], 
       safeContent.stageColumnLabels || safeContent.labels || []
-    )
+    ),
+    getCurrentStateFn: () => {
+      const state = useTreeStore.getState();
+      return {
+        nodes: state.nodes,
+        edges: state.edges,
+        stageColumnLabels: state.stageColumnLabels
+      };
+    }
   });
 
   usePendingProjectSave({
@@ -43,8 +50,6 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
     setCurrentProject,
     saveToBackend,
     setIsSaving: actions.setIsSaving,
-    // Bezpośrednie przekazanie globalnego Toasta
-    setToast: (t) => addToast(t.message, t.type) 
   });
 
   const previewedItem = actions.historyItems.find(item => item.id === previewingSnapshotId);
@@ -144,18 +149,14 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
           onClose={() => actions.setIsCreateModalOpen(false)}
           title="Zapisz drzewo decyzyjne"
           placeholder="Np. Wybór nowej floty"
-          newProjectData={actions.newProjectData}
-          setNewProjectData={actions.setNewProjectData}
-          handleCreateProject={actions.handleCreateProject}
+          onSubmit={actions.handleCreateProject}
           isSaving={actions.isSaving}
         />
 
         <SaveVersionModal
           isOpen={actions.isSnapshotModalOpen}
           onClose={() => actions.setIsSnapshotModalOpen(false)}
-          snapshotLabel={actions.snapshotLabel}
-          setSnapshotLabel={actions.setSnapshotLabel}
-          handleCreateSnapshot={actions.handleCreateSnapshot}
+          onSubmit={actions.handleCreateSnapshot}
           isSaving={actions.isSaving}
         />
 

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Search, Edit2, Trash2, Calendar, MessageSquare, X, Tag, 
-  ExternalLink, Filter, Plus 
+  ExternalLink, Filter, Plus, Camera
 } from "lucide-react";
 
 import { decisionApi } from "../api/decisionApi";
@@ -250,6 +250,19 @@ export default function UserPanel() {
                       <Badge variant="table">Tabela</Badge>
                     ) : (
                       <Badge variant="tree">Drzewo</Badge>
+                    )}
+
+                   
+                    {/* NOWY BADGE - SNAPSHOTY */}
+                    {project.snapshotCount !== undefined && (
+                      <Badge 
+                        variant="secondary" 
+                        title={`Liczba zapisanych wersji: ${project.snapshotCount}`}
+                        className="flex items-center gap-1.5 px-2.5 py-0.5 text-xs text-muted-foreground bg-muted/40 border-border/50 cursor-help"
+                      >
+                        <Camera className="w-3.5 h-3.5" />
+                        <span>{project.snapshotCount}</span>
+                      </Badge>
                     )}
                   </div>
                   <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
