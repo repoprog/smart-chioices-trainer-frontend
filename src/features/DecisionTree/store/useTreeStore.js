@@ -468,9 +468,12 @@ export const useTreeStore = create()(
         evaluationMap: state.evaluationMap,
         winningPath: state.winningPath, 
       }),
-      // --- History guard for redo/undo ---
-      equality: (pastState, currentState) => {
-        return JSON.stringify(pastState) === JSON.stringify(currentState);
+      // --- History guard for redo/undo - shallow comparison for better performance --- 
+     equality: (pastState, currentState) => {
+        return pastState.nodes === currentState.nodes &&
+               pastState.edges === currentState.edges &&
+               pastState.stageColumnLabels === currentState.stageColumnLabels &&
+               pastState.evaluationMode === currentState.evaluationMode;
       },
     }
    ),

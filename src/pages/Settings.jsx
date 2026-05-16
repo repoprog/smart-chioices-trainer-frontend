@@ -1,20 +1,36 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { User, Lock, Bell, Palette, Save, Mail } from "lucide-react";
+
 import { Input } from "../components/ui/Input"; 
 import { Button } from "../components/ui/Button";
-import { Card } from "../components/ui/Card"; // <-- IMPORT NASZEJ KARTY
+import { Card } from "../components/ui/Card";
+import { userApi } from "../api/userApi";
+import useAuthStore from "../store/useAuthStore";
+// IMPORT TWOJEGO STORE'A OD TOASTÓW:
+import { useToastStore } from "../store/useToastStore"; 
+
+const profileSchema = z.object({
+  name: z.string().min(2, "Imię musi mieć minimum 2 znaki"),
+  email: z.string().email("Nieprawidłowy format adresu email"),
+});
+
+const passwordSchema = z.object({
+  currentPassword: z.string().min(1, "Obecne hasło jest wymagane"),
+  newPassword: z.string().min(8, "Nowe hasło musi mieć minimum 8 znaków"),
+  confirmPassword: z.string()
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Nowe hasła nie pasują do siebie",
+  path: ["confirmPassword"],
+});
 
 export default function Settings() {
-  const [profileData, setProfileData] = useState({
-    name: "Jan Kowalski",
-    email: "jan.kowalski@example.com",
-  });
-
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
+  const { user, updateUser } = useAuthStore(); 
+  const addToast = useToastStore((state) => state.addToast); // Pobieramy akcję z Twojego store'a
+  
+  const [isLoading, setIsLoading] = useState(false);
 
   const [notifications, setNotifications] = useState({
     emailNotifications: true,
@@ -23,51 +39,78 @@ export default function Settings() {
   });
   const [theme, setTheme] = useState("auto");
 
-  const [passwordError, setPasswordError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-
-  // CORE MECHANIC: Password validation logic
-  const handlePasswordChange = () => {
-    setPasswordError("");
-    setSuccessMessage("");
-
-    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-      setPasswordError("Wszystkie pola są wymagane");
-      return;
+  // Formularz Profilu
+  const profileForm = useForm({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      name: user?.name || "", 
+      email: user?.email || "",
     }
+  });
 
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordError("Nowe hasła nie pasują do siebie");
-      return;
+  useEffect(() => {
+    if (user) {
+      profileForm.reset({ name: user.name, email: user.email });
     }
+  }, [user, profileForm]);
 
-    if (passwordData.newPassword.length < 8) {
-      setPasswordError("Nowe hasło musi mieć minimum 8 znaków");
-      return;
+  // Formularz Hasła
+  const passwordForm = useForm({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: ""
     }
+  });
 
-    setSuccessMessage("Hasło zostało zmienione pomyślnie");
-    setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
-    setTimeout(() => setSuccessMessage(""), 3000);
+  const onProfileSubmit = async (data) => {
+    setIsLoading(true);
+    try {
+      await userApi.updateProfile(data);
+      updateUser({ name: data.name, email: data.email });
+      
+     addToast("Profil został zaktualizowany pomyślnie", "success");
+
+    } catch (err) {
+      const errMsg = err.response?.data?.message || "Nie udało się zaktualizować profilu";
+      // TWOJE POWIADOMIENIE (Błąd)
+      addToast(errMsg, "error");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleProfileSave = () => {
-    setSuccessMessage("Profil został zaktualizowany pomyślnie");
-    setTimeout(() => setSuccessMessage(""), 3000);
+  const onPasswordSubmit = async (data) => {
+    setIsLoading(true);
+    try {
+      const payload = {
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword
+      };
+      
+      await userApi.updatePassword(payload);
+      
+      // TWOJE POWIADOMIENIE (Sukces)
+      addToast("Hasło zostało zmienione pomyślnie", "success");
+      
+      passwordForm.reset(); 
+    } catch (err) {
+      const errMsg = err.response?.data?.message || "Obecne hasło jest nieprawidłowe";
+      
+      // TWOJE POWIADOMIENIE (Błąd)
+      addToast(errMsg, "error");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
-        <h2 className="text-2xl font-bold">Ustawienia</h2>
+        <h2 className="text-2xl font-bold text-foreground">Ustawienia</h2>
         <p className="text-muted-foreground mt-1">Zarządzaj swoim kontem i preferencjami</p>
       </div>
-
-      {successMessage && (
-        <div className="p-4 bg-primary/10 text-primary border border-primary/20 rounded-lg animate-in fade-in slide-in-from-top-2">
-          {successMessage}
-        </div>
-      )}
 
       {/* PROFIL UŻYTKOWNIKA */}
       <Card className="p-6 space-y-6">
@@ -76,27 +119,27 @@ export default function Settings() {
           <h3 className="font-medium text-foreground">Profil użytkownika</h3>
         </div>
 
-        <div className="space-y-4">
+        <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
           <Input 
             label="Imię i nazwisko"
             icon={User}
-            value={profileData.name}
-            onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+            error={profileForm.formState.errors.name?.message}
+            {...profileForm.register("name")}
           />
 
           <Input 
             label="Email"
             type="email"
             icon={Mail}
-            value={profileData.email}
-            onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+            error={profileForm.formState.errors.email?.message}
+            {...profileForm.register("email")}
           />
 
-          <Button onClick={handleProfileSave}>
+          <Button type="submit" disabled={isLoading || !profileForm.formState.isDirty}>
             <Save className="w-4 h-4 mr-2" />
             Zapisz profil
           </Button>
-        </div>
+        </form>
       </Card>
 
       {/* ZMIANA HASŁA */}
@@ -106,37 +149,36 @@ export default function Settings() {
           <h3 className="font-medium text-foreground">Zmiana hasła</h3>
         </div>
 
-        <div className="space-y-4">
+        <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
           <Input 
             label="Obecne hasło"
             type="password"
             icon={Lock}
-            value={passwordData.currentPassword}
-            onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+            error={passwordForm.formState.errors.currentPassword?.message}
+            {...passwordForm.register("currentPassword")}
           />
 
           <Input 
             label="Nowe hasło"
             type="password"
             icon={Lock}
-            value={passwordData.newPassword}
-            onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+            error={passwordForm.formState.errors.newPassword?.message}
+            {...passwordForm.register("newPassword")}
           />
 
           <Input 
             label="Potwierdź nowe hasło"
             type="password"
             icon={Lock}
-            error={passwordError}
-            value={passwordData.confirmPassword}
-            onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+            error={passwordForm.formState.errors.confirmPassword?.message}
+            {...passwordForm.register("confirmPassword")}
           />
 
-          <Button onClick={handlePasswordChange}>
+          <Button type="submit" disabled={isLoading}>
             <Save className="w-4 h-4 mr-2" />
             Zmień hasło
           </Button>
-        </div>
+        </form>
       </Card>
 
       {/* POWIADOMIENIA */}

@@ -187,25 +187,24 @@ const handleCreateSnapshot = async (label) => {
     }
   };
 
-  const handleClosePreview = async () => {
+ const handleClosePreview = async () => {
     if (previewCache) {
       loadScenarioFn(previewCache);
-      setPreviewCache(null);
-      exitPreviewMode();
-      return;
-    } 
+    } else {
       try {
         const original = await decisionApi.getProject(currentProjectId);
         let rawContent = original.content;
         if (typeof rawContent === 'string') {
           try { rawContent = JSON.parse(rawContent); } catch(e){}
         }
-        
         loadScenarioFn(rawContent || {});
-        exitPreviewMode();
       } catch(e) {
-         addToast("Błąd połączenia. Przywrócono lokalny stan.", "error");
+        addToast("Błąd połączenia. Wróciłeś do bieżącej wersji.", "warning");
       }
+    }
+    
+    exitPreviewMode();
+    setPreviewCache(null);
   };
     
   return {

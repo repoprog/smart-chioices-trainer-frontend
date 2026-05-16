@@ -8,20 +8,7 @@ export function HistoryPreviewBanner({
   onRestore,
   onClose,
 }) {
-  // CORE MECHANIC: Move down navigation 
-  useEffect(() => {
-    if (isVisible) {
-      document.body.style.transition = 'padding-top 0.3s ease-in-out';
-      document.body.style.paddingTop = '64px'; 
-    } else {
-      document.body.style.paddingTop = '0px';
-    }
-
-    // Cleanup: 
-    return () => {
-      document.body.style.paddingTop = '0px';
-    };
-  }, [isVisible]);
+  
   if (!isVisible) return null;
 
   return (

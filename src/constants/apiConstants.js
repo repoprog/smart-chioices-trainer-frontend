@@ -19,6 +19,10 @@ export const API_PATHS = {
     LOGOUT: '/api/v1/auth/logout',
     REFRESH: '/api/v1/auth/refresh',
   },
+  USERS: {                                     
+    PROFILE: '/api/v1/users/me/profile',
+    PASSWORD: '/api/v1/users/me/password',
+  },
   PROJECTS: {
     BASE: '/api/v1/projects',
     BY_ID: (id) => `/api/v1/projects/${id}`,

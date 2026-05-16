@@ -1,6 +1,8 @@
-// src/pages/auth/RegisterPage.jsx
 import { useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom"; 
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import useAuthStore from "../../store/useAuthStore";
 import { UserPlus, AlertCircle, Mail, Lock } from "lucide-react";
 import { Input } from "../../components/ui/Input";
@@ -8,49 +10,42 @@ import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { APP_ROUTES } from "../../constants/appConstants"; 
 
+const registerSchema = z.object({
+  email: z.string().email("Nieprawidłowy format adresu email"),
+  password: z.string().min(8, "Hasło musi mieć minimum 8 znaków"),
+  confirmPassword: z.string()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Hasła nie pasują do siebie",
+  path: ["confirmPassword"],
+});
+
 export default function RegisterPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
+  const [globalError, setGlobalError] = useState("");
   const [loading, setLoading] = useState(false);
   
-  const register = useAuthStore((state) => state.register);
+  const registerAction = useAuthStore((state) => state.register);
   const navigate = useNavigate();
   const location = useLocation(); 
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+  });
+
+  const onSubmit = async (data) => {
+    setGlobalError("");
     setLoading(true);
 
-    if (!email || !password || !confirmPassword) {
-      setError("Wszystkie pola są wymagane");
-      setLoading(false);
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Hasła nie pasują do siebie");
-      setLoading(false);
-      return;
-    }
-
-    if (password.length < 8) {
-      setError("Hasło musi mieć minimum 8 znaków");
-      setLoading(false);
-      return;
-    }
-
     try {
-      await register(email, password);
-     
+      await registerAction(data.email, data.password);
       const params = new URLSearchParams(location.search);
-    
       const returnTo = params.get('returnTo') || APP_ROUTES.PANEL;
       navigate(returnTo);
     } catch (err) {
-      setError("Użytkownik z tym adresem email prawdopodobnie już istnieje");
+      setGlobalError("Użytkownik z tym adresem email prawdopodobnie już istnieje");
     } finally {
       setLoading(false);
     }
@@ -65,11 +60,11 @@ export default function RegisterPage() {
         </div>
 
         <Card className="p-8">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {error && (
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            {globalError && (
               <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive border border-destructive/20 rounded-lg text-sm animate-in fade-in zoom-in-95">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                {error}
+                {globalError}
               </div>
             )}
 
@@ -77,31 +72,30 @@ export default function RegisterPage() {
               label="Email"
               type="email"
               icon={Mail}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               placeholder="twoj@email.com"
               disabled={loading}
+              error={errors.email?.message}
+              {...register("email")}
             />
 
             <Input
               label="Hasło"
               type="password"
               icon={Lock}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               disabled={loading}
-              error={password.length > 0 && password.length < 8 ? "Minimum 8 znaków" : ""}
+              error={errors.password?.message}
+              {...register("password")}
             />
 
             <Input
               label="Potwierdź hasło"
               type="password"
               icon={Lock}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
               disabled={loading}
+              error={errors.confirmPassword?.message}
+              {...register("confirmPassword")}
             />
 
             <Button

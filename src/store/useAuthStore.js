@@ -58,6 +58,11 @@ const useAuthStore = create(
                    set({ user: null, isAuthenticated: false, isLoading: false, error: null });
                 }
             },
+            updateUser: (updatedData) => {
+    set((state) => ({
+        user: { ...state.user, ...updatedData }
+    }));
+},
 
             refreshToken: async () => {
                 // Ciasteczko HttpOnly z Refresh Tokenem leci automatycznie dzięki withCredentials: true
@@ -71,7 +76,9 @@ const useAuthStore = create(
                 
                 return accessToken;
             }
+            
         }),
+        
         {
             name: STORAGE_KEYS.AUTH,
             // ZABEZPIECZENIE: Zustand zapisze na dysku TYLKO usera i flagę 'isAuthenticated'
