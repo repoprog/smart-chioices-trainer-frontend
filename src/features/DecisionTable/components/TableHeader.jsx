@@ -35,7 +35,7 @@ export function TableHeader({
   return (
     <thead>
       <tr>
-        <th className="text-center sticky left-0 top-0 z-[30] bg-muted/90 backdrop-blur-md shadow-[inset_-1px_-1px_0_var(--border)] px-4 py-3 align-middle font-semibold text-muted-foreground text-[13px] uppercase tracking-wide rounded-tl-xl">
+        <th className="text-center md:sticky md:left-0 md:top-0 z-[30] bg-muted/90 backdrop-blur-md shadow-[inset_-1px_-1px_0_var(--border)] px-4 py-3 align-middle font-semibold text-muted-foreground text-[13px] uppercase tracking-wide rounded-tl-xl">
           <div className="flex justify-center items-center gap-2.5 text-muted-foreground text-xs font-medium whitespace-nowrap">
             {objectives.length === 0 && (
               <span className="inline-flex items-center text-primary bg-primary/10 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-dashed border-primary/30">Dodaj cel →</span>
@@ -71,7 +71,7 @@ export function TableHeader({
           return (
             <th
               key={`col-${colIndex}`}
-              className={`p-1.5 align-middle overflow-hidden text-ellipsis sticky top-0 z-[20] shadow-[inset_0_-1px_0_var(--border),inset_-1px_0_0_var(--border)] bg-muted/90 backdrop-blur-md ${isRejected && !showRejected ? "hidden" : ""} ${isRejected && showRejected ? "opacity-40" : ""} ${winnerClasses} ${isLastHeader ? "rounded-tr-xl" : ""}`}
+             className={`p-1.5 align-middle overflow-hidden text-ellipsis md:sticky md:top-0 z-[20] shadow-[inset_0_-1px_0_var(--border),inset_-1px_0_0_var(--border)] bg-muted/90 backdrop-blur-md ${isRejected && !showRejected ? "hidden" : ""} ${isRejected && showRejected ? "opacity-40" : ""} ${winnerClasses} ${isLastHeader ? "rounded-tr-xl" : ""}`}
               title={alt}
             >
               <div className="flex items-center justify-center gap-1">

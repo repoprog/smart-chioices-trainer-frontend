@@ -73,8 +73,8 @@ export function DecisionTreePage() {
 
   return (
     
-    <div className="flex flex-col h-full space-y-6">
-      <div className="flex flex-wrap md:flex-nowrap items-start md:items-center justify-between gap-4 relative z-50">
+    <div className="flex flex-col h-full lg:space-y-6">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 relative z-50 w-full">
         <div className="flex-1">
           <div className="flex items-center gap-4">
             <h2 className="text-2xl font-semibold tracking-tight text-foreground">Drzewo decyzyjne</h2>
@@ -130,9 +130,9 @@ export function DecisionTreePage() {
       )}
 
       <Card 
-        noPadding 
-        className="flex-1 min-h-[600px] overflow-hidden relative z-0 flex flex-col"
-      >
+  noPadding 
+  className="flex-1 h-full min-h-[400px] lg:min-h-[600px] overflow-hidden relative z-0 flex flex-col mt-2 lg:mt-0"
+>
         
         {isLoading && (
           <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/50 backdrop-blur-sm animate-in fade-in duration-200">

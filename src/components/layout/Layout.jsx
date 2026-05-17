@@ -112,13 +112,13 @@ export function Layout() {
       <span className="hidden md:inline">Zaloguj</span>
     </Button>
     <Button 
-      variant="dangerGhost"
-      className="px-2 md:px-4 border border-destructive/40 hover:border-destructive/70"
-      onClick={() => navigate(`${APP_ROUTES.REGISTER}?returnTo=${encodeURIComponent(location.pathname)}`)}
-    >
-      <UserPlus className="w-4 h-4 md:mr-2" /> 
-      <span className="hidden md:inline">Dołącz</span>
-    </Button>
+    variant="dangerActive"
+    className="px-2 md:px-4"
+    onClick={() => navigate(`${APP_ROUTES.REGISTER}?returnTo=${encodeURIComponent(location.pathname)}`)}
+  >
+    <UserPlus className="w-4 h-4 md:mr-2" /> 
+    <span className="hidden md:inline">Dołącz</span>
+  </Button>
   </div>
 )}
           </nav>

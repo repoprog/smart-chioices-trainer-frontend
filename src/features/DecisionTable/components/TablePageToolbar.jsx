@@ -64,36 +64,44 @@ export function TablePageToolbar({ showTemplates, setShowTemplates }) {
         onClose={actions.handleClosePreview}
       />
 
-      <div className="flex gap-3 shrink-0 flex-wrap justify-end relative z-20">
+      <div className="flex flex-wrap gap-1.5 lg:gap-3 justify-end items-center relative z-20 w-full lg:w-auto mt-2 lg:mt-0">
         
         <Button 
           variant="secondary" 
           onClick={() => setShowTemplates(!showTemplates)}
           disabled={isPreviewMode} 
+          className="h-8 px-2.5 text-xs lg:h-9 lg:px-4 lg:text-sm"
         >
-          <FileText className="w-4 h-4 mr-2" /> Przykłady
+          <FileText className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" /> Przykłady
         </Button>
 
         <Button 
           variant="secondary" 
           onClick={() => actions.setIsHistoryOpen(true)}
           disabled={isPreviewMode} 
+          className="h-8 px-2.5 text-xs lg:h-9 lg:px-4 lg:text-sm"
         >
-          <History className="w-4 h-4 mr-2" /> Historia
+          <History className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" /> Historia
         </Button>
 
-        <Button variant={currentProjectId ? "secondary" : "default"} onClick={actions.handleSaveClick} disabled={isPreviewMode}>
-  {currentProjectId ? <Camera className="w-4 h-4 mr-2" /> : <Save className="w-4 h-4 mr-2" />} 
-  {currentProjectId ? "Zapisz wersję" : "Zapisz tabelę"}
-</Button>
+        <Button 
+          variant={currentProjectId ? "secondary" : "default"} 
+          onClick={actions.handleSaveClick} 
+          disabled={isPreviewMode}
+          className="h-8 px-2.5 text-xs lg:h-9 lg:px-4 lg:text-sm"
+        >
+          {currentProjectId ? <Camera className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" /> : <Save className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />} 
+          {currentProjectId ? "Zapisz wersję" : "Zapisz tabelę"}
+        </Button>
 
         <div className="relative flex">
           <Button 
             variant={showTradeoffs ? "purple" : "defaultPurple"} 
             onClick={toggleTradeoffs}
             disabled={isPreviewMode} 
+            className="h-8 px-2.5 text-xs lg:h-9 lg:px-4 lg:text-sm"
           >
-            <Scale className="w-4 h-4 mr-2" /> Kompromisy
+            <Scale className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" /> Kompromisy
             <Tooltip 
               title="Kompromisy" 
               position="bottom-right"
@@ -141,8 +149,9 @@ export function TablePageToolbar({ showTemplates, setShowTemplates }) {
           variant={showRanking ? "amber" : "defaultAmber"} 
           onClick={toggleRanking}
           disabled={isPreviewMode} 
+          className="h-8 px-2.5 text-xs lg:h-9 lg:px-4 lg:text-sm"
         >
-          <Trophy className="w-4 h-4 mr-2" /> Ranking
+          <Trophy className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" /> Ranking
         </Button>
 
         <HistorySidebar 

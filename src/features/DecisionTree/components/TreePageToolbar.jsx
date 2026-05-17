@@ -10,7 +10,6 @@ import { usePendingProjectSave } from '../../../hooks/usePendingProjectSave';
 import { useCloudProjectActions } from '../../../hooks/useCloudProjectActions';
 import { PROJECT_TYPES } from '../../../constants/decisionTypes'; 
 
-// IMPORT NOWYCH MODALI
 import { SaveDecisionModal } from '../../../components/ui/SaveDecisionModal';
 import { SaveVersionModal } from '../../../components/ui/SaveVersionModal';
 
@@ -21,7 +20,6 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
     saveToBackend, enterPreviewMode, exitPreviewMode 
   } = useTreeStore();
  
-
   const actions = useCloudProjectActions({
     projectType: PROJECT_TYPES.TREE, 
     currentProjectId,
@@ -64,37 +62,47 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
         onClose={actions.handleClosePreview}
       />
 
-      <div className="flex gap-3 shrink-0 flex-wrap justify-end relative z-20">
+      {/* ZMIENIONY KONTENER: Układ chmury tagów wyrównany do prawej */}
+      <div className="flex flex-wrap gap-1.5 lg:gap-3 justify-end items-center relative z-20 w-full lg:w-auto mt-2 lg:mt-0">
         
         <Button 
           variant="secondary" 
           onClick={() => setShowTemplates(!showTemplates)}
           disabled={isPreviewMode}
+          className="h-8 px-2.5 text-xs lg:h-9 lg:px-4 lg:text-sm"
         >
-          <FileText className="w-4 h-4 mr-2" /> Przykłady
+          <FileText className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" /> Przykłady
         </Button>
 
         <Button 
           variant="secondary" 
           onClick={() => actions.setIsHistoryOpen(true)}
           disabled={isPreviewMode}
+          className="h-8 px-2.5 text-xs lg:h-9 lg:px-4 lg:text-sm"
         >
-          <History className="w-4 h-4 mr-2" /> Historia
+          <History className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" /> Historia
         </Button>
 
-        <Button variant={currentProjectId ? "secondary" : "default"} onClick={actions.handleSaveClick} disabled={isPreviewMode}>
-  {currentProjectId ? <Camera className="w-4 h-4 mr-2" /> : <Save className="w-4 h-4 mr-2" />} 
-  {currentProjectId ? "Zapisz wersję" : "Zapisz drzewo"}
-</Button>
+        <Button 
+          variant={currentProjectId ? "secondary" : "default"} 
+          onClick={actions.handleSaveClick} 
+          disabled={isPreviewMode}
+          className="h-8 px-2.5 text-xs lg:h-9 lg:px-4 lg:text-sm"
+        >
+          {currentProjectId ? <Camera className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" /> : <Save className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />} 
+          {currentProjectId ? "Zapisz wersję" : "Zapisz drzewo"}
+        </Button>
         
         <div className="relative flex">
           <Button 
             variant={isSimulationMode ? "cyan" : "defaultCyan"}
             onClick={toggleSimulationMode}
             disabled={isPreviewMode}
+            className="h-8 px-2.5 text-xs lg:h-9 lg:px-4 lg:text-sm"
           >
-            <SlidersHorizontal className="w-4 h-4 mr-2" /> Symulacja
+            <SlidersHorizontal className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" /> Symulacja
             
+            {/* Tooltip w oryginalnej formie, skoro Portal załatwił sprawę */}
             <Tooltip 
               title="Symulacja „What-if”" 
               subtitle="(Auto-balans)"
@@ -143,7 +151,6 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
           onSelectItem={actions.handleSelectHistoryItem}
         />
 
-       
         <SaveDecisionModal
           isOpen={actions.isCreateModalOpen}
           onClose={() => actions.setIsCreateModalOpen(false)}

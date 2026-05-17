@@ -42,8 +42,8 @@ export const TableRow = memo(function TableRow({
   return (
     <tr className={trClass}>
       {/* Objective Header Cell (Sticky) */}
-      <td
-        className={`sticky left-0 z-[11] bg-card/90 backdrop-blur-md shadow-[inset_-1px_0_0_var(--border),inset_0_-1px_0_var(--border)] px-4 py-2.5 align-middle overflow-hidden text-ellipsis ${
+     <td
+  className={`md:sticky md:left-0 z-[11] bg-card/90 backdrop-blur-md shadow-[inset_-1px_0_0_var(--border),inset_0_-1px_0_var(--border)] px-4 py-2.5 align-middle overflow-hidden text-ellipsis ${
           isLastRow && !showRanking ? "rounded-bl-xl" : ""
         }`}
       >

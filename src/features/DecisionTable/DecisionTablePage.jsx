@@ -73,10 +73,10 @@ export function DecisionTablePage() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col font-sans space-y-6">
+   <div className="w-full min-h-full lg:h-full flex flex-col font-sans space-y-4 lg:space-y-6">
       
       {/* HEADER SECTION */}
-      <div className="flex flex-wrap md:flex-nowrap items-start md:items-center justify-between gap-4 relative z-50">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 relative z-50 w-full">
         <div className="flex-1">
           <div className="flex items-center gap-4">
             <h2 className="text-2xl font-semibold tracking-tight text-foreground">
@@ -133,7 +133,7 @@ export function DecisionTablePage() {
       )}
 
       {/* MAIN TABLE AREA */}
-      <Card className="flex-1 overflow-auto max-h-[85vh] custom-scrollbar flex flex-col relative z-0 p-6">
+      <Card className="flex-1 overflow-auto min-h-[400px] lg:min-h-0 lg:max-h-[85vh] custom-scrollbar flex flex-col relative z-0 p-4 lg:p-6 mt-2 lg:mt-0">
         {isLoading && (
           <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/50 backdrop-blur-sm animate-in fade-in duration-200 rounded-lg">
             <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4" />
