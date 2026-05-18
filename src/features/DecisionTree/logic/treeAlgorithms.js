@@ -1,25 +1,41 @@
 import { NODE_TYPES, EVALUATION_MODES } from '../../../constants/decisionTypes';
 
 /**
- * CORE MECHANIC: Parses string values into numbers for math operations.
- * Handles currency, percentages, and European number formatting (comma to dot).
+ * ============================================================================
+ * OPTIMISTIC UI ENGINE: LOCAL DECISION TREE MATH EVALUATOR
+ * ============================================================================
+ * This module acts as the fast, local math engine for the frontend. It provides
+ * instant, zero-latency visual feedback when the user manipulates sliders.
+ * Complex, definitive calculations are deferred to the Server-Authoritative 
+ * Spring Boot backend upon user request.
+ */
+
+/**
+ * CORE MECHANIC: Anti-Corruption Layer for numeric inputs.
+ * Safely parses dirty string values (currencies, spaces, European/US formats) into clean floats.
+ * * @param {string|number} value - The raw input from the UI (e.g., "1.234,50 zł" or "1,234.50")
+ * @returns {number} The sanitized float ready for mathematical operations.
  */
 export const parseValue = (value) => {
   if (value == null || value === '') return 0;
   if (typeof value === 'number') return value;
   if (typeof value !== 'string') return 0;
 
+  // Normalize spaces and typographical minus signs
   let cleanStr = value.replace(/\s+/g, '').replace(/−|\u2212/g, '-');
   cleanStr = cleanStr.replace(/[^\d.,-]/g, '');
 
   const lastCommaIndex = cleanStr.lastIndexOf(',');
   const lastDotIndex = cleanStr.lastIndexOf('.');
 
+  // Intelligent locale detection based on the position of commas and dots
   if (lastCommaIndex > -1 && lastDotIndex > -1) {
     if (lastCommaIndex > lastDotIndex) {
+      // European format: 1.234,50
       cleanStr = cleanStr.replace(/\./g, '');
       cleanStr = cleanStr.replace(',', '.'); 
     } else {
+      // US/UK format: 1,234.50
       cleanStr = cleanStr.replace(/,/g, '');
     }
   } else if (lastCommaIndex > -1) {
@@ -33,18 +49,20 @@ export const parseValue = (value) => {
 
   const parsed = parseFloat(cleanStr);
   return isNaN(parsed) ? 0 : parsed;
-  
 };
 
-// CORE MECHANIC: Universal probability parser from string (e.g., "50%" → 50)
+/**
+ * CORE MECHANIC: Universal probability parser (e.g., "50%" → 50).
+ */
 export const parseProbabilityString = (p) => {
   if (p == null) return 0;
   return parseFloat(String(p).replace('%', '').replace(',', '.')) || 0; 
 };
 
 /**
- * CORE MECHANIC: Parses probability percentages into decimals (0.0 to 1.0).
- * Falls back to an even split among unassigned siblings if no value exists.
+ * CORE MECHANIC: Probability normalizer (converts percentages to 0.0 - 1.0 decimals).
+ * Provides graceful degradation: if a user hasn't assigned a probability, 
+ * it automatically calculates an even split among unassigned siblings.
  */
 export const parseProbability = (prob, allSiblings = []) => {
   if (prob != null && prob !== '') {
@@ -63,13 +81,18 @@ export const formatProbability = (p) => `${parseFloat(p).toFixed(2)}%`;
 const formatEqNum = (num) => Number.isInteger(num) ? num : parseFloat(num.toFixed(2));
 
 /**
- * CORE MECHANIC: Recursive evaluation of the Decision Tree to calculate Expected Monetary Value (EMV).
- * Traverses from terminal nodes back to the root, resolving chance nodes (weighted average) 
- * and decision nodes (max/min optimization).
+ * CORE MECHANIC: Local Expected Monetary Value (EMV) Evaluator.
+ * Uses Depth-First Search (DFS) with Memoization to trace paths from terminal leaves up to the root.
+ * Note: This is an optimistic approximation. The authoritative result is calculated by Java.
+ * * @param {Array} nodes - The graph nodes
+ * @param {Array} edges - The graph edges
+ * @param {string} optimizationMode - MIN or MAX evaluation logic
+ * @returns {Object} A map containing EMV, steps, and visual equations for each node
  */
 export function evaluateDecisionTree(nodes, edges, optimizationMode = EVALUATION_MODES.MAX) {
   if (!nodes || nodes.length === 0) return {};
 
+  // Build adjacency list for O(1) edge lookups
   const outgoingEdges = new Map();
   for (const edge of edges) {
     if (!outgoingEdges.has(edge.source)) {
@@ -79,9 +102,10 @@ export function evaluateDecisionTree(nodes, edges, optimizationMode = EVALUATION
   }
 
   const nodesMap = new Map(nodes.map((node) => [node.id, node]));
-  const memo = new Map();
+  const memo = new Map(); // Cache to prevent exponential O(2^n) time complexity
 
   const calculateEvForNode = (nodeId) => {
+    // Return cached result if already evaluated
     if (memo.has(nodeId)) return memo.get(nodeId);
 
     const node = nodesMap.get(nodeId);
@@ -90,12 +114,12 @@ export function evaluateDecisionTree(nodes, edges, optimizationMode = EVALUATION
     const childrenEdges = outgoingEdges.get(nodeId) || [];
     let result;
     
-    // 1. TERMINAL NODE
+    // 1. TERMINAL NODE (Leaf): Returns immediate payoff
     if (node.type === NODE_TYPES.TERMINAL || childrenEdges.length === 0) {
       const payoff = parseValue(node.data?.payoff);
       result = { ev: payoff, steps: 0, equation: `${formatEqNum(payoff)}` }; 
     } 
-    // 2. CHANCE NODE (Weighted Average calculation)
+    // 2. CHANCE NODE: Calculates weighted average of all potential outcomes
     else if (node.type === NODE_TYPES.CHANCE) {
       let expectedSteps = 0;
       let equationParts = [];
@@ -118,7 +142,7 @@ export function evaluateDecisionTree(nodes, edges, optimizationMode = EVALUATION
         equation: equationParts.join(' + ') 
       };
     } 
-    // 3. DECISION NODE (Optimization calculation)
+    // 3. DECISION NODE: Applies Min/Max optimization to select the most lucrative branch
     else if (node.type === NODE_TYPES.DECISION) {
       let equationParts = [];
       
@@ -138,7 +162,7 @@ export function evaluateDecisionTree(nodes, edges, optimizationMode = EVALUATION
           (best, current) => {
             if (optimizationMode === EVALUATION_MODES.MAX) {
               if (current.ev > best.ev) return current;
-              if (current.ev === best.ev && current.steps < best.steps) return current;
+              if (current.ev === best.ev && current.steps < best.steps) return current; // Tie-breaker: shortest path
             } else {
               if (current.ev < best.ev) return current;
               if (current.ev === best.ev && current.steps < best.steps) return current;
@@ -175,7 +199,8 @@ export function evaluateDecisionTree(nodes, edges, optimizationMode = EVALUATION
 
 /**
  * CORE MECHANIC: Auto-balancer for 'What-If' scenarios.
- * Automatically distributes remaining probability (100% - locked) equally among unlocked branches.
+ * Automatically distributes the remaining probability pool equally among unlocked branches.
+ * Keeps the math sound (summing to 100%) while the user experiments with sliders.
  */
 export function rebalanceProbabilities(edges, sourceId) {
   const childEdges = edges.filter(e => e.source === sourceId);
@@ -199,6 +224,7 @@ export function rebalanceProbabilities(edges, sourceId) {
               newProb = parseFloat(evenSplit.toFixed(2));
               distributedRemainder += newProb;
           } else {
+              // Final branch absorbs any rounding discrepancies to perfectly hit 100%
               newProb = parseFloat((remainder - distributedRemainder).toFixed(2));
           }
 
@@ -215,7 +241,8 @@ export function rebalanceProbabilities(edges, sourceId) {
 }
 
 /**
- * CORE MECHANIC: Calculate cumulative path probabilities from root down to all nodes.
+ * CORE MECHANIC: Cumulative Risk/Probability Calculator.
+ * Employs Breadth-First Search (BFS) to calculate the cumulative probability of reaching any given node from the root.
  */
 export function calculatePathProbabilities(nodes, edges) {
   const probMap = {};
@@ -242,15 +269,16 @@ export function calculatePathProbabilities(nodes, edges) {
 }
 
 /**
- * CORE MECHANIC: Main pipeline function to trace the optimal route based on EMV evaluations.
- * Validates probabilities FIRST and aborts calculation if mathematically impossible state is detected.
+ * CORE MECHANIC: The Main Evaluation Pipeline.
+ * Orchestrates the full graph evaluation: Validates state -> Calculates local EMV -> Traces optimal path.
+ * Injects a 'dataVersion' timestamp acting as an Optimistic Concurrency Control (OCC) token.
  */
 export const evaluateAndSetWinningPath = (state) => {
   const { nodes, edges, evaluationMode } = state;
   
   let hasProbabilityError = false;
   
-  // 1. Validation Step: Check for probability math errors first
+  // 1. Guard Clause: Validation Step. Abort math if the graph state is mathematically impossible.
   for (const node of nodes) {
     if (node.type === NODE_TYPES.CHANCE) {
       const outgoingEdges = edges.filter((e) => e.source === node.id);
@@ -264,7 +292,7 @@ export const evaluateAndSetWinningPath = (state) => {
     }
   }
 
-  // 2. Abort calculating Expected Value if tree is mathematically invalid
+  // 2. State Degredation: Clear visual results if the tree is invalid.
   if (hasProbabilityError) {
     const nodesWithoutEv = nodes.map(node => {
       const newData = { ...node.data };
@@ -272,13 +300,15 @@ export const evaluateAndSetWinningPath = (state) => {
       delete newData.equation;
       return { ...node, data: newData };
     });
-    return { ...state, nodes: nodesWithoutEv, evaluationMap: {}, winningPath: [] };
+    // Generate a fresh OCC token (dataVersion) even on error to invalidate stale server responses
+    return { ...state, nodes: nodesWithoutEv, evaluationMap: {}, winningPath: [], dataVersion: Date.now() };
   }
 
-  // 3. Normal evaluation if math is correct
+  // 3. Normal Pipeline Execution
   const evaluationMap = evaluateDecisionTree(nodes, edges, evaluationMode);
   const cumulativeProbs = calculatePathProbabilities(nodes, edges);
 
+  // Hydrate nodes with evaluated data
   const nodesWithEv = nodes.map(node => {
     const evaluationResult = evaluationMap[node.id];
     const newData = { ...node.data };
@@ -294,6 +324,7 @@ export const evaluateAndSetWinningPath = (state) => {
     return { ...node, data: newData };
   });
   
+  // 4. Critical Path Tracing (BFS based on bestEdgeId)
   const winningPathSet = new Set();
   
   const rootNode = nodesWithEv.find((n) => (n.type === NODE_TYPES.DECISION || n.type === NODE_TYPES.CHANCE) && !edges.some((e) => e.target === n.id));
@@ -326,5 +357,11 @@ export const evaluateAndSetWinningPath = (state) => {
     }
   }
   
- return { ...state, nodes: nodesWithEv, evaluationMap, winningPath: Array.from(winningPathSet) };
+  return { 
+    ...state, 
+    nodes: nodesWithEv, 
+    evaluationMap, 
+    winningPath: Array.from(winningPathSet),
+    dataVersion: Date.now() // OCC Token generation for Race Condition prevention
+  };
 };

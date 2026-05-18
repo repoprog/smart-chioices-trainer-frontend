@@ -4,6 +4,8 @@ import { persist } from 'zustand/middleware';
 import { treeScenarios } from '../data/treeScenarios.js';
 import { decisionApi } from '../../../api/decisionApi.js'; 
 import { NODE_TYPES, EVALUATION_MODES } from '../../../constants/decisionTypes.js';
+import { buildTreeAnalysisPayload } from '../logic/treePayloadBuilder.js';
+import { useToastStore } from '../../../store/useToastStore.js';
 
 // CORE MECHANIC: Visual layout and graph traversal utilities
 import {
@@ -26,6 +28,12 @@ const layoutedInitial = getLayoutedElements(defaultScenario.nodes, defaultScenar
 const numberedInitial = renumberDecisionAndChanceNodes(layoutedInitial, defaultScenario.edges);
 const initialStageLabels = syncColumnLabels(numberedInitial, defaultScenario.edges, defaultScenario.labels || []);
 
+/**
+ * Global State Management for the Decision Tree Editor.
+ * Wraps Zustand with 'persist' (for LocalStorage hydration) and 'temporal' (Zundo) for Time-Travel (Undo/Redo).
+ * Employs a "Server-Authoritative Hybrid Architecture" where local state is fast/optimistic, 
+ * but validated against a Spring Boot backend for complex calculations.
+ */
 export const useTreeStore = create()(
   persist(
     temporal((set, get) => ({
@@ -38,6 +46,8 @@ export const useTreeStore = create()(
       isDirty: false, 
       isLoading: false, 
       isSimulationMode: false, 
+      isCalculating: false,
+      backendWarnings: [],
 
       // --- AUTO-SAVE STATE ---
       currentProjectId: null,
@@ -45,7 +55,6 @@ export const useTreeStore = create()(
       saveError: null,
       loadError: null,
 
-      
       // --- TIME MACHINE (PREVIEW) STATE ---
       isPreviewMode: false,
       previewingSnapshotId: null,
@@ -55,9 +64,74 @@ export const useTreeStore = create()(
 
       setCurrentProject: (id) => set({ currentProjectId: id }),
 
+      /**
+       * Core Integration: Server-Authoritative Math Validation.
+       * Uses Optimistic Concurrency Control (OCC) to prevent Race Conditions.
+       */
+      analyzeWithBackend: async () => {
+        const state = get();
+        if (state.isCalculating) return;
+
+        // 1. Snapshot the current data version before async request
+        // This acts as an OCC token to detect if the user modified the graph during network transit.
+        const snapshotDataVersion = state.dataVersion; 
+
+        set({ isCalculating: true, backendWarnings: [] });
+        
+        try {
+          // Adapter Pattern: Strip visual metadata (x/y, colors) and cast strings to Doubles for Java
+          const payload = buildTreeAnalysisPayload(state.nodes, state.edges, state.evaluationMode);
+          const result = await decisionApi.analyzeTree(payload);
+          
+          // 2. CRITICAL GUARD (Race Condition Prevention)
+          // If the user moved a slider while waiting for the response, discard the stale server response.
+          if (get().dataVersion !== snapshotDataVersion) {
+            console.warn("Discarded server response: Graph was modified by user during network latency.");
+            return; 
+          }
+          
+          // Hydrate nodes with strict, server-verified Expected Monetary Values (EMV)
+          const updatedNodes = state.nodes.map(node => {
+            const backendEval = result.evaluationMap[node.id];
+            if (backendEval) {
+              return { 
+                ...node, 
+                data: { ...node.data, expectedValue: backendEval.emv, equation: backendEval.equation ?? node.data.equation } 
+              };
+            }
+            return node;
+          });
+
+          // Single Source of Truth update + trigger background auto-save (isDirty: true)
+          set({
+            nodes: updatedNodes,
+            evaluationMap: result.evaluationMap || {},
+            winningPath: result.winningPath || [],
+            backendWarnings: result.warnings || [],
+            isDirty: true 
+          });
+          
+        } catch (error) {
+          console.error("Backend analysis failed:", error);
+          // UX: Graceful degradation. Inform user, but keep local fallback calculations alive.
+          useToastStore.getState().addToast( 
+            'Błąd weryfikacji przez silnik serwera. Wyniki lokalne pozostają aktywne.',
+            'error'
+          );
+        } finally {
+          // Only release the lock if the flow wasn't aborted by OCC
+          if (get().dataVersion === snapshotDataVersion) {
+            set({ isCalculating: false });
+          }
+        }
+      },
+
+      /**
+       * Silent Background Auto-Save.
+       * Uses guard clauses to prevent overlapping writes or saving readonly history snapshots.
+       */
       saveToBackend: async () => {
         const state = get();
-        // ← guard (DODANO state.isPreviewMode)
         if (!state.currentProjectId || state.isSaving || state.isPreviewMode) return; 
 
         set({ isSaving: true, saveError: null });
@@ -76,7 +150,6 @@ export const useTreeStore = create()(
       
       // --- REMOTE DATA FETCHING ---
       
-      // Droga A: Szablony z frontendu
       loadTemplateScenario: async (templateId) => {
         set({ isLoading: true });
         try {
@@ -88,15 +161,14 @@ export const useTreeStore = create()(
             { clearProjectId: true } 
           );
         } catch (error) {
-          console.error("Błąd ładowania szablonu drzewa:", error);
+          console.error("Template load error:", error);
         } finally {
           set({ isLoading: false });
         }
       },
 
-     // Droga B: Prawdziwe projekty z chmury
-     loadCloudProject: async (projectId) => {
-        set({ isLoading: true, loadError: null }); // <-- Resetujemy błąd przed próbą
+      loadCloudProject: async (projectId) => {
+        set({ isLoading: true, loadError: null });
         try {
           const project = await decisionApi.getProject(projectId);
           const safeContent = project.content || {}; 
@@ -109,8 +181,8 @@ export const useTreeStore = create()(
           set({ currentProjectId: projectId });
 
         } catch (error) {
-          console.error("Krytyczny błąd ładowania decyzji z bazy:", error);
-          // <-- NOWE: Mapowanie błędu z backendu na czytelny komunikat dla UI
+          console.error("Cloud project load critical error:", error);
+          // UX: Map raw HTTP status codes to user-friendly messages
           const message = error.response?.status === 403
             ? 'Brak dostępu do tej decyzji.'
             : error.response?.status === 404
@@ -123,6 +195,11 @@ export const useTreeStore = create()(
       },
 
       // --- LOAD & RESET ---
+      
+      /**
+       * Pure function pipeline for graph hydration.
+       * Calculates visual layout -> renumbers stages -> syncs labels -> runs local EMV math.
+       */
       loadScenario: (newNodes, newEdges, newLabels = [], { clearProjectId = false } = {}) =>
         set((state) => {
           const layoutedNodes = getLayoutedElements(newNodes, newEdges);
@@ -135,7 +212,7 @@ export const useTreeStore = create()(
             edges: newEdges,
             stageColumnLabels,
             isDirty: false,
-            ...(clearProjectId && { currentProjectId: null }) // <-- Bezpieczne czyszczenie
+            ...(clearProjectId && { currentProjectId: null })
           };
           return evaluateAndSetWinningPath(newState);
         }),
@@ -146,7 +223,8 @@ export const useTreeStore = create()(
         return evaluateAndSetWinningPath(newState);
       }),
 
-      // --- USER ACTIONS ---
+      // --- USER ACTIONS (GRAPH MANIPULATION) ---
+      
       setEvaluationMode: (mode) => set((state) => evaluateAndSetWinningPath({ ...state, evaluationMode: mode, isDirty: true })),
 
       setStageColumnLabel: (index, text) =>
@@ -193,6 +271,10 @@ export const useTreeStore = create()(
           return evaluateAndSetWinningPath(newState);
         }),
 
+      /**
+       * Modifies a branch probability and automatically triggers a sibling rebalance
+       * to maintain the 100% mathematical constraint for Chance nodes.
+       */
       setEdgeProbability: (edgeId, newProbabilityValue) =>
         set((state) => {
           let allEdges = [...state.edges];
@@ -234,18 +316,13 @@ export const useTreeStore = create()(
           const newState = { ...state, edges: allEdges, isDirty: true };
           return evaluateAndSetWinningPath(newState);
         }),
-
         
       toggleSimulationMode: () =>
         set((state) => {
           const newMode = !state.isSimulationMode;
+          if (!newMode) return { isSimulationMode: false };
 
-          
-          if (!newMode) {
-            return { isSimulationMode: false };
-          }
-
-          
+          // Unlock all chance nodes to allow fluid "what-if" slider testing
           const chanceNodeIds = new Set(state.nodes.filter(n => n.type === NODE_TYPES.CHANCE).map(n => n.id));
           let hasChanges = false;
           
@@ -257,10 +334,7 @@ export const useTreeStore = create()(
             return edge;
           });
 
-          
-          if (!hasChanges) {
-            return { isSimulationMode: true };
-          }
+          if (!hasChanges) return { isSimulationMode: true };
 
           const newState = { ...state, edges: newEdges, isSimulationMode: true, isDirty: true };
           return evaluateAndSetWinningPath(newState);
@@ -274,6 +348,7 @@ export const useTreeStore = create()(
           const newNodeId = nextDomId(childKind === NODE_TYPES.CHANCE ? 'c' : 't');
           const existingOutgoing = state.edges.filter((e) => e.source === parentId);
           const isFromChance = parent.type === NODE_TYPES.CHANCE;
+          
           let edgeData = isFromChance 
             ? { optionLabel: `Zdarzenie ${existingOutgoing.length + 1}`, probability: '0%', isLocked: false }
             : { optionLabel: `Opcja ${existingOutgoing.length + 1}`, probability: null };
@@ -294,6 +369,8 @@ export const useTreeStore = create()(
           }
 
           const nodesWithNew = [...state.nodes, newNode];
+          
+          // Trigger the layout pipeline for the updated graph
           const layoutedNodes = getLayoutedElements(nodesWithNew, edgesWithNew);
           const renumbered = renumberDecisionAndChanceNodes(layoutedNodes, edgesWithNew);
           const stageColumnLabels = syncColumnLabels(renumbered, edgesWithNew, state.stageColumnLabels);
@@ -312,6 +389,8 @@ export const useTreeStore = create()(
         set((state) => {
           const incomingEdge = state.edges.find((e) => e.target === nodeId);
           if (!incomingEdge) return state; 
+          
+          // DFS Graph Traversal to find all children and prune the entire sub-tree
           const removeSet = collectDescendants(nodeId, state.edges);
           removeSet.add(nodeId); 
 
@@ -468,8 +547,12 @@ export const useTreeStore = create()(
         evaluationMap: state.evaluationMap,
         winningPath: state.winningPath, 
       }),
-      // --- History guard for redo/undo - shallow comparison for better performance --- 
-     equality: (pastState, currentState) => {
+      /**
+       * Performance Guard: Shallow equality check for Zundo (Undo/Redo history).
+       * Prevents memory bloat by only saving new snapshots when specific state domains change,
+       * ignoring ephemeral UI state like 'isCalculating' or 'isLoading'.
+       */
+      equality: (pastState, currentState) => {
         return pastState.nodes === currentState.nodes &&
                pastState.edges === currentState.edges &&
                pastState.stageColumnLabels === currentState.stageColumnLabels &&

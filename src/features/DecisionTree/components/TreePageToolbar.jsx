@@ -1,6 +1,6 @@
 import React from 'react'; 
 import { useTreeStore } from '../store/useTreeStore.js';
-import { Save, FileText, History, SlidersHorizontal, Lock, Camera } from 'lucide-react';
+import { Save, FileText, History, SlidersHorizontal, Lock, Camera, Loader2, Calculator, AlertTriangle } from 'lucide-react';
 import { Button } from '../../../components/ui/Button'; 
 import { Tooltip } from '../../../components/ui/Tooltip'; 
 import { HistorySidebar } from '../../../components/ui/HistorySidebar';
@@ -17,7 +17,8 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
   const { 
     currentProjectId, isSimulationMode, toggleSimulationMode, 
     isPreviewMode, previewingSnapshotId, setCurrentProject, 
-    saveToBackend, enterPreviewMode, exitPreviewMode 
+    saveToBackend, enterPreviewMode, exitPreviewMode,
+    isCalculating, backendWarnings, analyzeWithBackend
   } = useTreeStore();
  
   const actions = useCloudProjectActions({
@@ -93,6 +94,19 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
           {currentProjectId ? "Zapisz wersję" : "Zapisz drzewo"}
         </Button>
         
+        <Button 
+          variant="secondary" 
+          onClick={analyzeWithBackend}
+          disabled={isCalculating || isPreviewMode}
+          className="h-8 px-2.5 text-xs lg:h-9 lg:px-4 lg:text-sm"
+        >
+          {isCalculating ? (
+            <><Loader2 className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2 animate-spin" /> Liczę...</>
+          ) : (
+            <><Calculator className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" /> Przelicz</>
+          )}
+        </Button>
+
         <div className="relative flex">
           <Button 
             variant={isSimulationMode ? "cyan" : "defaultCyan"}
@@ -167,6 +181,16 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
           isSaving={actions.isSaving}
         />
 
+        {backendWarnings && backendWarnings.length > 0 && (
+          <div className="w-full flex flex-col gap-2 mt-2">
+            {backendWarnings.map((warning, index) => (
+              <div key={index} className="flex items-start gap-2 px-3 py-2 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md shadow-sm text-left">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+                <span>{warning}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </>
   );

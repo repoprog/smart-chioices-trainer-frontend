@@ -123,5 +123,10 @@ export const decisionApi = {
   async getSnapshot(projectId, snapshotId) {
     const response = await apiClient.get(API_PATHS.PROJECTS.SNAPSHOT(projectId, snapshotId));
     return response.data; 
+  },
+
+  async analyzeTree(payload) {
+    const response = await apiClient.post('/api/v1/analysis/tree', payload);
+    return response.data;
   }
 };
