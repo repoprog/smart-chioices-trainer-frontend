@@ -2,9 +2,15 @@
  * Transforms frontend node and edge structures into a clean payload for Java backend analysis.
  */
 
+// OSTRZEŻENIE 5 z audytu: Odporność na spacje typograficzne
 const parseProbability = (value) => {
   if (value === null || value === undefined || value === '') return null;
-  const cleanStr = String(value).replace('%', '').replace(',', '.').trim();
+  const cleanStr = String(value)
+    .replace(/\s+/g, '') 
+    .replace('%', '')
+    .replace(',', '.')
+    .trim();
+    
   if (cleanStr === '') return null;
   const num = Number(cleanStr);
   return isNaN(num) ? null : num / 100;
@@ -60,6 +66,6 @@ export function buildTreeAnalysisPayload(nodes, edges, evaluationMode) {
   return {
     nodes: mappedNodes,
     edges: mappedEdges,
-    evaluationMode
+    evaluationMode: (evaluationMode || 'MAX').toUpperCase()
   };
 }

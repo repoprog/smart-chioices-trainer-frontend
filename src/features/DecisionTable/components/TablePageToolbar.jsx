@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTableStore } from '../store/useTableStore';
-import { Save, FileText, Scale, Trophy, History, Camera } from 'lucide-react';
+import { Save, FileText, ArrowRightLeft, Trophy, History, Camera, Calculator, Loader2 } from 'lucide-react';
 import { Button } from '../../../components/ui/Button'; 
 import { Tooltip } from '../../../components/ui/Tooltip'; 
 import { HistorySidebar } from '../../../components/ui/HistorySidebar';
@@ -13,6 +13,7 @@ import { PROJECT_TYPES } from '../../../constants/decisionTypes';
 import { SaveDecisionModal } from '../../../components/ui/SaveDecisionModal';
 import { SaveVersionModal } from '../../../components/ui/SaveVersionModal';
 
+
 export function TablePageToolbar({ showTemplates, setShowTemplates }) {
   const currentProjectId = useTableStore(s => s.currentProjectId);
   const showTradeoffs = useTableStore(s => s.showTradeoffs);
@@ -23,6 +24,10 @@ export function TablePageToolbar({ showTemplates, setShowTemplates }) {
   const toggleTradeoffs = useTableStore(s => s.toggleTradeoffs);
   const toggleRanking = useTableStore(s => s.toggleRanking);
   const setCurrentProject = useTableStore(s => s.setCurrentProject);
+
+  const isCalculating = useTableStore((s) => s.isCalculating);
+  const analyzeWithBackend = useTableStore((s) => s.analyzeWithBackend);
+
 
   const actions = useCloudProjectActions({
     projectType: PROJECT_TYPES.TABLE, 
@@ -101,7 +106,7 @@ export function TablePageToolbar({ showTemplates, setShowTemplates }) {
             disabled={isPreviewMode} 
             className="h-8 px-2.5 text-xs lg:h-9 lg:px-4 lg:text-sm"
           >
-            <Scale className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" /> Kompromisy
+            <ArrowRightLeft className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" /> Kompromisy
             <Tooltip 
               title="Kompromisy" 
               position="bottom-right"
@@ -154,12 +159,25 @@ export function TablePageToolbar({ showTemplates, setShowTemplates }) {
           <Trophy className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" /> Ranking
         </Button>
 
+        {/* PRZYCISK PRZELICZ (Taki sam jak w drzewie, bez blokady currentProjectId) */}
+        <Button 
+          variant="secondary" 
+          onClick={analyzeWithBackend}
+          disabled={isCalculating || isPreviewMode}
+          className="h-8 px-2.5 text-xs lg:h-9 lg:px-4 lg:text-sm"
+        >
+          {isCalculating ? (
+            <><Loader2 className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2 animate-spin" /> Liczę...</>
+          ) : (
+            <><Calculator className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" /> Przelicz</>
+          )}
+        </Button>
+
         <HistorySidebar 
           isOpen={actions.isHistoryOpen} onClose={() => actions.setIsHistoryOpen(false)}
           items={actions.historyItems} type="table" onSelectItem={actions.handleSelectHistoryItem} 
         />
 
-        {/* --- UŻYCIE REUŻYWALNYCH MODALI ZAMIAST CZYSTEGO HTML --- */}
         <SaveDecisionModal
           isOpen={actions.isCreateModalOpen}
           onClose={() => actions.setIsCreateModalOpen(false)}
@@ -177,6 +195,7 @@ export function TablePageToolbar({ showTemplates, setShowTemplates }) {
         />
 
       </div>
+
     </>
   );
 }

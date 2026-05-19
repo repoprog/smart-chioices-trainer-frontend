@@ -33,19 +33,22 @@ export function TreeToolbar() {
   const handleUndo = useCallback(() => {
     if (useTreeStore.getState().isPreviewMode) return; 
     undo();
-    setTimeout(() => {
-      useTreeStore.setState({ isDirty: true });
-    }, 10);
+    // Używamy callbacka, żeby upewnić się, że podbijamy nową wersję
+    useTreeStore.setState((state) => ({ 
+      isDirty: true, 
+      dataVersion: state.dataVersion + 1 
+    }));
   }, [undo]);
 
   const handleRedo = useCallback(() => {
     if (useTreeStore.getState().isPreviewMode) return; 
     redo();
-    setTimeout(() => {
-      useTreeStore.setState({ isDirty: true });
-    }, 10);
+    useTreeStore.setState((state) => ({ 
+      isDirty: true, 
+      dataVersion: state.dataVersion + 1 
+    }));
   }, [redo]);
-
+  
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;

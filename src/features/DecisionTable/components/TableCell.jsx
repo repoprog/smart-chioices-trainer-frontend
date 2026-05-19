@@ -24,15 +24,12 @@ export const TableCell = memo(function TableCell({
 }) {
   const cellKey = `${rowIndex}-${colIndex}`;
 
-  
   const globalVal = useTableStore(state => state.cells[cellKey] || "");
   const originalVal = useTableStore(state => state.originalCells[cellKey] || "");
   const updateCell = useTableStore(state => state.updateCell);
-
  
   const [localVal, setLocalVal] = useState(globalVal);
 
- 
   useEffect(() => {
     setLocalVal(globalVal);
   }, [globalVal]);
@@ -60,7 +57,32 @@ export const TableCell = memo(function TableCell({
   if (isRejected && !showRejected) tdClass = "hidden";
   else if (isRejected && showRejected) tdClass = "opacity-30";
 
-  const hasChangedInTradeoff = showTradeoffs && !showRanking && originalVal !== "" && originalVal !== localVal;
+  
+  const normalizeForComparison = (val) => {
+    if (val === null || val === undefined || val === "") return "";
+  
+  
+    let clean = String(val).toLowerCase().replace(/\s/g, "").replace(/−|\u2212/g, "-");
+    
+    if (unit) {
+      const cleanUnit = String(unit).toLowerCase().replace(/\s/g, "");
+      clean = clean.split(cleanUnit).join("");
+    }
+    
+ 
+    clean = clean.replace(",", ".");
+    
+  
+    if (!isNaN(clean) && clean !== "") {
+      return Number(clean).toString();
+    }
+    return clean;
+  };
+
+  const isEffectivelyDifferent = normalizeForComparison(originalVal) !== normalizeForComparison(localVal);
+  const hasChangedInTradeoff = showTradeoffs && !showRanking && originalVal !== "" && isEffectivelyDifferent;
+  // --- KONIEC ŁATKI ---
+
   const hasValidValue = localVal !== undefined && localVal.toString().trim() !== "";
   
   // CORE MECHANIC: Highlight the objectively best value in a row when not in strict ranking mode
@@ -119,8 +141,8 @@ export const TableCell = memo(function TableCell({
       }`}
     >
       <div className="relative flex flex-row items-center justify-center w-full h-full min-h-[32px]">
-        {hasChangedInTradeoff && (
-          <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] text-destructive line-through whitespace-nowrap pointer-events-none">
+       {hasChangedInTradeoff && (
+          <span className="absolute -top-1 right-1 text-xs text-destructive line-through whitespace-nowrap pointer-events-none z-10">
             {originalVal}
           </span>
         )}

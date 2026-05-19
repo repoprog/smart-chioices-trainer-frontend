@@ -14,7 +14,8 @@ export function useCloudProjectActions({
   loadScenarioFn,
   enterPreviewMode,
   exitPreviewMode,
-  getCurrentStateFn
+  getCurrentStateFn,
+  setGlobalDirty 
 }) {
   const navigate = useNavigate();
   const addToast = useToastStore(s => s.addToast); 
@@ -170,13 +171,20 @@ const handleCreateSnapshot = async (label) => {
     }
   };
 
+ // --- ZMIANA: Zmodyfikowany blok przywracania wersji ---
  const handleRestoreVersion = async () => {
     setIsSaving(true); 
     try {
-      
-      await saveToBackend();
-      
+      // 1. Zdejmujemy blokadę zapisu
       exitPreviewMode();
+      
+      // 2. Podbijamy flagi w głównym storze za pomocą funkcji podanej w propsach
+      if (typeof setGlobalDirty === 'function') {
+        setGlobalDirty(true);
+      }
+
+      // 3. Wymuszamy zapis odblokowanego już stanu
+      await saveToBackend();
       
       addToast("Wersja przywrócona i zapisana w chmurze.", "success");
     } catch (error) {

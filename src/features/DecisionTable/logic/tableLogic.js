@@ -134,7 +134,18 @@ export const getTradeoffResults = (state) => {
   const equalizedRowsIndexes = getEqualizedRowsIndexes(state);
   const equalizedCount = equalizedRowsIndexes.length;
 
-  const activeAlts = alternatives.map((_, i) => i).filter(i => !rejectedAlternatives.includes(i));
+  // ZMIANA: Wykluczamy z analizy kolumny, które są całkowicie puste (nie mają ani jednej wartości)
+  const activeAlts = alternatives.map((_, i) => i).filter(i => {
+    if (rejectedAlternatives.includes(i)) return false;
+    
+    // Sprawdzamy, czy w kolumnie jest jakikolwiek wpis
+    const hasAnyData = objectives.some((_, r) => {
+      const val = cells[`${r}-${i}`];
+      return val !== undefined && val !== null && val.toString().trim() !== '';
+    });
+    
+    return hasAnyData;
+  });
   
   const activeObjForCheck = objectives.map((_, r) => r).filter(r => {
     if (equalizedRowsIndexes.includes(r)) return false; 

@@ -16,6 +16,9 @@ import { useUnsavedChangesWarning } from "../../hooks/useUnsavedChangesWarning";
 import { useScenarioLoader } from "../../hooks/useScenarioLoader";
 import { CheckCircle2, Loader2, AlertCircle, Edit3 } from 'lucide-react';
 
+// ---> 1. IMPORT BANERA <---
+import { BackendWarningsBanner } from '../../components/ui/BackendWarningsBanner';
+
 export function DecisionTablePage() {
   const resetAll = useTableStore((s) => s.resetAll);
   const isDirty = useTableStore((s) => s.isDirty);
@@ -34,6 +37,10 @@ export function DecisionTablePage() {
   const objectives = useTableStore((s) => s.objectives);
   const isPreviewMode = useTableStore((s) => s.isPreviewMode);
   const isLoading = useTableStore((s) => s.isLoading);
+
+  // ---> 2. WYCIĄGNIĘCIE FUNKCJI I BŁĘDÓW ZE STORE'A <---
+  const backendWarnings = useTableStore((s) => s.backendWarnings);
+  const analyzeWithBackend = useTableStore((s) => s.analyzeWithBackend);
 
   // CORE MECHANIC: Prevent data loss by intercepting page unload if changes are unsaved
   useUnsavedChangesWarning(isDirty);
@@ -73,7 +80,8 @@ export function DecisionTablePage() {
   };
 
   return (
-   <div className="w-full min-h-full lg:h-full flex flex-col font-sans space-y-4 lg:space-y-6">
+    // ---> 3. ZMIENIONE space-y na gap (inaczej ukryty baner zostawiałby dziurę) <---
+    <div className="w-full min-h-full lg:h-full flex flex-col font-sans gap-4 lg:gap-6">
       
       {/* HEADER SECTION */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 relative z-50 w-full">
@@ -131,6 +139,13 @@ export function DecisionTablePage() {
           </div>
         </Card>
       )}
+
+      {/* ---> 4. OTO MAGIA: BANER UMIESZCZONY POD PRZYCISKAMI, A NAD TABELĄ <--- */}
+      <BackendWarningsBanner 
+        warnings={backendWarnings} 
+        onDismiss={() => useTableStore.setState({ backendWarnings: [] })}
+        onRetry={analyzeWithBackend}
+      />
 
       {/* MAIN TABLE AREA */}
       <Card className="flex-1 overflow-auto min-h-[400px] lg:min-h-0 lg:max-h-[85vh] custom-scrollbar flex flex-col relative z-0 p-4 lg:p-6 mt-2 lg:mt-0">

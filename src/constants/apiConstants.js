@@ -1,4 +1,3 @@
-
 export const PROJECT_STATUS = {
   DRAFT: 'DRAFT',
   FINALIZED: 'FINALIZED',
@@ -31,4 +30,9 @@ export const API_PATHS = {
     SNAPSHOTS: (id) => `/api/v1/projects/${id}/snapshots`,
     SNAPSHOT: (id, snapId) => `/api/v1/projects/${id}/snapshots/${snapId}`,
   },
+ 
+  ANALYSIS: {
+    TABLE: '/api/v1/analysis/table',
+    TREE: '/api/v1/analysis/tree',
+  }
 };

@@ -125,8 +125,13 @@ export const decisionApi = {
     return response.data; 
   },
 
-  async analyzeTree(payload) {
-    const response = await apiClient.post('/api/v1/analysis/tree', payload);
+  async analyzeTable(payload, signal) {
+    const response = await apiClient.post(API_PATHS.ANALYSIS.TABLE, payload, { signal });
+    return response.data; // TableAnalysisResultDTO
+  },
+
+  async analyzeTree(payload, signal) {
+    const response = await apiClient.post(API_PATHS.ANALYSIS.TREE, payload, { signal });
     return response.data;
   }
 };

@@ -1,20 +1,23 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 
-// CORE UI: Reusable tooltip/popover component with outside-click detection.
+// CORE UI: Reusable tooltip/popover component with outside-click and hover detection.
 export function Tooltip({
   trigger,
   title,
   subtitle,
   children,
   position = 'bottom-right',
-  width = 'w-[360px]'
+  width = 'w-[360px]',
+  triggerMode = 'click' // <--- NOWY PROP (domyślnie 'click', by nie zepsuć starych miejsc)
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const tooltipRef = useRef(null);
 
   // CORE MECHANIC: Close tooltip when clicking outside of its DOM element
   useEffect(() => {
+    if (triggerMode !== 'click') return; // Nie potrzebujemy tego nasłuchiwania dla hovera
+
     const handleClickOutside = (event) => {
       if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
         setIsOpen(false);
@@ -28,7 +31,7 @@ export function Tooltip({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen]);
+  }, [isOpen, triggerMode]);
 
   const positionClasses = {
     'bottom-right': 'top-full right-0 mt-3',
@@ -38,14 +41,21 @@ export function Tooltip({
   };
 
   return (
-    <div className="relative inline-flex items-center" ref={tooltipRef}>
-      {/* Trigger element (e.g. a button with a '?' mark) */}
+    <div 
+      className="relative inline-flex items-center" 
+      ref={tooltipRef}
+      onMouseEnter={() => triggerMode === 'hover' && setIsOpen(true)}
+      onMouseLeave={() => triggerMode === 'hover' && setIsOpen(false)}
+    >
+      {/* Trigger element */}
       <div 
         onClick={(e) => {
-          e.stopPropagation();
-          setIsOpen(!isOpen);
+          if (triggerMode === 'click') {
+            e.stopPropagation();
+            setIsOpen(!isOpen);
+          }
         }} 
-        className="cursor-pointer"
+        className={triggerMode === 'click' ? "cursor-pointer" : "cursor-help"}
       >
         {trigger}
       </div>
@@ -55,15 +65,18 @@ export function Tooltip({
         <div
           className={`absolute ${positionClasses[position]} ${width} bg-card border border-border p-5 rounded-xl shadow-xl z-50 text-sm leading-relaxed text-left cursor-default font-normal text-foreground animate-in fade-in zoom-in-95 duration-200`}
         >
-          <button
-            className="absolute top-3 right-3 bg-transparent border-none text-muted-foreground w-7 h-7 flex items-center justify-center cursor-pointer rounded-md transition-colors hover:text-foreground hover:bg-muted leading-none text-lg"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsOpen(false);
-            }}
-          >
-            <X className="w-4 h-4" />
-          </button>
+          {/* Przycisk X pokazujemy TYLKO w trybie click */}
+          {triggerMode === 'click' && (
+            <button
+              className="absolute top-3 right-3 bg-transparent border-none text-muted-foreground w-7 h-7 flex items-center justify-center cursor-pointer rounded-md transition-colors hover:text-foreground hover:bg-muted leading-none text-lg"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsOpen(false);
+              }}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
 
           {(title || subtitle) && (
             <h3 className="text-base font-bold text-foreground mb-4 pr-6 leading-tight">

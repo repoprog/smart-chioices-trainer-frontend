@@ -14,6 +14,8 @@ import { TreeErrorFallback } from "../../components/ui/ErrorFallbacks";
 import { useUnsavedChangesWarning } from "../../hooks/useUnsavedChangesWarning"; 
 import { useScenarioLoader } from "../../hooks/useScenarioLoader";
 import { Button } from '../../components/ui/Button';
+import { BackendWarningsBanner } from '../../components/ui/BackendWarningsBanner';
+
 
 export function DecisionTreePage() {
   const resetTree = useTreeStore((s) => s.resetTree);
@@ -29,9 +31,10 @@ export function DecisionTreePage() {
   const nodes = useTreeStore((s) => s.nodes);
   const edges = useTreeStore((s) => s.edges);
   const isPreviewMode = useTreeStore((s) => s.isPreviewMode);
-  
+  const backendWarnings = useTreeStore((s) => s.backendWarnings);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const isLoading = useTreeStore((s) => s.isLoading);
+  const analyzeWithBackend = useTreeStore((s) => s.analyzeWithBackend);
   
   // CORE MECHANIC: Prevent data loss by intercepting page unload if changes are unsaved
   useUnsavedChangesWarning(isDirty);
@@ -73,7 +76,9 @@ export function DecisionTreePage() {
 
   return (
     
-    <div className="flex flex-col h-full lg:space-y-6">
+   <div className="flex flex-col h-full gap-4 lg:gap-6">
+  
+
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 relative z-50 w-full">
         <div className="flex-1">
           <div className="flex items-center gap-4">
@@ -128,7 +133,11 @@ export function DecisionTreePage() {
           </div>
         </Card>
       )}
-
+<BackendWarningsBanner 
+        warnings={backendWarnings} 
+        onDismiss={() => useTreeStore.setState({ backendWarnings: [] })}
+        onRetry={analyzeWithBackend} // <--- DODANY PRZYCISK RE-TRY
+      />
       <Card 
   noPadding 
   className="flex-1 h-full min-h-[400px] lg:min-h-[600px] overflow-hidden relative z-0 flex flex-col mt-2 lg:mt-0"

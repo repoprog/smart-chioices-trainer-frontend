@@ -96,6 +96,7 @@ export function TreeCanvas() {
   }, []);
 
 return (
+  
     <div 
       id="tree-canvas-container" 
       className={`relative flex-1 w-full h-full min-h-[560px] bg-background transition-colors ${

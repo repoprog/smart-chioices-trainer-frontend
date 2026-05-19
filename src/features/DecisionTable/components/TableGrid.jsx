@@ -7,6 +7,42 @@ import { ConfirmModal } from "../../../components/ui/ConfirmModal";
 import { TableHeader } from "./TableHeader";
 import { TableRow } from "./TableRow";
 import { TableConclusions } from "./TableConclusions";
+import { DOMINATION_TYPES } from "../../../constants/decisionTypes";
+
+// --- FUNKCJA ADAPTERA ---
+// Tłumaczy twarde DTO z Javy na format, który od zawsze rozumiał Twój frontend.
+function mapBackendResultsToLocal(backendResult, store) {
+  const { results, winnerIndex } = backendResult;
+  const dominationResults = {};
+
+  // Iterujemy po wynikach z backendu (klucz to indeks kolumny, np. 0, 1, 2)
+  Object.entries(results || {}).forEach(([colIdx, dto]) => {
+    if (dto.domination) {
+      dominationResults[Number(colIdx)] = {
+        type: dto.domination.type === 'STRICT' ? DOMINATION_TYPES.STRICT : DOMINATION_TYPES.PRACTICAL,      
+        by: dto.domination.dominatedByName || "", 
+        objective: dto.domination.exceptionalCriterionName || ""
+      };
+    }
+  });
+
+  // Filtrujemy tylko te alternatywy, które Java uznała za kompletne
+  const completeAlts = Object.entries(results || {})
+    .filter(([, dto]) => dto.isComplete)
+    .map(([idx]) => Number(idx));
+
+  // Rzeczy, których backend nie robi (np. wizualne ukrywanie wyzerowanych wierszy)
+  // bierzemy po staremu z logiki lokalnej
+  const localPartial = getTradeoffResults(store);
+
+  return {
+    dominationResults,
+    winnerIndex: winnerIndex ?? null,
+    completeAlts,
+    equalizedRowsIndexes: localPartial.equalizedRowsIndexes,
+    equalizedCount: localPartial.equalizedCount,
+  };
+}
 
 export function TableGrid() {
   const store = useTableStore();
@@ -19,31 +55,31 @@ export function TableGrid() {
     onConfirm: null,
   });
 
-
   const {
     alternatives, objectives, cells, objectiveUnits, showRanking, sortDirections,
     showTradeoffs, hideEqualizedObjectives, rejectedAlternatives, showRejected,
-    customScales, 
+    customScales, backendAnalysisResult, // <--- WYCIĄGAMY DANE Z JAVY
     toggleShowRejected, toggleHideEqualized, toggleSortDirection,
     addAlternative, addObjective, updateAlternative, updateObjective, updateUnit,
     rejectAlternative, restoreAlternative, removeAlternative, removeObjective
   } = store;
-
   
+  // 1. Lokalne obliczenia "w locie" dla płynnego UX przy edycji suwaków
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const tradeoffResults = useMemo(() => getTradeoffResults(store), [
+  const localResults = useMemo(() => getTradeoffResults(store), [
     showRanking, showTradeoffs, alternatives, objectives,
     rejectedAlternatives, cells, customScales, sortDirections
   ]);
 
+  // 2. MAGIA ADAPTERA: Jeśli mamy twarde dane z Javy, nadpisujemy wnioski lokalne!
   const {
     equalizedRowsIndexes, equalizedCount, dominationResults,
     winnerIndex, completeAlts,
-  } = tradeoffResults;
+  } = backendAnalysisResult
+    ? mapBackendResultsToLocal(backendAnalysisResult, store)
+    : localResults;
 
   const closeConfirmModal = () => setModalConfig({ ...modalConfig, isOpen: false });
-
-
 
   const handleRemoveAlternative = (indexToRemove) => {
     const hasData = objectives.some((_, r) => cells[`${r}-${indexToRemove}`] && cells[`${r}-${indexToRemove}`].toString().trim() !== "");
@@ -89,10 +125,10 @@ export function TableGrid() {
               objectives={objectives}
               alternatives={alternatives}
               showRanking={showRanking}
-              dominationResults={dominationResults}
+              dominationResults={dominationResults} // <--- To już są dane z Javy!
               rejectedAlternatives={rejectedAlternatives}
               showRejected={showRejected}
-              winnerIndex={winnerIndex}
+              winnerIndex={winnerIndex} // <--- To już są dane z Javy!
               addObjective={addObjective}
               addAlternative={addAlternative}
               updateAlternative={updateAlternative}
@@ -113,7 +149,7 @@ export function TableGrid() {
                   hideEqualizedObjectives={hideEqualizedObjectives}
                   rejectedAlternatives={rejectedAlternatives}
                   showRejected={showRejected}
-                  rowRanks={getRowRanks(rowIndex, store)}
+                  rowRanks={getRowRanks(rowIndex, store)} // Rangi wierszy zostawiamy lokalnie (UX)
                   isRowEqual={equalizedRowsIndexes.includes(rowIndex)}
                   dominationResults={dominationResults}
                   winnerIndex={winnerIndex}
@@ -132,13 +168,14 @@ export function TableGrid() {
                 objectives={objectives}
                 cells={cells}
                 showRanking={showRanking}
-                dominationResults={dominationResults}
+                dominationResults={dominationResults} // <--- Backend DTO wchodzi tu
                 rejectedAlternatives={rejectedAlternatives}
                 showRejected={showRejected}
-                winnerIndex={winnerIndex}
-                completeAlts={completeAlts}
+                winnerIndex={winnerIndex}             // <--- Backend DTO wchodzi tu
+                completeAlts={completeAlts}           // <--- Backend DTO wchodzi tu
                 restoreAlternative={restoreAlternative}
                 rejectAlternative={rejectAlternative}
+                toggleTradeoffs={store.toggleTradeoffs}
               />
             </tbody>
           </table>

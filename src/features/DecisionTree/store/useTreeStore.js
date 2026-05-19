@@ -43,6 +43,7 @@ export const useTreeStore = create()(
       evaluationMode: EVALUATION_MODES.MAX,
       evaluationMap: {},
       winningPath: [],
+      dataVersion: Date.now(),
       isDirty: false, 
       isLoading: false, 
       isSimulationMode: false, 
@@ -68,64 +69,79 @@ export const useTreeStore = create()(
        * Core Integration: Server-Authoritative Math Validation.
        * Uses Optimistic Concurrency Control (OCC) to prevent Race Conditions.
        */
-      analyzeWithBackend: async () => {
-        const state = get();
-        if (state.isCalculating) return;
+     analyzeWithBackend: async () => {
+          const state = get();
+          if (state.isCalculating) return;
 
-        // 1. Snapshot the current data version before async request
-        // This acts as an OCC token to detect if the user modified the graph during network transit.
-        const snapshotDataVersion = state.dataVersion; 
+          // 1. Snapshot the current data version before async request
+          // This acts as an OCC token to detect if the user modified the graph during network transit.
+          const snapshotDataVersion = state.dataVersion; 
 
-        set({ isCalculating: true, backendWarnings: [] });
-        
-        try {
-          // Adapter Pattern: Strip visual metadata (x/y, colors) and cast strings to Doubles for Java
-          const payload = buildTreeAnalysisPayload(state.nodes, state.edges, state.evaluationMode);
-          const result = await decisionApi.analyzeTree(payload);
+          // --- ABORT CONTROLLER (TIMEOUT 30s) ---
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 30_000);
+
+          set({ isCalculating: true, backendWarnings: [] });
           
-          // 2. CRITICAL GUARD (Race Condition Prevention)
-          // If the user moved a slider while waiting for the response, discard the stale server response.
-          if (get().dataVersion !== snapshotDataVersion) {
-            console.warn("Discarded server response: Graph was modified by user during network latency.");
-            return; 
-          }
-          
-          // Hydrate nodes with strict, server-verified Expected Monetary Values (EMV)
-          const updatedNodes = state.nodes.map(node => {
-            const backendEval = result.evaluationMap[node.id];
-            if (backendEval) {
-              return { 
-                ...node, 
-                data: { ...node.data, expectedValue: backendEval.emv, equation: backendEval.equation ?? node.data.equation } 
-              };
+          try {
+            // Adapter Pattern: Strip visual metadata (x/y, colors) and cast strings to Doubles for Java
+            const payload = buildTreeAnalysisPayload(state.nodes, state.edges, state.evaluationMode);
+            
+            // Przekazujemy sygnał (controller.signal) do API, aby móc przerwać żądanie
+            const result = await decisionApi.analyzeTree(payload, controller.signal);
+            
+            // 2. CRITICAL GUARD (Race Condition Prevention)
+            // If the user moved a slider while waiting for the response, discard the stale server response.
+            if (get().dataVersion !== snapshotDataVersion) {
+              console.warn("Discarded server response: Graph was modified by user during network latency.");
+              return; 
             }
-            return node;
-          });
+            
+            // Hydrate nodes with strict, server-verified Expected Monetary Values (EMV)
+            const updatedNodes = state.nodes.map(node => {
+              const backendEval = result.evaluationMap[node.id];
+              if (backendEval) {
+                return { 
+                  ...node, 
+                  data: { ...node.data, expectedValue: backendEval.emv, equation: backendEval.equation ?? node.data.equation } 
+                };
+              }
+              return node;
+            });
+            const hasWarnings = result.warnings && result.warnings.length > 0;
+            
+            // Single Source of Truth update + trigger background auto-save (isDirty: true)
+            set({
+              nodes: updatedNodes,
+              evaluationMap: result.evaluationMap || {},
+              winningPath: result.winningPath || [],
+              backendWarnings: result.warnings || [],
+              isDirty: true,
+            });
 
-          // Single Source of Truth update + trigger background auto-save (isDirty: true)
-          set({
-            nodes: updatedNodes,
-            evaluationMap: result.evaluationMap || {},
-            winningPath: result.winningPath || [],
-            backendWarnings: result.warnings || [],
-            isDirty: true 
-          });
-          
-        } catch (error) {
-          console.error("Backend analysis failed:", error);
-          // UX: Graceful degradation. Inform user, but keep local fallback calculations alive.
-          useToastStore.getState().addToast( 
-            'Błąd weryfikacji przez silnik serwera. Wyniki lokalne pozostają aktywne.',
-            'error'
-          );
-        } finally {
-          // Only release the lock if the flow wasn't aborted by OCC
-          if (get().dataVersion === snapshotDataVersion) {
-            set({ isCalculating: false });
+            if (!hasWarnings) {
+              useToastStore.getState().addToast(
+                'Analiza serwera zakończona. Ścieżka optymalna zaktualizowana.',
+                'success'
+              );
+            }
+
+          } catch (error) {
+            console.error('Błąd analizy drzewa na backendzie:', error);
+            
+            
+            if (error.name === 'CanceledError' || error.name === 'AbortError') {
+              useToastStore.getState().addToast('Analiza przekroczyła limit czasu (30s).', 'error');
+            } else {
+              useToastStore.getState().addToast('Błąd weryfikacji serwera. Wyniki lokalne pozostają aktywne.', 'error');
+            }
+          } finally {
+              
+              clearTimeout(timeoutId); 
+              set({ isCalculating: false });
           }
-        }
-      },
-
+        },
+        
       /**
        * Silent Background Auto-Save.
        * Uses guard clauses to prevent overlapping writes or saving readonly history snapshots.
@@ -158,7 +174,7 @@ export const useTreeStore = create()(
             data.nodes || [], 
             data.edges || [], 
             data.labels || [], 
-            { clearProjectId: true } 
+            { clearProjectId: true, evaluationMode: data.evaluationMode || EVALUATION_MODES.MAX } 
           );
         } catch (error) {
           console.error("Template load error:", error);
@@ -176,8 +192,10 @@ export const useTreeStore = create()(
           const nodes = safeContent.nodes || [];
           const edges = safeContent.edges || [];
           const stageColumnLabels = safeContent.stageColumnLabels || safeContent.labels || [];
+         
+          const evaluationMode = safeContent.evaluationMode || EVALUATION_MODES.MAX;
 
-          get().loadScenario(nodes, edges, stageColumnLabels);
+          get().loadScenario(nodes, edges, stageColumnLabels, { evaluationMode });
           set({ currentProjectId: projectId });
 
         } catch (error) {
@@ -200,7 +218,7 @@ export const useTreeStore = create()(
        * Pure function pipeline for graph hydration.
        * Calculates visual layout -> renumbers stages -> syncs labels -> runs local EMV math.
        */
-      loadScenario: (newNodes, newEdges, newLabels = [], { clearProjectId = false } = {}) =>
+      loadScenario: (newNodes, newEdges, newLabels = [], { clearProjectId = false, evaluationMode = null  } = {}) =>
         set((state) => {
           const layoutedNodes = getLayoutedElements(newNodes, newEdges);
           const renumbered = renumberDecisionAndChanceNodes(layoutedNodes, newEdges);
@@ -211,6 +229,8 @@ export const useTreeStore = create()(
             nodes: renumbered,
             edges: newEdges,
             stageColumnLabels,
+            evaluationMode: evaluationMode || state.evaluationMode, 
+            dataVersion: state.dataVersion + 1, 
             isDirty: false,
             ...(clearProjectId && { currentProjectId: null })
           };
@@ -218,8 +238,11 @@ export const useTreeStore = create()(
         }),
 
       resetTree: () => set((state) => {
-        const newState = { ...state, nodes: [], edges: [], stageColumnLabels: [], isDirty: false, currentProjectId: null, 
-          saveError: null, loadError: null   };    
+        const newState = { 
+          ...state, nodes: [], edges: [], stageColumnLabels: [], isDirty: false, 
+          currentProjectId: null, saveError: null, loadError: null, evaluationMode: EVALUATION_MODES.MAX,
+          dataVersion: state.dataVersion + 1 
+        };    
         return evaluateAndSetWinningPath(newState);
       }),
 
@@ -233,7 +256,7 @@ export const useTreeStore = create()(
           if (index < 0) return state;
           while (next.length <= index) next.push('');
           next[index] = text;
-          return { stageColumnLabels: next, isDirty: true };
+          return { stageColumnLabels: next, isDirty: true, dataVersion: state.dataVersion + 1 }; 
         }),
 
       updateEdgeData: (edgeId, patch) =>
@@ -241,7 +264,8 @@ export const useTreeStore = create()(
           const newState = {
             ...state,
             edges: state.edges.map((e) => e.id === edgeId ? { ...e, data: { ...e.data, ...patch } } : e),
-            isDirty: true
+            isDirty: true,
+            dataVersion: state.dataVersion + 1 
           };
           return evaluateAndSetWinningPath(newState);
         }),
@@ -256,7 +280,8 @@ export const useTreeStore = create()(
             edges: state.edges.map((e) =>
               e.source === sourceNodeId ? { ...e, data: { ...e.data, showCost: willShow, localShowCost: false } } : e
             ),
-            isDirty: true
+            isDirty: true,
+            dataVersion: state.dataVersion + 1 
           };
           return evaluateAndSetWinningPath(newState);
         }),
@@ -266,7 +291,8 @@ export const useTreeStore = create()(
            const newState = {
             ...state,
             nodes: state.nodes.map((n) => n.id === nodeId ? { ...n, data: { ...n.data, ...patch } } : n),
-            isDirty: true
+            isDirty: true,
+            dataVersion: state.dataVersion + 1 
           };
           return evaluateAndSetWinningPath(newState);
         }),
@@ -291,8 +317,7 @@ export const useTreeStore = create()(
           };
           
           const updatedEdges = rebalanceProbabilities(allEdges, sourceNodeId);
-          const newState = { ...state, edges: updatedEdges, isDirty: true };
-          return evaluateAndSetWinningPath(newState);
+          const newState = { ...state, edges: updatedEdges, isDirty: true, dataVersion: state.dataVersion + 1 }; 
         }),
 
       toggleEdgeAutoBalance: (edgeId) =>
@@ -313,7 +338,7 @@ export const useTreeStore = create()(
             allEdges = rebalanceProbabilities(allEdges, edge.source);
           }
 
-          const newState = { ...state, edges: allEdges, isDirty: true };
+          const newState = { ...state, edges: allEdges, isDirty: true, dataVersion: state.dataVersion + 1 }; 
           return evaluateAndSetWinningPath(newState);
         }),
         
@@ -336,7 +361,7 @@ export const useTreeStore = create()(
 
           if (!hasChanges) return { isSimulationMode: true };
 
-          const newState = { ...state, edges: newEdges, isSimulationMode: true, isDirty: true };
+          const newState = { ...state, edges: newEdges, isSimulationMode: true, isDirty: true, dataVersion: state.dataVersion + 1 }; 
           return evaluateAndSetWinningPath(newState);
         }),
 
@@ -380,7 +405,8 @@ export const useTreeStore = create()(
             nodes: renumbered,
             edges: edgesWithNew,
             stageColumnLabels,
-            isDirty: true
+            isDirty: true,
+            dataVersion: state.dataVersion + 1 
           };
           return evaluateAndSetWinningPath(newState);
         }),
@@ -412,7 +438,8 @@ export const useTreeStore = create()(
             nodes: renumbered,
             edges: remainingEdges,
             stageColumnLabels,
-            isDirty: true
+            isDirty: true,
+            dataVersion: state.dataVersion + 1 
           };
 
           return evaluateAndSetWinningPath(newState);
@@ -468,7 +495,7 @@ export const useTreeStore = create()(
           const renumbered = renumberDecisionAndChanceNodes(layoutedNodes, remainingEdges);
           const stageColumnLabels = syncColumnLabels(renumbered, remainingEdges, state.stageColumnLabels);
 
-          const newState = { ...state, nodes: renumbered, edges: remainingEdges, stageColumnLabels, isDirty: true };
+          const newState = { ...state, nodes: renumbered, edges: remainingEdges, stageColumnLabels, isDirty: true, dataVersion: state.dataVersion + 1 }; 
           return evaluateAndSetWinningPath(newState);
         }),
 
@@ -487,7 +514,9 @@ export const useTreeStore = create()(
                 nodes: renumbered,
                 edges: parsed.edges,
                 stageColumnLabels,
-                isDirty: false
+                evaluationMode: parsed.evaluationMode || EVALUATION_MODES.MAX,
+                isDirty: false,
+                dataVersion: state.dataVersion + 1 
               };
               return evaluateAndSetWinningPath(newState);
             }
@@ -530,7 +559,8 @@ export const useTreeStore = create()(
             nodes: renumbered,
             edges: remainingEdges,
             stageColumnLabels,
-            isDirty: true
+            isDirty: true,
+            dataVersion: state.dataVersion + 1 
           };
           return evaluateAndSetWinningPath(newState);
         }),

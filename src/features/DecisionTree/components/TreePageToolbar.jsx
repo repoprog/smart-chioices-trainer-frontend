@@ -1,6 +1,6 @@
 import React from 'react'; 
 import { useTreeStore } from '../store/useTreeStore.js';
-import { Save, FileText, History, SlidersHorizontal, Lock, Camera, Loader2, Calculator, AlertTriangle } from 'lucide-react';
+import { Save, FileText, History, SlidersHorizontal, Lock, Camera, Loader2, Calculator } from 'lucide-react';
 import { Button } from '../../../components/ui/Button'; 
 import { Tooltip } from '../../../components/ui/Tooltip'; 
 import { HistorySidebar } from '../../../components/ui/HistorySidebar';
@@ -12,13 +12,14 @@ import { PROJECT_TYPES } from '../../../constants/decisionTypes';
 
 import { SaveDecisionModal } from '../../../components/ui/SaveDecisionModal';
 import { SaveVersionModal } from '../../../components/ui/SaveVersionModal';
+import { BackendWarningsBanner } from '../../../components/ui/BackendWarningsBanner';
 
 export function TreePageToolbar({ showTemplates, setShowTemplates }) {
   const { 
     currentProjectId, isSimulationMode, toggleSimulationMode, 
     isPreviewMode, previewingSnapshotId, setCurrentProject, 
     saveToBackend, enterPreviewMode, exitPreviewMode,
-    isCalculating, backendWarnings, analyzeWithBackend
+    isCalculating, analyzeWithBackend
   } = useTreeStore();
  
   const actions = useCloudProjectActions({
@@ -32,14 +33,16 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
     loadScenarioFn: (safeContent) => useTreeStore.getState().loadScenario(
       safeContent.nodes || [], 
       safeContent.edges || [], 
-      safeContent.stageColumnLabels || safeContent.labels || []
+      safeContent.stageColumnLabels || safeContent.labels || [],
+      { evaluationMode: safeContent.evaluationMode }
     ),
     getCurrentStateFn: () => {
       const state = useTreeStore.getState();
       return {
         nodes: state.nodes,
         edges: state.edges,
-        stageColumnLabels: state.stageColumnLabels
+        stageColumnLabels: state.stageColumnLabels,
+        evaluationMode: state.evaluationMode
       };
     }
   });
@@ -54,7 +57,9 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
   const previewedItem = actions.historyItems.find(item => item.id === previewingSnapshotId);
 
   return (
-    <>
+    // ZAMIAST PUSTEGO <> UŻYWAMY GŁÓWNEGO KONTENERA RELATIVE:
+    <div className="relative flex flex-col items-end w-full lg:w-auto">
+      
       <HistoryPreviewBanner
         isVisible={isPreviewMode}
         itemTitle={previewedItem?.title || "Nieznana wersja"}
@@ -63,7 +68,6 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
         onClose={actions.handleClosePreview}
       />
 
-      {/* ZMIENIONY KONTENER: Układ chmury tagów wyrównany do prawej */}
       <div className="flex flex-wrap gap-1.5 lg:gap-3 justify-end items-center relative z-20 w-full lg:w-auto mt-2 lg:mt-0">
         
         <Button 
@@ -116,7 +120,6 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
           >
             <SlidersHorizontal className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" /> Symulacja
             
-            {/* Tooltip w oryginalnej formie, skoro Portal załatwił sprawę */}
             <Tooltip 
               title="Symulacja „What-if”" 
               subtitle="(Auto-balans)"
@@ -181,17 +184,8 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
           isSaving={actions.isSaving}
         />
 
-        {backendWarnings && backendWarnings.length > 0 && (
-          <div className="w-full flex flex-col gap-2 mt-2">
-            {backendWarnings.map((warning, index) => (
-              <div key={index} className="flex items-start gap-2 px-3 py-2 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md shadow-sm text-left">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
-                <span>{warning}</span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
-    </>
+      
+    </div>
   );
 }
