@@ -7,7 +7,7 @@ import { TableGrid } from "./components/TableGrid";
 import { TableSettings } from "./components/TableSettings";
 import { TablePageToolbar } from "./components/TablePageToolbar";
 
-import { ConfirmModal } from "../../components/ui/ConfirmModal";
+import { ConfirmModal } from "../../components/modals/ConfirmModal";
 import { Card } from "../../components/ui/Card";       
 import { Button } from "../../components/ui/Button";   
 import { ErrorBoundary } from "../../components/ui/ErrorBoundary"; 

@@ -107,7 +107,6 @@ export default function LoginPage() {
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border"></span></div>
-            <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">Lub sprawdź wersję demo</span></div>
           </div>
 
           <Button 
@@ -117,7 +116,7 @@ export default function LoginPage() {
             disabled={loading}
           >
             <UserCheck className="w-4 h-4 mr-2" />
-            Zaloguj jako Gość (Rekruter)
+            Zaloguj jako Gość (Demo)
           </Button>
 
           <div className="mt-6 text-center text-sm text-muted-foreground">

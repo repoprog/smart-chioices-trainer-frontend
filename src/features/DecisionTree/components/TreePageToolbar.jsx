@@ -10,8 +10,8 @@ import { usePendingProjectSave } from '../../../hooks/usePendingProjectSave';
 import { useCloudProjectActions } from '../../../hooks/useCloudProjectActions';
 import { PROJECT_TYPES } from '../../../constants/decisionTypes'; 
 
-import { SaveDecisionModal } from '../../../components/ui/SaveDecisionModal';
-import { SaveVersionModal } from '../../../components/ui/SaveVersionModal';
+import { SaveDecisionModal } from '../../../components/modals/SaveDecisionModal.jsx';
+import { SaveVersionModal } from '../../../components/modals/SaveVersionModal.jsx';
 import { BackendWarningsBanner } from '../../../components/ui/BackendWarningsBanner';
 
 export function TreePageToolbar({ showTemplates, setShowTemplates }) {

@@ -9,7 +9,7 @@ import {useTableStore} from "../../features/DecisionTable/store/useTableStore";
 import {useTreeStore} from "../../features/DecisionTree/store/useTreeStore";
 
 import { Button } from "../ui/Button";
-import { ConfirmModal } from "../ui/ConfirmModal";
+import { ConfirmModal } from "../modals/ConfirmModal";
 import { ToastContainer } from "../ui/ToastContainer";
 import { APP_ROUTES } from "../../constants/appConstants"; 
 

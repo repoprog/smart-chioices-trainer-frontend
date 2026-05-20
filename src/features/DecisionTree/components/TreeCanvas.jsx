@@ -17,40 +17,47 @@ import { TreeToolbar } from './TreeToolbar.jsx'
 import { TreeLegend } from './TreeLegend.jsx' 
 import { NODE_TYPES } from '../../../constants/decisionTypes';
 
+// ZMIANA: Dodajemy opcjonalny prop readOnlyData
+export function TreeCanvas({ readOnlyData = null }) {
+  // Jeśli dostarczono readOnlyData (tryb publiczny), omijamy nasłuchiwanie na store
+  const isReadOnly = !!readOnlyData;
 
-export function TreeCanvas() {
-  const allNodes = useTreeStore((s) => s.nodes)
-  const allEdges = useTreeStore((s) => s.edges)
+  const storeNodes = useTreeStore((s) => s.nodes);
+  const storeEdges = useTreeStore((s) => s.edges);
   const storeWinningPath = useTreeStore((s) => s.winningPath);
-    const isPreviewMode = useTreeStore((s) => s.isPreviewMode);
+  const isPreviewMode = useTreeStore((s) => s.isPreviewMode);
 
+  // ZMIANA: Logika wyboru danych: albo ze Store (normalna praca), albo z Propsa (publiczny link)
+  const baseNodes = isReadOnly ? (readOnlyData.nodes || []) : storeNodes;
+  const baseEdges = isReadOnly ? (readOnlyData.edges || []) : storeEdges;
+  const rawWinningPath = isReadOnly ? (readOnlyData.winningPath || []) : storeWinningPath;
+  const activePreviewMode = isReadOnly ? true : isPreviewMode; // ReadOnly to na sztywno zablokowany edytor
 
   const winningPath = useMemo(() => {
-    return storeWinningPath instanceof Set 
-      ? storeWinningPath 
-      : new Set(storeWinningPath || []);
-  }, [storeWinningPath]);
+    return rawWinningPath instanceof Set 
+      ? rawWinningPath 
+      : new Set(rawWinningPath || []);
+  }, [rawWinningPath]);
   
-
   const nodes = useMemo(() => {
-    return allNodes.map((node) => ({
+    return baseNodes.map((node) => ({
       ...node,
       data: {
         ...node.data,
         isHighlighted: winningPath.has(node.id),
       },
     }));
-  }, [allNodes, winningPath]);
+  }, [baseNodes, winningPath]);
 
   const edges = useMemo(() => {
-    return allEdges.map((edge) => ({
+    return baseEdges.map((edge) => ({
       ...edge,
       data: {
         ...edge.data,
         isHighlighted: winningPath.has(edge.id),
       },
     }));
-  }, [allEdges, winningPath]);
+  }, [baseEdges, winningPath]);
 
   const onInit = useCallback((rf) => {
     requestAnimationFrame(() =>
@@ -59,9 +66,11 @@ export function TreeCanvas() {
         includeHiddenNodes: false,
       })
     )
-  }, [])
+  }, []);
 
   const onNodesChange = useCallback((changes) => {
+    if (isReadOnly) return; // BLOKADA: W trybie read-only ignorujemy zdarzenia
+
     const isNoise = changes.every(
       (c) => c.type === 'dimensions' || c.type === 'select' || c.type === 'position'
     );
@@ -77,9 +86,11 @@ export function TreeCanvas() {
     if (isNoise) {
       useTreeStore.temporal.getState().resume();
     }
-  }, []);
+  }, [isReadOnly]);
 
   const onEdgesChange = useCallback((changes) => {
+    if (isReadOnly) return; // BLOKADA: W trybie read-only ignorujemy zdarzenia
+
     const isNoise = changes.every((c) => c.type === 'select');
 
     if (isNoise) {
@@ -93,19 +104,18 @@ export function TreeCanvas() {
     if (isNoise) {
       useTreeStore.temporal.getState().resume();
     }
-  }, []);
+  }, [isReadOnly]);
 
 return (
-  
     <div 
       id="tree-canvas-container" 
       className={`relative flex-1 w-full h-full min-h-[560px] bg-background transition-colors ${
-        isPreviewMode ? "opacity-90 grayscale-[0.1]" : ""
+        activePreviewMode ? "opacity-90 grayscale-[0.1]" : ""
       }`}
     >
       {/* --- MAGICZNY CSS SNAJPER --- */}
-      {/* Odbiera kliknięcia tylko elementom na płótnie, przepuszczając je do tła (dzięki czemu działa przesuwanie planszy i przyciski z CustomControls) */}
-      {isPreviewMode && (
+      {/* Odbiera kliknięcia tylko elementom na płótnie, przepuszczając je do tła */}
+      {activePreviewMode && (
         <style>{`
           .react-flow__node *,
           .react-flow__edgelabel-renderer *,
@@ -128,9 +138,9 @@ return (
           defaultEdgeOptions={{ type: 'smartChoices' }}
           
           /* --- NATYWNE BLOKADY REACT FLOW --- */
-          nodesDraggable={!isPreviewMode}
-          nodesConnectable={!isPreviewMode}
-          elementsSelectable={!isPreviewMode}
+          nodesDraggable={!activePreviewMode}
+          nodesConnectable={!activePreviewMode}
+          elementsSelectable={!activePreviewMode}
 
           minZoom={0.35}
           maxZoom={1.75}
@@ -143,6 +153,7 @@ return (
             includeHiddenNodes: false,
           }}
         >
+          {/* ZMIANA: Nagłówki i legenda wyświetlają się, ale upewnijmy się że działają z readOnlyData, jeśli tego używają */}
           <StageHeaders />
           <Background
             id="tree-bg"
@@ -163,7 +174,9 @@ return (
               return 'var(--muted)'
             }}
           />
-          <TreeToolbar />
+          
+          {/* ZMIANA: Pasek narzędziowy pokazujemy TYLKO jeśli NIE jesteśmy w trybie publicznego linku */}
+          {!isReadOnly && <TreeToolbar />}
           <TreeLegend />
         </ReactFlow>
       </div>

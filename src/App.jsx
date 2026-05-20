@@ -1,3 +1,6 @@
+
+
+import { useEffect } from 'react'; 
 import { BrowserRouter, Navigate, Route, Routes, Outlet } from 'react-router-dom';
 import useAuthStore from './store/useAuthStore.js';
 
@@ -12,6 +15,8 @@ import Settings from './pages/Settings.jsx';
 import LoginPage from './pages/auth/LoginPage.jsx';
 import RegisterPage from './pages/auth/RegisterPage.jsx';
 
+// DODANE: Import nowej strony udostępnionego projektu
+import { SharedProjectPage } from './pages/SharedProjectPage.jsx'; 
 
 import { APP_ROUTES } from './constants/appConstants';
 
@@ -19,7 +24,6 @@ const ProtectedRoute = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   
   if (!isAuthenticated) {
- 
     return <Navigate to={APP_ROUTES.LOGIN} replace />;
   }
   
@@ -27,6 +31,17 @@ const ProtectedRoute = () => {
 };
 
 function App() {
+  // DODANE: Wyciągamy stan i akcję z Zustanda
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const fetchProfile = useAuthStore((state) => state.fetchProfile);
+
+  // DODANE: Odpalenie fetchProfile po odświeżeniu, jeśli user jest zalogowany
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchProfile();
+    }
+  }, [isAuthenticated, fetchProfile]);
+
   return (
     <BrowserRouter>
     <ToastContainer />
@@ -34,6 +49,9 @@ function App() {
         <Route path={APP_ROUTES.HOME} element={<LandingPage />} />
         <Route path={APP_ROUTES.LOGIN} element={<LoginPage />} />
         <Route path={APP_ROUTES.REGISTER} element={<RegisterPage />} />
+
+        {/* DODANE: Trasa publiczna dla linków udostępniania (musi być poza ProtectedRoute) */}
+        <Route path="/shared/:token" element={<SharedProjectPage />} />
 
         {/* Cały Layout aplikacji */}
         <Route path={APP_ROUTES.APP} element={<Layout />}>
@@ -51,6 +69,7 @@ function App() {
           </Route>
         </Route>
 
+        {/* CATCH-ALL: Jeśli ścieżka nie istnieje (i nie jest to /shared/:token), wróć na główną */}
         <Route path="*" element={<Navigate to={APP_ROUTES.HOME} replace />} />
       </Routes>
     </BrowserRouter>

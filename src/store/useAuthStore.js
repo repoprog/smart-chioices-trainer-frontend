@@ -12,6 +12,24 @@ const useAuthStore = create(
             isLoading: false,
             error: null,
 
+            fetchProfile: async () => {
+                try {
+                    // Uderzamy do naszego nowego endpointu GET /api/v1/users/me
+                    const response = await apiClient.get('/api/v1/users/me'); 
+                    
+                    set((state) => ({
+                        // Aktualizujemy dane usera, łącząc to, co mamy, z nowymi danymi (np. dodając 'name')
+                        user: { ...state.user, ...response.data }
+                    }));
+                } catch (error) {
+                    console.error("Błąd podczas odświeżania profilu:", error);
+                    // Opcjonalnie: jeśli token wygasł (401), wymuszamy wylogowanie
+                    if (error.response?.status === 401) {
+                        get().logout();
+                    }
+                }
+            },
+
             login: async (email, password) => {
                 set({ isLoading: true, error: null });
                 try {
@@ -26,6 +44,8 @@ const useAuthStore = create(
 
                 // Aktualizujemy stan globalny (bez tokena!)
                 set({ user, isAuthenticated: true, isLoading: false });
+                // --- NOWOŚĆ: Po pomyślnym logowaniu dociągamy pełny profil (z imieniem) ---
+                    await get().fetchProfile();
                 } catch (error) {
                     set({ isLoading: false, error: error.response?.data?.message || 'Błąd logowania' });
                     throw error;
@@ -33,12 +53,14 @@ const useAuthStore = create(
                 
             },
 
-            register: async (email, password) => {
+            // Przyjmujemy 'name' jako pierwszy argument
+            register: async (name, email, password) => {
                 set({ isLoading: true, error: null });
                 try {
-                await apiClient.post(API_PATHS.AUTH.REGISTER, { email, password });
-                // Po udanej rejestracji od razu automatycznie logujemy użytkownika
-                await get().login(email, password);
+                    
+                    await apiClient.post(API_PATHS.AUTH.REGISTER, { name, email, password });
+                    
+                    await get().login(email, password);
                 } catch (error) {
                     set({ isLoading: false, error: error.response?.data?.message || 'Błąd rejestracji' });
                     throw error;

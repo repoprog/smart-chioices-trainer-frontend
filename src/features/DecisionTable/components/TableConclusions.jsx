@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from "../../../components/ui/Button";
 import { Badge } from "../../../components/ui/Badge"; 
-import { Crown, Info, ArrowRightLeft } from "lucide-react";
+import { Trophy, Info, ArrowRightLeft } from "lucide-react";
 import { DOMINATION_TYPES } from '../../../constants/decisionTypes';
 
 export function TableConclusions({
@@ -44,9 +44,9 @@ export function TableConclusions({
   return (
     <tr>
       {/* 3. Zmieniony nagłówek z solidnym tłem dymku i resetem stylów */}
-      <td className="sticky left-0 z-[50] bg-card/90 backdrop-blur-md text-right text-muted-foreground font-bold pr-5 whitespace-nowrap border-b border-r border-border py-4 shadow-[inset_-1px_0_0_var(--border)] rounded-bl-xl overflow-visible">
-        <div className="flex items-center justify-end gap-2 text-sm uppercase tracking-wider">
-          ANALIZA SMART
+      <td className="sticky left-0 z-[50] bg-card/90 backdrop-blur-md text-right text-foreground font-semibold pr-5 whitespace-nowrap border-b border-r border-border py-4 shadow-[inset_-1px_0_0_var(--border)] rounded-bl-xl overflow-visible">
+        <div className="flex items-center justify-end gap-2 text-sm tracking-wider">
+         <span>Analiza SMART</span>
           
           {/* Kontener grupy (wykrywa najechanie myszką) */}
           <div className="relative group cursor-help">
@@ -148,8 +148,8 @@ export function TableConclusions({
                 className={`p-2 align-middle border-b border-r border-border bg-green-50 dark:bg-green-900/10 text-green-700 dark:text-green-500 text-[11px] font-medium text-center ${isLastCell ? 'rounded-br-xl' : ''}`}
               >
                 <div className="flex flex-col items-center justify-center mb-1.5 mt-1">
-                  <Badge variant="success" className="px-3 py-1 shadow-sm">
-                    <Crown className="w-4 h-4 mr-1.5" />
+                  <Badge variant="success" className="px-3 py-1">
+                    <Trophy className="w-4 h-4 mr-1.5" />
                     ZWYCIĘZCA
                   </Badge>
                 </div>

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { X, Camera } from 'lucide-react';
+import { Camera, AlertCircle } from 'lucide-react'; 
+import { Modal } from '../modals/Modal';
+import { Button } from '../ui/Button';
 
 export function SaveVersionModal({
   isOpen,
@@ -8,12 +10,11 @@ export function SaveVersionModal({
   isSaving
 }) {
   const [localLabel, setLocalLabel] = useState('');
+  const [error, setError] = useState(''); 
 
-  if (!isOpen) return null;
-
-  // Własna funkcja zamykająca, która od razu czyści stan
   const handleClose = () => {
     setLocalLabel('');
+    setError(''); 
     onClose();
   };
 
@@ -23,24 +24,27 @@ export function SaveVersionModal({
     const date = now.toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit" });
     const time = now.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
     setLocalLabel(`Wersja z ${date} ${time}`);
+    if (error) setError('');
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(localLabel);
+    
+    // Walidacja
+    if (!localLabel.trim()) {
+      setError("Nazwa wersji jest wymagana.");
+      return;
+    }
+
+    onSubmit(localLabel.trim());
     setLocalLabel('');
+    setError('');
   };
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-card w-full max-w-md p-6 rounded-xl shadow-xl border border-border animate-in fade-in zoom-in-95 relative">
-        <button 
-          onClick={handleClose} 
-          className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
-        >
-          <X className="w-5 h-5" />
-        </button>
-        <h2 className="text-xl font-bold mb-5">Zapisz wersję</h2>
+    <Modal isOpen={isOpen} onClose={handleClose} size="sm" title="Zapisz wersję">
+      <div className="relative">
+      
         
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="flex items-start gap-3 p-3 bg-primary/5 border border-primary/20 rounded-lg">
@@ -53,47 +57,62 @@ export function SaveVersionModal({
             </div>
           </div>
 
+          {/* Wyświetlanie błędu */}
+          {error && (
+            <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive border border-destructive/20 rounded-lg text-sm animate-in fade-in slide-in-from-top-1">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              {error}
+            </div>
+          )}
+
           <div>
-            <label className="block text-sm font-medium mb-2">
+            <label className="block text-sm font-medium mb-2 text-foreground">
               Nazwa wersji <span className="text-destructive">*</span>
             </label>
             <input 
-              autoFocus required 
+              autoFocus 
               value={localLabel} 
-              onChange={e => setLocalLabel(e.target.value)} 
+              onChange={e => {
+                setLocalLabel(e.target.value);
+                if (error) setError('');
+              }} 
               placeholder="np. Przed zmianami w Q2"
-              className="w-full px-4 py-3 bg-muted/30 border border-border rounded-lg outline-none focus:border-primary transition-colors" 
+              className={`w-full px-4 py-3 bg-muted/30 border rounded-lg outline-none transition-colors text-foreground ${
+                error ? 'border-destructive focus:border-destructive' : 'border-border focus:border-primary'
+              }`} 
               disabled={isSaving}
             />
+
             <button 
               type="button" 
               onClick={handleGenerateAutoName} 
-              className="text-sm text-primary hover:underline mt-2 text-left"
+              className="text-sm text-primary hover:underline mt-2 text-left cursor-pointer disabled:cursor-default"
               disabled={isSaving}
             >
               Wygeneruj automatyczną nazwę
             </button>
           </div>
           <div className="flex gap-3 justify-end pt-2">
-            <button 
+            <Button 
               type="button" 
+              variant="ghost"
               onClick={handleClose} 
-              className="px-4 py-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors font-medium text-sm"
               disabled={isSaving}
             >
               Anuluj
-            </button>
-            <button 
+            </Button>
+            <Button 
               type="submit" 
-              disabled={isSaving || !localLabel.trim()} 
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors font-medium text-sm disabled:opacity-50"
+              variant="default"
+              disabled={isSaving} 
+              className="flex items-center gap-2"
             >
               <Camera className="w-4 h-4" />
               {isSaving ? 'Zapisywanie...' : 'Zapisz'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
-    </div>
+    </Modal>
   );
 }

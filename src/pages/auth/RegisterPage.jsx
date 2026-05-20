@@ -4,13 +4,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import useAuthStore from "../../store/useAuthStore";
-import { UserPlus, AlertCircle, Mail, Lock } from "lucide-react";
-import { Input } from "../../components/ui/Input";
+import { UserPlus, AlertCircle, Mail, Lock, User } from "lucide-react"; 
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { APP_ROUTES } from "../../constants/appConstants"; 
+import { Input } from "../../components/ui/Input";
 
 const registerSchema = z.object({
+  name: z.string().min(2, "Imię musi mieć co najmniej 2 znaki"), 
   email: z.string().email("Nieprawidłowy format adresu email"),
   password: z.string().min(8, "Hasło musi mieć minimum 8 znaków"),
   confirmPassword: z.string()
@@ -40,7 +41,8 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await registerAction(data.email, data.password);
+      // DODANO przekazywanie imienia (data.name) do akcji rejestracji
+      await registerAction(data.name, data.email, data.password);
       const params = new URLSearchParams(location.search);
       const returnTo = params.get('returnTo') || APP_ROUTES.PANEL;
       navigate(returnTo);
@@ -67,6 +69,17 @@ export default function RegisterPage() {
                 {globalError}
               </div>
             )}
+
+         
+            <Input
+              label="Imię"
+              type="text"
+              icon={User}
+              placeholder="np. Jan"
+              disabled={loading}
+              error={errors.name?.message}
+              {...register("name")}
+            />
 
             <Input
               label="Email"

@@ -5,7 +5,7 @@ import { decisionApi } from '../../api/decisionApi';
 
 import { TreeCanvas } from './components/TreeCanvas.jsx';
 import { TreePageToolbar } from './components/TreePageToolbar.jsx';
-import { ConfirmModal } from '../../components/ui/ConfirmModal'; 
+import { ConfirmModal } from '../../components/modals/ConfirmModal.jsx'; 
 import { Tooltip } from '../../components/ui/Tooltip'; 
 import { Card } from '../../components/ui/Card'; 
 import { Lock, CheckCircle2, Loader2, AlertCircle, Edit3 } from 'lucide-react'; 

@@ -13,7 +13,7 @@ import { useToastStore } from "../store/useToastStore";
 import { Button } from "../components/ui/Button"; 
 import { Badge } from "../components/ui/Badge";   
 import { Card } from "../components/ui/Card";
-import { ConfirmModal } from "../components/ui/ConfirmModal";     
+import { ConfirmModal } from "../components/modals/ConfirmModal";     
 
 export default function UserPanel() {
   const navigate = useNavigate();

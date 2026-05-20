@@ -3,19 +3,17 @@ import { useTableStore } from '../store/useTableStore';
 import { getTradeoffResults, getRowRanks } from "../logic/tableLogic"; 
 import { Eye, EyeOff } from 'lucide-react';
 
-import { ConfirmModal } from "../../../components/ui/ConfirmModal";
+import { ConfirmModal } from "../../../components/modals/ConfirmModal";
 import { TableHeader } from "./TableHeader";
 import { TableRow } from "./TableRow";
 import { TableConclusions } from "./TableConclusions";
 import { DOMINATION_TYPES } from "../../../constants/decisionTypes";
 
 // --- FUNKCJA ADAPTERA ---
-// Tłumaczy twarde DTO z Javy na format, który od zawsze rozumiał Twój frontend.
 function mapBackendResultsToLocal(backendResult, store) {
   const { results, winnerIndex } = backendResult;
   const dominationResults = {};
 
-  // Iterujemy po wynikach z backendu (klucz to indeks kolumny, np. 0, 1, 2)
   Object.entries(results || {}).forEach(([colIdx, dto]) => {
     if (dto.domination) {
       dominationResults[Number(colIdx)] = {
@@ -26,13 +24,10 @@ function mapBackendResultsToLocal(backendResult, store) {
     }
   });
 
-  // Filtrujemy tylko te alternatywy, które Java uznała za kompletne
   const completeAlts = Object.entries(results || {})
     .filter(([, dto]) => dto.isComplete)
     .map(([idx]) => Number(idx));
 
-  // Rzeczy, których backend nie robi (np. wizualne ukrywanie wyzerowanych wierszy)
-  // bierzemy po staremu z logiki lokalnej
   const localPartial = getTradeoffResults(store);
 
   return {
@@ -44,7 +39,9 @@ function mapBackendResultsToLocal(backendResult, store) {
   };
 }
 
-export function TableGrid() {
+// ZMIANA: Odbieramy nowe propsy
+export function TableGrid({ readOnlyData = null, readOnlyShowRanking = true }) {
+  const isReadOnly = !!readOnlyData;
   const store = useTableStore();
   const [focusedCell, setFocusedCell] = useState(null);
 
@@ -55,33 +52,51 @@ export function TableGrid() {
     onConfirm: null,
   });
 
+  // 1. ZMIANA: Wyciągamy ze store TYLKO to, czego nie nadpiszemy z readOnlyData
   const {
-    alternatives, objectives, cells, objectiveUnits, showRanking, sortDirections,
     showTradeoffs, hideEqualizedObjectives, rejectedAlternatives, showRejected,
-    customScales, backendAnalysisResult, // <--- WYCIĄGAMY DANE Z JAVY
+    customScales, backendAnalysisResult,
     toggleShowRejected, toggleHideEqualized, toggleSortDirection,
     addAlternative, addObjective, updateAlternative, updateObjective, updateUnit,
     rejectAlternative, restoreAlternative, removeAlternative, removeObjective
   } = store;
   
-  // 1. Lokalne obliczenia "w locie" dla płynnego UX przy edycji suwaków
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const localResults = useMemo(() => getTradeoffResults(store), [
+  // 2. MAGIA: Pobranie głównych danych: Jeśli tryb publiczny (readOnlyData), bierzemy z JSON-a. Jeśli nie, ze Store'a.
+  const alternatives = isReadOnly ? (readOnlyData.alternatives || []) : store.alternatives;
+  const objectives = isReadOnly ? (readOnlyData.objectives || []) : store.objectives;
+  const cells = isReadOnly ? (readOnlyData.cells || {}) : store.cells;
+  const objectiveUnits = isReadOnly ? (readOnlyData.objectiveUnits || {}) : store.objectiveUnits;
+  const sortDirections = isReadOnly ? (readOnlyData.sortDirections || {}) : store.sortDirections;
+  
+  // 3. ZMIANA: Reagowanie na przycisk z SharedProjectPage 
+  const showRanking = isReadOnly ? readOnlyShowRanking : store.showRanking;
+
+  // 4. Tworzymy atrapę store'a dla logiki obliczeniowej, by uchronić się przed zepsuciem podczas podglądu z cudzych danych
+  const mockStoreContext = isReadOnly ? {
+    alternatives, objectives, cells, objectiveUnits, sortDirections,
+    showRanking, showTradeoffs, hideEqualizedObjectives, rejectedAlternatives, showRejected, customScales
+  } : store;
+
+  const localResults = useMemo(() => getTradeoffResults(mockStoreContext), [
     showRanking, showTradeoffs, alternatives, objectives,
-    rejectedAlternatives, cells, customScales, sortDirections
+    rejectedAlternatives, cells, customScales, sortDirections, mockStoreContext
   ]);
 
-  // 2. MAGIA ADAPTERA: Jeśli mamy twarde dane z Javy, nadpisujemy wnioski lokalne!
+  // Używamy analizy z Javy jeśli jest w stanie, ALBO jeśli dostaliśmy ją w payloadzie linku
+  const activeBackendResult = isReadOnly ? readOnlyData.backendAnalysisResult : backendAnalysisResult;
+
   const {
     equalizedRowsIndexes, equalizedCount, dominationResults,
     winnerIndex, completeAlts,
-  } = backendAnalysisResult
-    ? mapBackendResultsToLocal(backendAnalysisResult, store)
+  } = activeBackendResult
+    ? mapBackendResultsToLocal(activeBackendResult, mockStoreContext)
     : localResults;
 
   const closeConfirmModal = () => setModalConfig({ ...modalConfig, isOpen: false });
 
+  // Blokady kliknięć
   const handleRemoveAlternative = (indexToRemove) => {
+    if (isReadOnly) return;
     const hasData = objectives.some((_, r) => cells[`${r}-${indexToRemove}`] && cells[`${r}-${indexToRemove}`].toString().trim() !== "");
     if (hasData) {
       setModalConfig({
@@ -96,6 +111,7 @@ export function TableGrid() {
   };
 
   const handleRemoveObjective = (indexToRemove) => {
+    if (isReadOnly) return;
     const hasData = alternatives.some((_, c) => cells[`${indexToRemove}-${c}`] && cells[`${indexToRemove}-${c}`].toString().trim() !== "");
     if (hasData) {
       setModalConfig({
@@ -109,8 +125,13 @@ export function TableGrid() {
     }
   };
 
+  // Klasa blokująca edycję w trybie udostępniania
+  const readOnlyClasses = isReadOnly 
+    ? "[&_input]:pointer-events-none [&_input]:!bg-transparent [&_button]:hidden [&_button.flex]:flex" 
+    : "";
+
   return (
-    <div className="w-full pb-6">
+    <div className={`w-full pb-6 ${readOnlyClasses}`}>
       <div className={`relative isolate rounded-xl transition-all duration-500 border border-border bg-card shadow-sm overflow-hidden ${showTradeoffs ? "ring-2 ring-purple-500 z-20 shadow-[0_0_20px_rgba(168,85,247,0.3)]" : ""}`}>
         <div className="overflow-x-auto w-full">
           <table className="w-full table-fixed border-separate border-spacing-0">
@@ -125,10 +146,10 @@ export function TableGrid() {
               objectives={objectives}
               alternatives={alternatives}
               showRanking={showRanking}
-              dominationResults={dominationResults} // <--- To już są dane z Javy!
+              dominationResults={dominationResults}
               rejectedAlternatives={rejectedAlternatives}
               showRejected={showRejected}
-              winnerIndex={winnerIndex} // <--- To już są dane z Javy!
+              winnerIndex={winnerIndex} 
               addObjective={addObjective}
               addAlternative={addAlternative}
               updateAlternative={updateAlternative}
@@ -149,7 +170,7 @@ export function TableGrid() {
                   hideEqualizedObjectives={hideEqualizedObjectives}
                   rejectedAlternatives={rejectedAlternatives}
                   showRejected={showRejected}
-                  rowRanks={getRowRanks(rowIndex, store)} // Rangi wierszy zostawiamy lokalnie (UX)
+                  rowRanks={getRowRanks(rowIndex, mockStoreContext)} 
                   isRowEqual={equalizedRowsIndexes.includes(rowIndex)}
                   dominationResults={dominationResults}
                   winnerIndex={winnerIndex}
@@ -168,11 +189,11 @@ export function TableGrid() {
                 objectives={objectives}
                 cells={cells}
                 showRanking={showRanking}
-                dominationResults={dominationResults} // <--- Backend DTO wchodzi tu
+                dominationResults={dominationResults} 
                 rejectedAlternatives={rejectedAlternatives}
                 showRejected={showRejected}
-                winnerIndex={winnerIndex}             // <--- Backend DTO wchodzi tu
-                completeAlts={completeAlts}           // <--- Backend DTO wchodzi tu
+                winnerIndex={winnerIndex}             
+                completeAlts={completeAlts}           
                 restoreAlternative={restoreAlternative}
                 rejectAlternative={rejectAlternative}
                 toggleTradeoffs={store.toggleTradeoffs}
@@ -186,14 +207,14 @@ export function TableGrid() {
         <div></div>
         <div className="flex gap-3">
           {equalizedCount > 0 && (
-            <button className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors" onClick={toggleHideEqualized}>
+            <button className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors" onClick={isReadOnly ? undefined : toggleHideEqualized}>
               {hideEqualizedObjectives ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
               {hideEqualizedObjectives ? `Pokaż wyrównane cele (${equalizedCount})` : `Ukryj wyrównane cele (${equalizedCount})`}
             </button>
           )}
 
           {rejectedAlternatives.length > 0 && (
-            <button className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors" onClick={toggleShowRejected}>
+            <button className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors" onClick={isReadOnly ? undefined : toggleShowRejected}>
               {showRejected ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
               {showRejected ? `Ukryj odrzucone opcje (${rejectedAlternatives.length})` : `Pokaż odrzucone opcje (${rejectedAlternatives.length})`}
             </button>
@@ -202,22 +223,24 @@ export function TableGrid() {
       </div>
 
       <datalist id="scale-suggestions">
-        {store.customScales.map((scale, index) => <option key={index} value={scale.word} />)}
+        {customScales.map((scale, index) => <option key={index} value={scale.word} />)}
       </datalist>
 
       <datalist id="unit-suggestions">
         <option value="zł" /><option value="$" /><option value="€" /><option value="m²" /><option value="m" /><option value="km" /><option value="kg" /><option value="min" /><option value="h" /><option value="%" /><option value="szt." />
       </datalist>
 
-      <ConfirmModal
-        isOpen={modalConfig.isOpen}
-        onClose={closeConfirmModal}
-        onConfirm={() => { if (modalConfig.onConfirm) modalConfig.onConfirm(); }}
-        title={modalConfig.title}
-        message={modalConfig.message}
-        variant="danger"
-        confirmText="Usuń"
-      />
+      {!isReadOnly && (
+        <ConfirmModal
+          isOpen={modalConfig.isOpen}
+          onClose={closeConfirmModal}
+          onConfirm={() => { if (modalConfig.onConfirm) modalConfig.onConfirm(); }}
+          title={modalConfig.title}
+          message={modalConfig.message}
+          variant="danger"
+          confirmText="Usuń"
+        />
+      )}
     </div>
   );
 }

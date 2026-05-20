@@ -109,13 +109,26 @@ export const useTreeStore = create()(
               return node;
             });
             const hasWarnings = result.warnings && result.warnings.length > 0;
+
+            // --- NOWOŚĆ: Tłumacz (Parser) komunikatów z serwera ---
+            // Zamienia np. "węzła losowego 'c3'" na "węzła losowego nr 4"
+            const humanFriendlyWarnings = (result.warnings || []).map(warning => {
+              // Szukamy czegokolwiek w apostrofach, co pasuje do naszych ID (np. 'c3', 'd1')
+              return warning.replace(/'(c\d+|d\d+|t\d+)'/g, (match, nodeId) => {
+                const node = updatedNodes.find(n => n.id === nodeId);
+                if (node && node.data && node.data.nodeNumber) {
+                  return `nr ${node.data.nodeNumber}`; // Zwraca "nr 4" (bez apostrofów)
+                }
+                return match; // Jeśli z jakiegoś powodu nie znajdzie węzła, zostawia 'c3'
+              });
+            });
             
             // Single Source of Truth update + trigger background auto-save (isDirty: true)
             set({
               nodes: updatedNodes,
               evaluationMap: result.evaluationMap || {},
               winningPath: result.winningPath || [],
-              backendWarnings: result.warnings || [],
+              backendWarnings: humanFriendlyWarnings || [],
               isDirty: true,
             });
 
@@ -318,6 +331,7 @@ export const useTreeStore = create()(
           
           const updatedEdges = rebalanceProbabilities(allEdges, sourceNodeId);
           const newState = { ...state, edges: updatedEdges, isDirty: true, dataVersion: state.dataVersion + 1 }; 
+          return evaluateAndSetWinningPath(newState);
         }),
 
       toggleEdgeAutoBalance: (edgeId) =>

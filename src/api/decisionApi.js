@@ -124,6 +124,15 @@ export const decisionApi = {
     const response = await apiClient.get(API_PATHS.PROJECTS.SNAPSHOT(projectId, snapshotId));
     return response.data; 
   },
+  async createShareLink(projectId, payload) {
+    const response = await apiClient.post(API_PATHS.PROJECTS.SHARE(projectId), payload);
+    return response.data;
+  }, 
+  async getSharedProject(token) {
+    // Odpytujemy publiczny endpoint (backend nie będzie tu wymagał JWT)
+    const response = await apiClient.get(`/api/v1/projects/shared/${token}`);
+    return response.data;
+  },
 
   async analyzeTable(payload, signal) {
     const response = await apiClient.post(API_PATHS.ANALYSIS.TABLE, payload, { signal });
@@ -133,5 +142,6 @@ export const decisionApi = {
   async analyzeTree(payload, signal) {
     const response = await apiClient.post(API_PATHS.ANALYSIS.TREE, payload, { signal });
     return response.data;
-  }
+  },
+  
 };

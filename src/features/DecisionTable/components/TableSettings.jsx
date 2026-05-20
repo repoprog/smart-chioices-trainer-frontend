@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useTableStore } from '../store/useTableStore';
-import { Settings2, ChevronDown, ChevronUp, X, Plus, Trash2, FolderOpen, Save } from 'lucide-react';
+// ZMIANA: Dodano import Share2
+import { Settings2, ChevronDown, ChevronUp, X, Plus, Trash2, FolderOpen, Save, Share2 } from 'lucide-react';
 import { scalePresets } from '../data/scalePresets';
 
-import { ConfirmModal } from '../../../components/ui/ConfirmModal'; 
+import { ConfirmModal } from '../../../components/modals/ConfirmModal.jsx'; 
 import { Button } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';   
 import { Badge } from '../../../components/ui/Badge'; 
@@ -11,13 +12,15 @@ import { useJsonExportImport } from '../../../hooks/useJsonExportImport';
 
 import { useToastStore } from '../../../store/useToastStore'; 
 
+import { ShareModal } from '../../../components/modals/ShareModal.jsx';
+
 export function TableSettings() {
     const presetKeys = Object.keys(scalePresets);
     const [showScalesSettings, setShowScalesSettings] = useState(false);
     const [newScaleWord, setNewScaleWord] = useState('');
     const [newScaleRank, setNewScaleRank] = useState('');
    
-    
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
     const addToast = useToastStore(s => s.addToast);
     const [isClearModalOpen, setIsClearModalOpen] = useState(false);
@@ -30,7 +33,8 @@ export function TableSettings() {
         removeScale,
         clearScales,
         loadScenario,
-        setCurrentProject
+        setCurrentProject,
+        currentProjectId 
     } = useTableStore();
 
     // --- JSON EXPORT/IMPORT LOGIC ---
@@ -54,7 +58,6 @@ export function TableSettings() {
                 setCurrentProject(null); 
                 addToast("Tabela została wczytana poprawnie.", "success");
             } else {
-               
                 addToast('To nie wygląda na poprawny plik Tabeli Decyzyjnej.', 'error');
             }
         },
@@ -79,9 +82,9 @@ export function TableSettings() {
         setIsClearModalOpen(false);
     };
 
-    const badgeClass = "absolute -bottom-1.5 right-0 rounded-[4px] bg-background border border-border px-[3px] py-[1px] text-[8px] font-bold text-muted-foreground shadow-sm leading-none z-10 pointer-events-none";
-
     return (
+        // ZMIANA: Owijam całość we fragment <>, by dodać Modal na końcu
+        <>
         <div className="flex justify-between items-start w-full mb-2">
             
             {/* LEWA STRONA: Oceny / Ustawienia */}
@@ -197,7 +200,7 @@ export function TableSettings() {
                 )}
             </div>
 
-            {/* PRAWA STRONA: Import / Export JSON (bez ramek, same ikony) */}
+                {/* PRAWA STRONA: Import / Export JSON / Share (bez ramek, same ikony) */}
             <div className="flex items-center gap-1 z-10">
                 <input 
                     type="file" 
@@ -215,7 +218,6 @@ export function TableSettings() {
                     title="Wczytaj decyzję z pliku (JSON)"
                 >
                     <FolderOpen className="w-[18px] h-[18px] text-muted-foreground" />
-                    <span className={badgeClass}>JSON</span>
                 </Button>
 
                 <Button 
@@ -226,8 +228,22 @@ export function TableSettings() {
                     title="Pobierz plik (JSON)"
                 >
                     <Save className="w-[18px] h-[18px] text-muted-foreground" />
-                    <span className={badgeClass}>JSON</span>
                 </Button>
+
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                    onClick={() => {
+                        if (!currentProjectId) {
+                            addToast("Aby udostępnić projekt, musisz najpierw zapisać go w chmurze.", "warning");
+                            return;
+                        }
+                        setIsShareModalOpen(true);
+                    }} 
+                    title="Udostępnij projekt jako link (Read-Only)"
+                    >
+                    <Share2 className="w-[18px] h-[18px] text-muted-foreground" />
+                    </Button>
             </div>
 
             <ConfirmModal
@@ -241,5 +257,13 @@ export function TableSettings() {
             />
         
         </div>
+
+            {/* ZMIANA: Dodano komponent Modala */}
+            <ShareModal 
+                isOpen={isShareModalOpen} 
+                onClose={() => setIsShareModalOpen(false)} 
+                projectId={currentProjectId} 
+            />
+        </>
     );
 }

@@ -3,12 +3,15 @@ import { useReactFlow, getNodesBounds } from '@xyflow/react';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { useTreeStore, useTemporalTreeStore } from '../store/useTreeStore.js';
-import { FolderOpen, Save, Image as ImageIcon, FileText, Undo2, Redo2, Maximize, Minimize } from 'lucide-react'; 
+
+import { FolderOpen, Save, Image as ImageIcon, FileText, Undo2, Redo2, Maximize, Minimize, Share2 } from 'lucide-react'; 
 
 import { Button } from '../../../components/ui/Button'; 
 import { useJsonExportImport } from '../../../hooks/useJsonExportImport';
-// IMPORTUJEMY STORE ZAMIAST KOMPONENTU TOAST
+
 import { useToastStore } from '../../../store/useToastStore';
+
+import { ShareModal } from '../../../components/modals/ShareModal.jsx';
 
 export function TreeToolbar() {
   const undo = useTemporalTreeStore((state) => state.undo);
@@ -21,10 +24,15 @@ export function TreeToolbar() {
   
   
   const isPreviewMode = useTreeStore((s) => s.isPreviewMode); 
+  // ZMIANA: Pobieramy currentProjectId ze store'a, żeby wiedzieć, czy projekt jest zapisany w chmurze
+  const currentProjectId = useTreeStore((s) => s.currentProjectId);
   const importJson = useTreeStore((state) => state.importJson);
 
   const { getNodes, setViewport, getViewport } = useReactFlow();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  // ZMIANA: Stan sterujący otwieraniem/zamykaniem okna udostępniania
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const canUndo = pastStates.length > 0;
   const canRedo = futureStates.length > 0;
@@ -241,7 +249,8 @@ export function TreeToolbar() {
    };
 
   return (
-   
+    // ZMIANA: Otaczamy całość w <>, aby móc wyrenderować Modal obok Toolbara
+    <>
     <div className="tree-toolbar-export absolute top-3 left-3 z-10 flex items-center gap-1 rounded-lg border border-border bg-card/95 p-1.5 shadow-sm backdrop-blur-sm">
       
       <Button variant="ghost" size="icon" onClick={handleUndo} disabled={!canUndo || isPreviewMode} title="Cofnij (Ctrl+Z)">
@@ -285,21 +294,53 @@ export function TreeToolbar() {
       <Button variant="ghost" size="icon" onClick={handleExport} title="Zapisz decyzję jako plik (JSON)">
         <Save className="w-[18px] h-[18px] text-muted-foreground" />
       </Button>
-      
+
+        {/* --- NOWY PRZYCISK UDOSTĘPNIANIA --- */}
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={() => {
+        
+          if (!currentProjectId) {
+            addToast("Aby udostępnić projekt, musisz najpierw zapisać go w chmurze.", "warning");
+            return;
+          }
+        
+          setIsShareModalOpen(true);
+        }} 
+        disabled={isPreviewMode} 
+        title="Udostępnij projekt jako link (Read-Only)"
+      >
+        <Share2 className="w-[18px] h-[18px] text-muted-foreground" />
+      </Button>
       <div className="mx-1.5 h-5 w-px bg-border" />
 
-      <Button variant="ghost" size="icon" className="relative" onClick={() => exportGraph('png')} title="Pobierz jako obraz (PNG)">
-        <ImageIcon className="w-[18px] h-[18px]" />
-        <span className={badgeClass}>PNG</span>
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={() => exportGraph('png')} 
+        title="Pobierz jako obraz (PNG)"
+      >
+        <ImageIcon className="w-[18px] h-[18px] text-muted-foreground" />
       </Button>
       
-      <Button variant="ghost" size="icon" className="relative" onClick={() => exportGraph('pdf')} title="Pobierz jako dokument (PDF)">
-        <FileText className="w-[18px] h-[18px]" />
-        <span className={badgeClass}>PDF</span>
+      {/* PRZYCISK PDF - czysty, bez badge'a */}
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={() => exportGraph('pdf')} 
+        title="Pobierz jako dokument (PDF)"
+      >
+        <FileText className="w-[18px] h-[18px] text-muted-foreground" />
       </Button>
-      
     </div>
     
-    
+      {/* ZMIANA: Modal wyciągnięty na zewnątrz absolutnie pozycjonowanego Toolbara */}
+      <ShareModal 
+        isOpen={isShareModalOpen} 
+        onClose={() => setIsShareModalOpen(false)} 
+        projectId={currentProjectId} 
+      />
+    </>
   );
 }

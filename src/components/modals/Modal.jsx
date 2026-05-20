@@ -1,9 +1,9 @@
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useEffect } from "react";
-import { Button } from "./Button"; 
+import { Button } from "../ui/Button"; 
 
-export default function Modal({ isOpen, onClose, title, children, size = "md" }) {
+export  function Modal({ isOpen, onClose, title, children, size = "md" }) {
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === "Escape" && isOpen) {

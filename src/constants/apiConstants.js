@@ -29,6 +29,7 @@ export const API_PATHS = {
     NOTES: (id) => `/api/v1/projects/${id}/notes`,
     SNAPSHOTS: (id) => `/api/v1/projects/${id}/snapshots`,
     SNAPSHOT: (id, snapId) => `/api/v1/projects/${id}/snapshots/${snapId}`,
+    SHARE: (id) => `/api/v1/projects/${id}/share`
   },
  
   ANALYSIS: {
