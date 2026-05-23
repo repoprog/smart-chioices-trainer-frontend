@@ -25,7 +25,7 @@ export function SaveDecisionModal({
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Walidacja przed zapisem
+   
     if (!localTitle.trim()) {
       setError("Nazwa decyzji jest wymagana.");
       return;
@@ -58,7 +58,7 @@ export function SaveDecisionModal({
               value={localTitle} 
               onChange={e => {
                 setLocalTitle(e.target.value);
-                if (error) setError(''); // Ukryj błąd, gdy user zacznie pisać
+                if (error) setError(''); 
               }} 
               placeholder={placeholder}
               className={`w-full px-4 py-3 bg-muted/30 border rounded-lg outline-none transition-colors text-foreground ${
@@ -92,7 +92,6 @@ export function SaveDecisionModal({
             <Button 
               type="submit" 
               variant="default"
-              // Usunięto blokadę wyłączającą przycisk przy pustym polu
               disabled={isSaving} 
               className="flex items-center gap-2"
             >

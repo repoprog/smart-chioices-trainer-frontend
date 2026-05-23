@@ -3,6 +3,8 @@ import { persist } from 'zustand/middleware';
 import apiClient from '../api/apiClient'; 
 import { API_PATHS } from '../constants/apiConstants';
 import { STORAGE_KEYS } from '../constants/appConstants';
+import { useTreeStore } from '../features/DecisionTree/store/useTreeStore';
+import { useTableStore } from '../features/DecisionTable/store/useTableStore';
 
 const useAuthStore = create(
     persist(
@@ -11,11 +13,23 @@ const useAuthStore = create(
             isAuthenticated: false,
             isLoading: false,
             error: null,
+            pendingRedirectPath: null,
+
+            // --- NOWOŚĆ: Stan Modali Autoryzacyjnych ---
+            isLoginModalOpen: false,
+            isRegisterModalOpen: false,
+            
+            setPendingRedirectPath: (path) => set({ pendingRedirectPath: path }),
+            
+            openLoginModal: () => set({ isLoginModalOpen: true, isRegisterModalOpen: false, error: null }),
+            openRegisterModal: () => set({ isRegisterModalOpen: true, isLoginModalOpen: false, error: null }),
+            closeAuthModals: () => set({ isLoginModalOpen: false, isRegisterModalOpen: false, error: null }),
+           
 
             fetchProfile: async () => {
                 try {
                     // Uderzamy do naszego nowego endpointu GET /api/v1/users/me
-                    const response = await apiClient.get('/api/v1/users/me'); 
+                    const response = await apiClient.get(API_PATHS.USERS.ME); 
                     
                     set((state) => ({
                         // Aktualizujemy dane usera, łącząc to, co mamy, z nowymi danymi (np. dodając 'name')
@@ -42,24 +56,29 @@ const useAuthStore = create(
                 // Zapisujemy token WYŁĄCZNIE do localStorage jako jedyne źródło prawdy (Single Source of Truth)
                localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
 
-                // Aktualizujemy stan globalny (bez tokena!)
-                set({ user, isAuthenticated: true, isLoading: false });
-                // --- NOWOŚĆ: Po pomyślnym logowaniu dociągamy pełny profil (z imieniem) ---
+                    // Aktualizacja stanu i natychmiastowe ZAMKNIĘCIE modali po sukcesie
+                    set({ 
+                        user, 
+                        isAuthenticated: true, 
+                        isLoading: false,
+                        isLoginModalOpen: false,
+                        isRegisterModalOpen: false 
+                    });
+                    
                     await get().fetchProfile();
                 } catch (error) {
                     set({ isLoading: false, error: error.response?.data?.message || 'Błąd logowania' });
                     throw error;
                 }
-                
             },
 
             // Przyjmujemy 'name' jako pierwszy argument
             register: async (name, email, password) => {
                 set({ isLoading: true, error: null });
                 try {
-                    
                     await apiClient.post(API_PATHS.AUTH.REGISTER, { name, email, password });
                     
+                  
                     await get().login(email, password);
                 } catch (error) {
                     set({ isLoading: false, error: error.response?.data?.message || 'Błąd rejestracji' });
@@ -67,38 +86,41 @@ const useAuthStore = create(
                 }
             },
 
-            logout: async () => {
+             logout: async () => {
                 set({ isLoading: true });
                 try {
-                    // Próbujemy powiadomić backend, żeby usunął ciasteczko z Refresh Tokenem
-                  await apiClient.post(API_PATHS.AUTH.LOGOUT);
+                    await apiClient.post(API_PATHS.AUTH.LOGOUT);
                 } catch (error) {
                     console.error("Błąd podczas wylogowywania na backendzie", error);
                 } finally {
-                    // Niezależnie od backendu, czyścimy frontend
-                   localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-                   set({ user: null, isAuthenticated: false, isLoading: false, error: null });
-                }
-            },
-            updateUser: (updatedData) => {
-    set((state) => ({
-        user: { ...state.user, ...updatedData }
-    }));
-},
+                    // 1. Usuń główny token
+                    localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
 
-            refreshToken: async () => {
-                // Ciasteczko HttpOnly z Refresh Tokenem leci automatycznie dzięki withCredentials: true
-                // Zwykle to interceptor w apiClient robi to w tle, ale zostawiamy to jako funkcję pomocniczą
-                const response = await apiClient.post(API_PATHS.AUTH.REFRESH);
-                const { accessToken } = response.data;
-                
-                // Token ląduje tylko w localStorage
-               localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
-                set({ isAuthenticated: true });
-                
-                return accessToken;
+                    // 2. Wyczyść twardy dysk (localStorage) z danych innych modułów
+                    localStorage.removeItem('tree-storage');
+                    localStorage.removeItem('table-storage');
+
+                    // 3. Wyczyść miękką pamięć (Zustand), żeby UI zniknęło natychmiast
+                    useTreeStore.getState().resetTree();
+                    
+                    // Upewnij się, że w useTableStore masz funkcję o nazwie resetAll (lub zmień na właściwą np. resetTable)
+                    useTableStore.getState().resetAll(); 
+
+                    // 4. Ubij stan autoryzacji oraz ZAMKNIJ wszystkie wiszące modale
+                    set({ 
+                        user: null, 
+                        isAuthenticated: false, 
+                        isLoading: false, 
+                        error: null,
+                        isLoginModalOpen: false,    // DODANE: Zabezpieczenie przed "ghost modals"
+                        isRegisterModalOpen: false, // DODANE: Zabezpieczenie przed "ghost modals"
+                        pendingRedirectPath: null   // (To dodaliśmy w poprzednim kroku naprawy protected route)
+                    });
+                }
             }
             
+            // USUNIĘTO: Funkcja refreshToken() została całkowicie wyrzucona, 
+            // ponieważ odświeżaniem zajmuje się wyłącznie interceptor axiosa w apiClient.js
         }),
         
         {

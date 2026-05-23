@@ -30,7 +30,7 @@ export function SaveVersionModal({
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Walidacja
+  
     if (!localLabel.trim()) {
       setError("Nazwa wersji jest wymagana.");
       return;
@@ -57,7 +57,7 @@ export function SaveVersionModal({
             </div>
           </div>
 
-          {/* Wyświetlanie błędu */}
+     
           {error && (
             <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive border border-destructive/20 rounded-lg text-sm animate-in fade-in slide-in-from-top-1">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />

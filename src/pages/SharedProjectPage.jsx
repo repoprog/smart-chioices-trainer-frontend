@@ -2,11 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { decisionApi } from '../api/decisionApi';
 import { APP_ROUTES } from '../constants/appConstants';
+// DODANE: Importujemy magazyn autoryzacji
+import useAuthStore from '../store/useAuthStore'; 
 
 import { TreeCanvas } from '../features/DecisionTree/components/TreeCanvas';
 import { TableGrid } from '../features/DecisionTable/components/TableGrid'; 
 import { Button } from '../components/ui/Button';
-import { Trophy, TableProperties } from 'lucide-react';
+// DODANE: Import FlaskConical dla trybu symulacji
+import { Trophy, TableProperties, Eye, Calculator } from 'lucide-react';
 
 export function SharedProjectPage() {
   const { token } = useParams();
@@ -14,8 +17,12 @@ export function SharedProjectPage() {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // DODANE: Stan do sterowania widokiem rankingu w tabeli
+  // Stany do sterowania widokami
   const [isRankingView, setIsRankingView] = useState(true);
+  const [isSimulationView, setIsSimulationView] = useState(false); 
+
+  // DODANE: Pobieramy akcję otwierającą modal
+  const openRegisterModal = useAuthStore((s) => s.openRegisterModal);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -40,15 +47,30 @@ export function SharedProjectPage() {
 
   return (
     <div className="flex flex-col h-screen w-full bg-background overflow-hidden">
+      
       {/* Baner Publiczny */}
-      <div className="bg-primary/10 border-b border-primary/20 text-foreground p-3 flex flex-col sm:flex-row justify-between items-center px-6 shadow-sm z-50 gap-3">
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-xl">👁</span>
-          <span>Tryb tylko do odczytu: <strong className="text-primary">{project.title}</strong></span>
-        </div>
+      <div className="bg-primary/10 border-b-2 border-primary/30 px-6 py-3 shadow-sm z-50 shrink-0">
+        <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
         
         <div className="flex items-center gap-3">
-          {/* DODANE: Przycisk przełączający widok (tylko dla Tabeli) */}
+            <div className="p-2 bg-primary/20 rounded-lg shrink-0">
+              <Eye className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-foreground">Tryb tylko do odczytu</span>
+                <span className="text-sm text-muted-foreground">•</span>
+                <span className="text-sm font-medium text-primary">{project.title}</span>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Zaloguj się, aby zbudować własną decyzję.
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3 shrink-0">
+          
+          {/* PRZYCISKI DLA TABELI */}
           {project.type === 'TABLE' && (
             <Button
               variant={isRankingView ? "amber" : "defaultAmber"}
@@ -63,24 +85,58 @@ export function SharedProjectPage() {
             </Button>
           )}
 
-          <Link to={APP_ROUTES.REGISTER} className="px-5 py-2.5 cursor-pointer font-semibold text-sm bg-purple-500 !text-white border-none rounded-md transition-all hover:shadow-[0_0_30px_0_rgba(139,92,246,0.2)] hover:bg-purple-600 whitespace-nowrap">
-            Zbuduj własną decyzję za darmo
-          </Link>
+          {/* PRZYCISKI DLA DRZEWA (Symulacja) */}
+          {project.type === 'TREE' && (
+            
+            <Button
+              variant={isSimulationView ? "cyan" : "defaultCyan"}
+              onClick={() => setIsSimulationView(!isSimulationView)}
+              className="h-8 px-2.5 text-xs lg:h-9 lg:px-4 lg:text-sm transition-all"
+            >
+              <Calculator className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" /> 
+              {isSimulationView ? "Ukryj kalkulacje " : "Pokaż kalkulacje"}
+            </Button>
+          )}
+
+          {/* ZMIANA: Zastępujemy przestarzały <Link> bezpiecznym wywołaniem Modala */}
+          <Button 
+            onClick={openRegisterModal}
+            variant="purple"
+          >
+            Zbuduj własną decyzję
+          </Button>
+          </div>
         </div>
       </div>
 
       {/* Kontener GŁÓWNY */}
-      <div className="flex-1 w-full h-full relative p-4 bg-muted/20">
-        <div className="w-full h-full bg-card rounded-xl border border-border shadow-sm overflow-hidden relative">
-          
-          {project.type === 'TREE' ? (
-            <TreeCanvas readOnlyData={project.content} />
-          ) : (
-            // DODANE: Przekazujemy stan do TableGrid
-            <TableGrid readOnlyData={project.content} readOnlyShowRanking={isRankingView} />
-          )}
+      <div className="flex-1 w-full relative bg-muted/20 overflow-y-auto custom-scrollbar">
+        
+        {project.type === 'TREE' ? (
+          // WIDOK DRZEWA
+          <div className="absolute inset-4 md:inset-6 lg:inset-8">
+            <div className="w-full h-full bg-card rounded-xl border border-border shadow-sm overflow-hidden relative">
+              {/* ZMIANA: Przekazujemy stan symulacji do płótna drzewa */}
+              <TreeCanvas 
+                readOnlyData={project.content} 
+                readOnlySimulationMode={isSimulationView} 
+              />
+            </div>
+          </div>
+        ) : (
+          // WIDOK TABELI: Klasyczny układ blokowy z paddingiem (zero flexowych anomalii)
+          <div className="w-full mx-auto max-w-[1400px] p-4 md:p-8">
+            <div className="w-full bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+              <div className="w-full overflow-x-auto custom-scrollbar [&>div]:!h-auto [&>div]:!min-h-0">
+                <TableGrid 
+                  readOnlyData={project.content} 
+                  readOnlyShowRanking={isRankingView} 
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
-        </div>
       </div>
     </div>
   );

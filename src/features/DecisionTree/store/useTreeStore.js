@@ -23,6 +23,7 @@ import {
   formatProbability 
 } from '../logic/treeAlgorithms.js';
 
+
 const defaultScenario = treeScenarios.basketball || { nodes: [], edges: [], labels: [] };
 const layoutedInitial = getLayoutedElements(defaultScenario.nodes, defaultScenario.edges);
 const numberedInitial = renumberDecisionAndChanceNodes(layoutedInitial, defaultScenario.edges);
@@ -233,14 +234,20 @@ export const useTreeStore = create()(
        */
       loadScenario: (newNodes, newEdges, newLabels = [], { clearProjectId = false, evaluationMode = null  } = {}) =>
         set((state) => {
-          const layoutedNodes = getLayoutedElements(newNodes, newEdges);
-          const renumbered = renumberDecisionAndChanceNodes(layoutedNodes, newEdges);
-          const stageColumnLabels = syncColumnLabels(renumbered, newEdges, newLabels);
+          // --- NOWOŚĆ: Sanitization of incoming edges from backend ---
+          const sanitizedEdges = newEdges.map(edge => ({
+            ...edge,
+            type: 'smartChoices', // WYMUSZAMY NASZ TYP, bez względu na to co zapisał/nie zapisał backend
+          }));
+
+          const layoutedNodes = getLayoutedElements(newNodes, sanitizedEdges);
+          const renumbered = renumberDecisionAndChanceNodes(layoutedNodes, sanitizedEdges);
+          const stageColumnLabels = syncColumnLabels(renumbered, sanitizedEdges, newLabels);
 
           const newState = {
             ...state,
             nodes: renumbered,
-            edges: newEdges,
+            edges: sanitizedEdges, // Używamy oczyszczonych krawędzi
             stageColumnLabels,
             evaluationMode: evaluationMode || state.evaluationMode, 
             dataVersion: state.dataVersion + 1, 
@@ -250,10 +257,22 @@ export const useTreeStore = create()(
           return evaluateAndSetWinningPath(newState);
         }),
 
-      resetTree: () => set((state) => {
+   resetTree: () => set((state) => {
+        
+        const layoutedNodes = getLayoutedElements(treeScenarios.blank.nodes, treeScenarios.blank.edges);
+        const renumbered = renumberDecisionAndChanceNodes(layoutedNodes, treeScenarios.blank.edges);
+        const stageColumnLabels = syncColumnLabels(renumbered, treeScenarios.blank.edges, treeScenarios.blank.labels);
+
         const newState = { 
-          ...state, nodes: [], edges: [], stageColumnLabels: [], isDirty: false, 
-          currentProjectId: null, saveError: null, loadError: null, evaluationMode: EVALUATION_MODES.MAX,
+          ...state, 
+          nodes: renumbered, 
+          edges: treeScenarios.blank.edges, 
+          stageColumnLabels: stageColumnLabels, 
+          isDirty: false, 
+          currentProjectId: null, 
+          saveError: null, 
+          loadError: null, 
+          evaluationMode: EVALUATION_MODES.MAX,
           dataVersion: state.dataVersion + 1 
         };    
         return evaluateAndSetWinningPath(newState);
@@ -261,7 +280,14 @@ export const useTreeStore = create()(
 
       // --- USER ACTIONS (GRAPH MANIPULATION) ---
       
-      setEvaluationMode: (mode) => set((state) => evaluateAndSetWinningPath({ ...state, evaluationMode: mode, isDirty: true })),
+     setEvaluationMode: (mode) => set((state) =>
+      evaluateAndSetWinningPath({
+          ...state,
+          evaluationMode: mode,
+          isDirty: true,
+          dataVersion: state.dataVersion + 1
+      })
+  ),
 
       setStageColumnLabel: (index, text) =>
         set((state) => {

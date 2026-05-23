@@ -16,7 +16,9 @@ import { APP_ROUTES } from "../../constants/appConstants";
 export function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout, isAuthenticated } = useAuthStore();
+  
+  // ZMIANA: Wyciągamy funkcje otwierające modale z Zustanda
+  const { user, logout, isAuthenticated, openLoginModal, openRegisterModal } = useAuthStore();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
 
@@ -47,6 +49,7 @@ export function Layout() {
     <div className={`h-screen flex flex-col bg-background transition-all duration-300 ${isAnyPreview ? "pt-[60px]" : ""}`}>
       <header className="border-b border-border px-6 py-4 bg-card">
         <div className="flex items-center justify-between max-w-[1400px] mx-auto w-full">
+          
          {/* Loged user info */}
 <div className="flex items-center gap-4">
   <Link to={APP_ROUTES.HOME} className="text-xl font-bold tracking-tight text-foreground">
@@ -106,7 +109,7 @@ export function Layout() {
     <Button 
       variant="ghost" 
       className="px-2 md:px-4"
-      onClick={() => navigate(`${APP_ROUTES.LOGIN}?returnTo=${encodeURIComponent(location.pathname)}`)}
+                  onClick={openLoginModal}
     >
       <LogIn className="w-4 h-4 md:mr-2" /> 
       <span className="hidden md:inline">Zaloguj</span>
@@ -114,7 +117,7 @@ export function Layout() {
     <Button 
     variant="dangerActive"
     className="px-2 md:px-4"
-    onClick={() => navigate(`${APP_ROUTES.REGISTER}?returnTo=${encodeURIComponent(location.pathname)}`)}
+                  onClick={openRegisterModal}
   >
     <UserPlus className="w-4 h-4 md:mr-2" /> 
     <span className="hidden md:inline">Dołącz</span>

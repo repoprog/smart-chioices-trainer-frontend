@@ -313,7 +313,7 @@ export const useTableStore = create()(
           activePreset: null 
         })),
         // --- LOAD & RESET ---
-        loadScenario: (scenario, { clearProjectId = false } = {}) => set((state) => ({
+      loadScenario: (scenario, { clearProjectId = false } = {}) => set((state) => ({
           alternatives: scenario.alternatives || [],
           objectives: scenario.objectives || [],
           cells: scenario.cells || {},
@@ -324,11 +324,23 @@ export const useTableStore = create()(
           showRanking: false,
           isDirty: false,
           backendAnalysisResult: null,
-          dataVersion: 0,
+          backendWarnings: [], // czyścimy ostrzeżenia z poprzedniego stanu
+          dataVersion: state.dataVersion + 1, // <-- KLUCZOWE: Podbijamy wersję dla OCC!
           ...(clearProjectId && { currentProjectId: null, isPreviewMode: false, previewingSnapshotId: null }) 
         })),
         
-        resetAll: () => set({ ...initialTableState }), 
+        resetAll: () => set((state) => ({ 
+          ...initialTableState, 
+          ...tableScenarios.blank,     
+          showRanking: false,           
+          showTradeoffs: false,         
+          backendAnalysisResult: null,
+          backendWarnings: [],
+          rejectedAlternatives: [],
+          currentProjectId: null,
+          isDirty: false,
+          dataVersion: state.dataVersion + 1 
+        })),
       };
     },
     {

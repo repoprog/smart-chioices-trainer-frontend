@@ -1,5 +1,7 @@
 import React from "react";
+// Usunięto ikonę Lock
 import { X, Calendar, FileText, History, Eye } from "lucide-react";
+import useAuthStore from "../../store/useAuthStore"
 
 export function HistorySidebar({
   isOpen,
@@ -8,6 +10,8 @@ export function HistorySidebar({
   onSelectItem,
   type = "tree",
 }) {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
   if (!isOpen) return null;
 
   return (
@@ -41,9 +45,17 @@ export function HistorySidebar({
               <div className="text-center py-12 text-muted-foreground">
                 <FileText className="w-12 h-12 mx-auto mb-3 opacity-20" />
                 <p>Brak zapisanych migawek</p>
-                <p className="text-sm mt-1">
-                  Zapisane wersje {type === "table" ? "tabeli" : "drzewa"} pojawią się tutaj
-                </p>
+                
+                {/* ZMIANA: Zwykły, minimalistyczny tekst bez stylizacji ramek */}
+                {isAuthenticated ? (
+                  <p className="text-sm mt-1">
+                    Zapisane wersje {type === "table" ? "tabeli" : "drzewa"} pojawią się tutaj.
+                  </p>
+                ) : (
+                  <p className="text-sm mt-1 px-2">
+                    Zaloguj się, aby zapisywać i przywracać wersje projektów w chmurze.
+                  </p>
+                )}
               </div>
             ) : (
               <div className="space-y-2">
@@ -76,7 +88,6 @@ export function HistorySidebar({
                         {item.tags.slice(0, 3).map((tag, index) => (
                           <span
                             key={`${item.id}-${tag}-${index}`}
-                            // Zmieniono na większe, czytelniejsze pigułki: text-[11px], py-0.5, px-2
                             className="px-2 py-0.5 bg-muted text-muted-foreground text-xs font-semibold rounded-full leading-none"
                           >
                             {tag}
@@ -90,7 +101,6 @@ export function HistorySidebar({
                       </div>
                     )}
 
-                    {/* ANIMOWANY FADE-IN: Bez zmiany wysokości (h-4 rezerwuje miejsce) */}
                     <div className="flex items-center gap-1.5 text-[11px] font-medium text-primary mt-2 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       <Eye className="w-3.5 h-3.5" />
                       Kliknij, aby podejrzeć wersję

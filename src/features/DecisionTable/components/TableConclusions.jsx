@@ -16,7 +16,7 @@ export function TableConclusions({
   completeAlts,
   restoreAlternative,
   rejectAlternative,
-  toggleTradeoffs // <--- DODANY PROPS: Przekaż to z TableGrid.jsx
+  toggleTradeoffs 
 }) {
   
   // 1. Sprawdzamy czy powinniśmy w ogóle rysować ten wiersz
@@ -26,14 +26,11 @@ export function TableConclusions({
       winnerIndex !== null ||
       rejectedAlternatives.length > 0 ||
       completeAlts.length < alternatives.length ||
-      // Dodajemy warunek: Rysuj, nawet jeśli tabela jest "zablokowana" 
       completeAlts.length === alternatives.map((_,i)=>i).filter(i=>!rejectedAlternatives.includes(i)).length);
 
   if (!shouldRender) return null;
 
-  // 2. Detekcja STANU KOMPROMISU:
-  // Tabela jest w 100% pełna, nikt nie jest odrzucony, nie ma zwycięzcy ani żadnych dominacji.
-  // Wtedy system powinien zasugerować wymianę równowartościową (Tradeoffs).
+  // 2. Detekcja STANU KOMPROMISU
   const activeAltsCount = alternatives.filter((_, i) => !rejectedAlternatives.includes(i)).length;
   const isStuckInTradeoffPhase = 
     completeAlts.length === activeAltsCount && 
@@ -41,20 +38,22 @@ export function TableConclusions({
     Object.keys(dominationResults).length === 0 &&
     activeAltsCount > 1;
 
+  // 3. OBLICZENIE SZEROKOŚCI COLSPAN - ile fizycznie widać kolumn
+  const visibleColsCount = showRejected 
+    ? alternatives.length 
+    : alternatives.length - rejectedAlternatives.length;
+
   return (
     <tr>
-      {/* 3. Zmieniony nagłówek z solidnym tłem dymku i resetem stylów */}
+      {/* Nagłówek wiersza wniosków */}
       <td className="sticky left-0 z-[50] bg-card/90 backdrop-blur-md text-right text-foreground font-semibold pr-5 whitespace-nowrap border-b border-r border-border py-4 shadow-[inset_-1px_0_0_var(--border)] rounded-bl-xl overflow-visible">
         <div className="flex items-center justify-end gap-2 text-sm tracking-wider">
          <span>Analiza SMART</span>
           
-          {/* Kontener grupy (wykrywa najechanie myszką) */}
           <div className="relative group cursor-help">
             <Info className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
             
-            {/* Chmurka (Dodałem solidne tło 'bg-popover' i 'z-[60]') */}
-<div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 hidden group-hover:block w-[320px] p-4 bg-card border border-border shadow-2xl rounded-xl z-[60] normal-case tracking-normal font-normal text-left text-foreground pointer-events-none animate-in fade-in slide-in-from-bottom-2 duration-200">              
-              {/* Reset stylów dla tekstu wewnątrz (normal-case, tracking-normal, font-normal, whitespace-normal) */}
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 hidden group-hover:block w-[320px] p-4 bg-card border border-border shadow-2xl rounded-xl z-[60] normal-case tracking-normal font-normal text-left text-foreground pointer-events-none animate-in fade-in slide-in-from-bottom-2 duration-200">              
               <div className="space-y-3 whitespace-normal normal-case tracking-normal font-normal leading-snug">
                 <div>
                   <strong className="text-destructive block mb-1 text-[13px] font-semibold">Dominacja ścisła</strong>
@@ -71,38 +70,53 @@ export function TableConclusions({
                 </div>
               </div>
 
-              {/* Mały trójkącik (Dodałem 'bg-popover') */}
               <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-popover border-b border-r border-border rotate-45 z-[59]"></div>
             </div>
           </div>
-
         </div>
       </td>
       
-      {/* 4. STAN KOMPROMISU (Jeden duży wiersz łączący wszystkie kolumny) */}
+      {/* 4. RENDEROWANIE KOMÓREK WYNIKOWYCH */}
       {isStuckInTradeoffPhase ? (
-        <td colSpan={alternatives.length} className="p-4 align-middle border-b border-border bg-purple-50/50 dark:bg-purple-950/20 text-center rounded-br-xl">
-           <div className="flex flex-col items-center justify-center space-y-2">
-             <span className="text-sm font-medium text-purple-700 dark:text-purple-400">
-                Algorytm nie wyłonił jednoznacznego zwycięzcy.
-             </span>
-             <p className="text-xs text-muted-foreground max-w-md mx-auto">
-                Aby kontynuować analizę przejdź do trybu kompromisy.
-              
-             </p>
-             <Button 
-                variant="default" 
-                size="sm" 
-                className="mt-2 bg-purple-600 hover:bg-purple-700 text-white"
-                onClick={toggleTradeoffs}
-             >
-               <ArrowRightLeft className="w-4 h-4 mr-2" />
-               Uruchom Kompromisy
-             </Button>
-           </div>
-        </td>
+        // Wariant Kompromisu (Tradeoff)
+        // Jeśli opcje są ukrywane, musimy renderować przyciski przywracania POZA colSpanem kompromisu!
+        <>
+          <td colSpan={showRejected ? activeAltsCount : visibleColsCount} className="p-4 align-middle border-b border-border text-center rounded-br-xl">
+             <div className="flex flex-col items-center justify-center space-y-2">
+               <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                 Brak jednoznacznego zwycięzcy.
+               </span>
+               <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                 Kontynuuj w trybie kompromisów.
+               </p>
+               <Button 
+                 variant="purple" 
+                 size="sm" 
+                 className="mt-2"
+                 onClick={toggleTradeoffs}
+               >
+                 <ArrowRightLeft className="w-4 h-4 mr-2" />
+                 Uruchom Kompromisy
+               </Button>
+             </div>
+          </td>
+          
+          {/* Jeśli 'Pokaż Odrzucone' jest aktywne, musimy renderować przyciski do odzyskiwania obok paska kompromisu */}
+          {showRejected && alternatives.map((_, colIndex) => {
+            if (rejectedAlternatives.includes(colIndex)) {
+              return (
+                <td key={`dom-reject-${colIndex}`} className="p-1.5 align-middle border-b border-r border-border text-center bg-muted/30 opacity-40">
+                  <Button variant="outline" size="sm" onClick={() => restoreAlternative(colIndex)} className="rounded-full text-xs">
+                    Przywróć opcję
+                  </Button>
+                </td>
+              )
+            }
+            return null; // Zwykłe (aktywne) wchodzą w colSpan kompromisu
+          })}
+        </>
       ) : (
-        /* 5. STANDARDOWE KOLUMNY WYNIKÓW (Gdy mamy dominacje/braki/zwycięzcę) */
+        /* Wariant Standardowy (Dominacje/Błędy/Zwycięzcy) */
         alternatives.map((_, colIndex) => {
           const isRejected = rejectedAlternatives.includes(colIndex);
           const isWinner = winnerIndex === colIndex;
@@ -115,7 +129,7 @@ export function TableConclusions({
             return val !== undefined && val !== null && val.toString().trim() !== "";
           });
 
-          // 1. STATE: REJECTED
+          // STATE 1: REJECTED
           if (isRejected) {
             return (
               <td key={`dom-${colIndex}`} className={`p-1.5 align-middle border-b border-r border-border text-center bg-muted/30 ${!showRejected ? "hidden" : "opacity-40"} ${isLastCell ? 'rounded-br-xl' : ''}`}>
@@ -126,7 +140,7 @@ export function TableConclusions({
             );
           }
 
-          // 2. STATE: INCOMPLETE
+          // STATE 2: INCOMPLETE
           if (!isComplete) {
               return (
                 <td key={`dom-${colIndex}`} className={`p-3 align-middle border-b border-r border-border text-center bg-muted/20 text-[11px] text-muted-foreground ${isLastCell ? 'rounded-br-xl' : ''}`}>
@@ -140,7 +154,7 @@ export function TableConclusions({
               );
           }
 
-          // 3. STATE: WINNER
+          // STATE 3: WINNER
           if (isWinner) {
             return (
               <td 
@@ -158,14 +172,14 @@ export function TableConclusions({
             );
           }
 
-          // 4. STATE: NO DOMINATION (Neutral - Candidate is still in the race)
+          // STATE 4: NO DOMINATION (Neutral)
           if (!dom) return (
              <td key={`dom-${colIndex}`} className={`p-3 align-middle border-b border-r border-border bg-card text-center ${isLastCell ? 'rounded-br-xl' : ''}`}>
                  
              </td>
           );
 
-          // 5. STATE: STRICT DOMINATION
+          // STATE 5: STRICT DOMINATION
           if (dom.type === DOMINATION_TYPES.STRICT) {
             return (
               <td key={`dom-${colIndex}`} className={`p-3 align-middle border-b border-r border-border bg-red-50 dark:bg-red-950/30 text-[11px] text-center ${isLastCell ? 'rounded-br-xl' : ''}`}>
@@ -178,12 +192,12 @@ export function TableConclusions({
             );
           } 
           
-          // 6. STATE: PRACTICAL DOMINATION
+          // STATE 6: PRACTICAL DOMINATION
           else {
             return (
               <td key={`dom-${colIndex}`} className={`p-3 align-middle border-b border-r border-border bg-amber-50 dark:bg-amber-950/30 text-[11px] text-center ${isLastCell ? 'rounded-br-xl' : ''}`}>
                 <Badge variant="warning" className="mb-2">Rozważ odrzucenie</Badge>
-                <span className="block mb-2.5 text-amber-600/80 dark:text-amber-500/80">Lepsza od <b>"{dom.by}"</b> tylko w kryterium: <b>"{dom.objective}"</b>.</span>
+                <span className="block mb-2.5 text-amber-600/80 dark:text-amber-500/80">Lepsza od <b>"{dom.by}"</b> tylko w: <b>"{dom.objective}"</b>.</span>
                 
                 <Button 
                   variant="amberOutline" 

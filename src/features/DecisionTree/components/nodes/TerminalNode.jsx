@@ -11,6 +11,10 @@ export function TerminalNode({ id, data }) {
   const updateNodeData = useTreeStore((s) => s.updateNodeData);
   const isHighlighted = data?.isHighlighted;
   
+  // NOWE: Pobranie flagi udostępniania z wstrzykniętych danych
+  const isSharedView = data?.isSharedView ?? false;
+  const canInteract = !isSharedView;
+  
   const [localPayoff, setLocalPayoff] = useState(null); 
 
   const { executeCopy, executePaste, executeDelete } = useClipboardActions(id, false);
@@ -22,7 +26,6 @@ export function TerminalNode({ id, data }) {
   const fillColor = isHighlighted ? '#ecfdf5' : '#ffffff'; 
   const strokeColor = isHighlighted ? '#10b981' : '#0f172a'; 
 
-  
   const displayPayoff = localPayoff !== null ? localPayoff : (data.payoff || '');
 
   const rawPayoff = String(displayPayoff); 
@@ -35,12 +38,14 @@ export function TerminalNode({ id, data }) {
     textColorClass = 'text-red-600'; 
   }
 
-  const inputClasses = `w-28 rounded border bg-white px-2 py-1.5 font-sans text-xs font-bold tabular-nums outline-none shadow-sm transition-colors focus:ring-1 nodrag nopan pointer-events-auto ${
+  // ZMIANA: Dynamiczna klasa pointer-events w zależności od uprawnień
+  const pointerEventsClass = canInteract ? "pointer-events-auto" : "pointer-events-none";
+
+  const inputClasses = `w-28 rounded border bg-white px-2 py-1.5 font-sans text-xs font-bold tabular-nums outline-none shadow-sm transition-colors focus:ring-1 nodrag nopan ${pointerEventsClass} ${
     isHighlighted
       ? `border-emerald-400 bg-emerald-50 focus:border-emerald-500 focus:ring-emerald-500 ${isNaN(numericPayoff) || numericPayoff === 0 ? 'text-emerald-900' : textColorClass}`
       : `border-slate-300 focus:border-sky-500 focus:ring-sky-500 ${textColorClass}`
   }`;
-
 
   const containerClasses = `relative flex h-11 w-11 shrink-0 items-center justify-center transition-all ${
     isHighlighted 
@@ -49,7 +54,6 @@ export function TerminalNode({ id, data }) {
   }`;
 
   return (
-   
     <div className="group/node relative z-10 hover:!z-[9999] flex h-11 items-center transition-all">
       <Handle type="target" position={Position.Left} className={handleClass} />
       
@@ -66,36 +70,39 @@ export function TerminalNode({ id, data }) {
       </div>
       
       <div className="ml-2 relative flex flex-col justify-center">
-        
-   
         <div className="relative flex items-center group/input">
           <input
             type="text"
             value={displayPayoff} 
-            onChange={(e) => setLocalPayoff(e.target.value)} 
+            onChange={(e) => { if (canInteract) setLocalPayoff(e.target.value); }} 
             onBlur={() => { 
-              if (localPayoff !== null) {
+              if (canInteract && localPayoff !== null) {
                 updateNodeData(id, { payoff: localPayoff });
                 setLocalPayoff(null);
               }
             }}
-            onPointerDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => { if (canInteract) e.stopPropagation(); }}
             onKeyDown={(e) => { 
+              if (!canInteract) return;
               e.stopPropagation();
               if (e.key === 'Enter') e.currentTarget.blur();
             }}
             placeholder="np. 120 000 zł"
             className={inputClasses}
+            readOnly={!canInteract}
+            tabIndex={canInteract ? 0 : -1}
           />
-          <div className="opacity-0 group-hover/input:opacity-100 transition-opacity">
-            <FloatingToolbar
-              positionClass="bottom-full pb-1"
-              title="wynik"
-              onCopy={(e) => executeCopy(e, displayPayoff)} 
-              onPaste={(e) => executePaste(e, "payoff")}
-              onDelete={(e) => executeDelete(e, "payoff")}
-            />
-          </div>
+          {canInteract && (
+            <div className="opacity-0 group-hover/input:opacity-100 transition-opacity">
+              <FloatingToolbar
+                positionClass="bottom-full pb-1"
+                title="wynik"
+                onCopy={(e) => executeCopy(e, displayPayoff)} 
+                onPaste={(e) => executePaste(e, "payoff")}
+                onDelete={(e) => executeDelete(e, "payoff")}
+              />
+            </div>
+          )}
         </div>
 
         <div className="absolute top-full left-1 mt-0.5 text-[10px] font-medium text-slate-500 whitespace-nowrap pointer-events-none">
@@ -103,12 +110,14 @@ export function TerminalNode({ id, data }) {
         </div>
       </div>
 
-      <div
-        className="absolute left-full top-1/2 pl-1 flex -translate-y-1/2 flex-col opacity-0 group-hover/node:pointer-events-auto group-hover/node:opacity-100 pointer-events-none z-[1000]"
-        onPointerDown={(e) => e.stopPropagation()}
-      >
-        <NodeMenu nodeId={id} nodeType="terminal" hasIncoming={true} />
-      </div>
+      {canInteract && (
+        <div
+          className="absolute left-full top-1/2 pl-1 flex -translate-y-1/2 flex-col opacity-0 group-hover/node:pointer-events-auto group-hover/node:opacity-100 pointer-events-none z-[1000]"
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <NodeMenu nodeId={id} nodeType="terminal" hasIncoming={true} />
+        </div>
+      )}
     </div>
   )
 }

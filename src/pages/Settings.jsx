@@ -27,8 +27,8 @@ const passwordSchema = z.object({
 });
 
 export default function Settings() {
-  const { user, updateUser } = useAuthStore(); 
-  const addToast = useToastStore((state) => state.addToast); // Pobieramy akcję z Twojego store'a
+  const { user, fetchProfile } = useAuthStore(); 
+  const addToast = useToastStore((state) => state.addToast); 
   
   const [isLoading, setIsLoading] = useState(false);
 
@@ -48,6 +48,7 @@ export default function Settings() {
     }
   });
 
+  // Upewniamy się, że po odświeżeniu strony/załadowaniu usera formularz dostaje dane
   useEffect(() => {
     if (user) {
       profileForm.reset({ name: user.name, email: user.email });
@@ -67,8 +68,15 @@ export default function Settings() {
   const onProfileSubmit = async (data) => {
     setIsLoading(true);
     try {
+      // 1. Zapisujemy na serwerze
       await userApi.updateProfile(data);
-      updateUser({ name: data.name, email: data.email });
+      
+      // 2. Pobieramy ŚWIEŻE dane z serwera do globalnego stanu (Zustand)
+      await fetchProfile();
+      
+      // 3. Resetujemy formularz Z NOWYMI DANYMI. 
+      // To zdejmuje flagę "isDirty" z formularza i uaktualnia wartości początkowe.
+      profileForm.reset({ name: data.name, email: data.email });
       
      addToast("Profil został zaktualizowany pomyślnie", "success");
 

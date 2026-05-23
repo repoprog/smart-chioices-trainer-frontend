@@ -8,7 +8,7 @@ const handleClass = '!h-2 !w-2 !min-h-0 !min-w-0 !border !border-slate-900 !bg-w
 
 export function DecisionNode({ id, data }) {
   const edges = useTreeStore((s) => s.edges);
-  const isSimulationMode = useTreeStore((s) => s.isSimulationMode);
+  const isSimulationMode = data.isSimulationActive;
   const hasIncoming = edges.some((e) => e.target === id);
   const isHighlighted = data?.isHighlighted;
 
@@ -41,7 +41,7 @@ export function DecisionNode({ id, data }) {
 
      {hasExpectedValue && (
         <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 flex justify-center">
-           <div className="relative flex items-center gap-0.5">
+    <div className="relative flex items-center justify-center gap-0.5">
              
              <NodeEquationBadge 
                equation={data.equation} 
@@ -49,8 +49,20 @@ export function DecisionNode({ id, data }) {
                isSimulationActive={isSimulationMode}
              />
 
-             <div className="px-2 py-0.5 rounded-md bg-slate-900/50 backdrop-blur-sm shadow-inner pointer-events-none">
-               <span className="text-yellow-400 text-xs font-bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+      <div className={`
+        px-3 py-0.5 rounded-md pointer-events-none transition-colors backdrop-blur-sm border
+        ${isHighlighted
+          ? 'bg-emerald-50 border-emerald-400 shadow-sm dark:bg-emerald-950/80 dark:border-emerald-800 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
+          : 'bg-white border-slate-200 shadow-[0_1px_3px_rgba(0,0,0,0.07),inset_0_1px_0_rgba(255,255,255,0.9)] dark:bg-slate-900/80 dark:border-slate-800 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]'
+        }
+      `}>
+        <span className={`
+          font-sans text-[13px] font-bold tracking-tight tabular-nums
+          ${isHighlighted
+            ? 'text-emerald-700 dark:text-emerald-300'
+            : 'text-amber-700 dark:text-yellow-400 dark:drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]'
+          }
+        `}>
                 {data.expectedValue.toLocaleString('pl-PL', { maximumFractionDigits: 2 })}
                </span>
              </div>

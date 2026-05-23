@@ -18,7 +18,8 @@ export const API_PATHS = {
     LOGOUT: '/api/v1/auth/logout',
     REFRESH: '/api/v1/auth/refresh',
   },
-  USERS: {                                     
+  USERS: { 
+    ME: '/api/v1/users/me',                                    
     PROFILE: '/api/v1/users/me/profile',
     PASSWORD: '/api/v1/users/me/password',
   },

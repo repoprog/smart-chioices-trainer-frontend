@@ -2,6 +2,9 @@ import axios from 'axios';
 import { API_PATHS } from '../constants/apiConstants';
 import { STORAGE_KEYS } from '../constants/appConstants';
 
+// --- NOWOŚĆ: Blokada zapobiegająca wielokrotnemu odświeżaniu tokena ---
+let refreshPromise = null;
+
 // 1. Inicjalizacja klienta
 const apiClient = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
@@ -36,13 +39,22 @@ apiClient.interceptors.response.use(
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true; // Ustawiamy flagę, żeby nie wejść w nieskończoną pętlę
 
-            try {
-                // Próba odświeżenia tokena. Zwykły axios, nie apiClient, żeby nie wpaść w pętlę interceptorów!
-                const refreshResponse = await axios.post(
+            //  Logika blokady (Lock) ---
+            if (!refreshPromise) {
+                // Jeśli nie ma obietnicy odświeżania w toku, tworzymy ją
+                refreshPromise = axios.post(
                     `${import.meta.env.VITE_API_URL}${API_PATHS.AUTH.REFRESH}`,
                     {},
                     { withCredentials: true }
-                );
+                ).finally(() => {
+                    // Po udanym lub nieudanym odświeżeniu, zwalniamy blokadę
+                    refreshPromise = null;
+                });
+            }
+
+            try {
+                // Wszystkie równoległe zapytania 401 będą czekać na tę jedną obietnicę
+                const refreshResponse = await refreshPromise;
 
                 // Pobieramy nowy token z odpowiedzi
                 const newAccessToken = refreshResponse.data.accessToken;
@@ -58,6 +70,10 @@ apiClient.interceptors.response.use(
                 // Odświeżanie się nie udało (np. wygasł również Refresh Token)
               
                 localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+                
+            
+                const { default: useAuthStore } = await import('../store/useAuthStore');
+                useAuthStore.setState({ user: null, isAuthenticated: false });
                 
                 return Promise.reject(refreshError);
             }

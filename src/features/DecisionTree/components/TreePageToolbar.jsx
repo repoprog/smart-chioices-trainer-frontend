@@ -6,7 +6,7 @@ import { Tooltip } from '../../../components/ui/Tooltip';
 import { HistorySidebar } from '../../../components/ui/HistorySidebar';
 
 import { HistoryPreviewBanner } from '../../../components/ui/HistoryPreviewBanner'; 
-import { usePendingProjectSave } from '../../../hooks/usePendingProjectSave';
+
 import { useCloudProjectActions } from '../../../hooks/useCloudProjectActions';
 import { PROJECT_TYPES } from '../../../constants/decisionTypes'; 
 
@@ -47,12 +47,6 @@ export function TreePageToolbar({ showTemplates, setShowTemplates }) {
     }
   });
 
-  usePendingProjectSave({
-    expectedType: PROJECT_TYPES.TREE,
-    setCurrentProject,
-    saveToBackend,
-    setIsSaving: actions.setIsSaving,
-  });
 
   const previewedItem = actions.historyItems.find(item => item.id === previewingSnapshotId);
 

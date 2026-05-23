@@ -1,7 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Table2, Network, Filter, SlidersHorizontal } from 'lucide-react'; 
+import { Table2, Network, Filter, SlidersHorizontal, Share2, ShieldCheck } from 'lucide-react'; 
 import { motion } from 'framer-motion'; 
+import { APP_ROUTES } from '../constants/appConstants';
+
+// DODANE: Importujemy stan autoryzacji do wywołania modala logowania
+import useAuthStore from '../store/useAuthStore'; 
 
 const features = [
     {
@@ -32,6 +36,21 @@ const features = [
         desc: 'Zmieniaj wagi i prawdopodobieństwa i od razu zobacz wpływ na wynik — bez ręcznego przeliczania.',
         Icon: SlidersHorizontal,
         wrapperClass: 'hover:border-emerald-500/20',
+    },
+    // --- NOWE ZALETY BIZNESOWE I TECHNICZNE ---
+    {
+        id: 'sharing',
+        title: 'Udostępnianie i chmura',
+        desc: 'Zapisuj decyzje na swoim koncie i generuj publiczne linki Read-Only, aby skonsultować wybór z zespołem.',
+        Icon: Share2,
+        wrapperClass: 'hover:border-blue-500/20',
+    },
+    {
+        id: 'backend',
+        title: 'Silnik analizy decyzji',
+        desc: 'Złożone obliczenia i rankingi są weryfikowane po stronie backendu, co gwarantuje spójność danych (Server-Authoritative) oraz chroni aplikację przed zjawiskiem Race Conditions.',
+        Icon: ShieldCheck,
+        wrapperClass: 'md:col-span-2 hover:border-orange-500/20',
     }
 ];
 
@@ -63,20 +82,61 @@ const steps = [
 ];
 
 export default function LandingPage() {
+    
+    const openLoginModal = useAuthStore((state) => state.openLoginModal);
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
     return (
         <div className="min-h-screen bg-[#030303] !text-white font-sans selection:bg-purple-500/30 overflow-hidden">
           
-            {/*  NAVIGATION BAR */}
-            <header className="fixed top-0 left-1/2 -translate-x-1/2 mt-6 z-50">
+          {/* NAVIGATION BAR */}
+            <header className="fixed top-0 left-1/2 -translate-x-1/2 mt-6 z-50 w-max max-w-[90vw]">
                 <nav className="flex items-center gap-1.5 px-4 py-2 border border-white/5 bg-black/60 backdrop-blur-md rounded-full shadow-[0_0_20px_-10px_rgba(139,92,246,0.3)]">
-                    <span className="font-bold text-sm tracking-tight !text-white/90 mr-4">Decidely.</span>
-                    <a href="#features" className="!text-white/70 text-[12px] font-medium px-2.5 py-1 hover:!text-white transition-colors">Cechy</a>
-                    <a href="#how-it-works" className="!text-white/70 text-[12px] font-medium px-2.5 py-1 hover:!text-white transition-colors">Jak to Działa?</a>
-                    <a href="#cases" className="!text-white/70 text-[12px] font-medium px-2.5 py-1 hover:!text-white transition-colors">Przykłady</a>
+                    <span className="font-bold text-sm tracking-tight !text-white/90 mr-2 md:mr-4">Decidely.</span>
+                    <a href="#features" className="hidden md:block !text-white/70 text-[12px] font-medium px-2.5 py-1 hover:!text-white transition-colors">Cechy</a>
+                    <a href="#how-it-works" className="hidden md:block !text-white/70 text-[12px] font-medium px-2.5 py-1 hover:!text-white transition-colors">Jak to Działa?</a>
+                    <a href="#cases" className="hidden md:block !text-white/70 text-[12px] font-medium px-2.5 py-1 hover:!text-white transition-colors">Przykłady</a>
                     
-                    <Link to="/app/table?scenario=developerHiring" className="inline-flex items-center gap-1.5 ml-4 px-3.5 py-1.5 border-none rounded-full bg-purple-500 !text-white text-[12px] font-semibold cursor-pointer transition-all hover:bg-purple-600 hover:shadow-[0_0_20px_0_rgba(139,92,246,0.2)]">
-                        Rozpocznij (Free)
-                    </Link>
+                    <div className="flex items-center gap-2 ml-2 md:ml-4 border-l border-white/10 pl-2 md:pl-4">
+                        
+                       
+                        <a 
+                            href="LINK_DO_TWOJEGO_REPO" 
+                            title="Kod źródłowy na GitHubie"
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="!text-white/50 hover:!text-white transition-colors px-2 flex items-center justify-center"
+                            aria-label="Zobacz kod na GitHub"
+                        >
+                            <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] fill-current"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        </a>
+
+                       
+                        {isAuthenticated ? (
+                            <Link 
+                                to={APP_ROUTES.TABLE} 
+                                className="inline-flex items-center gap-1.5 px-4 py-1.5 border-none rounded-full bg-emerald-500 !text-white text-[12px] font-semibold cursor-pointer transition-all hover:bg-emerald-600 hover:shadow-[0_0_20px_0_rgba(16,185,129,0.3)]"
+                            >
+                                Otwórz aplikację
+                            </Link>
+                        ) : (
+                            <>
+                                <button 
+                                    onClick={openLoginModal} 
+                                    className="bg-transparent border-none cursor-pointer !text-white/70 text-[12px] font-medium px-2.5 py-1.5 hover:!text-white transition-colors"
+                                >
+                                    Zaloguj
+                                </button>
+
+                                <Link 
+                                    to="/app/table?scenario=developerHiring" 
+                                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 border-none rounded-full bg-purple-500 !text-white text-[12px] font-semibold cursor-pointer transition-all hover:bg-purple-600 hover:shadow-[0_0_20px_0_rgba(139,92,246,0.2)]"
+                                >
+                                    Wypróbuj bez konta
+                                </Link>
+                            </>
+                        )}
+                    </div>
                 </nav>
             </header>
 
@@ -105,15 +165,15 @@ export default function LandingPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.7, delay: 0.4, ease: "easeOut" }}
-                    className="flex flex-col md:flex-row gap-4 justify-center"
+                    className="flex flex-col md:flex-row gap-4 justify-center items-center"
                 >
-                
                     <Link to="/app/table?scenario=developerHiring" className="px-5 py-2.5 cursor-pointer font-semibold text-sm bg-purple-500 !text-white border-none rounded-md transition-all hover:shadow-[0_0_30px_0_rgba(139,92,246,0.2)] hover:bg-purple-600">
                       Porównaj Opcje
                     </Link>
                     <Link to="/app/tree?scenario=basketball" className="px-5 py-2.5 cursor-pointer font-semibold text-sm bg-cyan-600 !text-white border-none rounded-md transition-all hover:shadow-[0_0_30px_0_rgba(8,145,178,0.3)] hover:bg-cyan-500">
                         Zbuduj Drzewo Decyzji
                     </Link>
+                
                 </motion.div>
                 
                 {/* SCREENSHOT */}
@@ -155,7 +215,9 @@ export default function LandingPage() {
                     Zbudowane w oparciu o metodologię Smart Choices (Harvard Business School Press) — stosowaną przy decyzjach, gdzie stawką jest coś ważnego.
                 </motion.p>
                 
-                <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4 auto-rows-[250px]">
+               
+                {/* ZMIANA: Z lg:grid-cols-4 na lg:grid-cols-3 oraz dodano max-w-[1000px] dla lepszych proporcji */}
+                <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-[250px] max-w-[1000px] mx-auto">
                     {features.map(({ id, title, desc, Icon, wrapperClass, iconContainerClass }, i) => (
                         <motion.div 
                             key={id} 
@@ -163,13 +225,13 @@ export default function LandingPage() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-50px" }}
                             transition={{ duration: 0.5, delay: i * 0.15 }}
-                            className={`p-8 flex flex-col justify-end gap-3 rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-colors shadow-[inset_0_1px_0_0_rgba(255,255,255,0.01)] ${wrapperClass}`}
+                            className={`p-6 xl:p-8 flex flex-col justify-end gap-3 rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-colors shadow-[inset_0_1px_0_0_rgba(255,255,255,0.01)] ${wrapperClass || 'md:col-span-1'}`}
                         >
                             <div className={iconContainerClass}>
                                 <Icon className="w-6 h-6 !text-white" />
                             </div>
-                            <h3 className="m-0 text-xl font-bold !text-white/90">{title}</h3>
-                            <p className="m-0 text-[13px] !text-white/60 leading-relaxed max-w-[500px]">
+                            <h3 className="m-0 text-xl font-bold tracking-tight !text-white/90">{title}</h3>
+                            <p className="m-0 text-[14px] !text-white/60 leading-relaxed">
                                 {desc}
                             </p>
                         </motion.div>
@@ -255,11 +317,34 @@ export default function LandingPage() {
                 </motion.div>
             </section>
 
-            {/* TECH STACK */}
+           {/* WHY I BUILT THIS - AUTHOR'S NOTE */}
+            <section className="py-24 px-6 max-w-[800px] mx-auto text-center">
+                <div className="p-8 md:p-12 rounded-3xl bg-gradient-to-b from-white/[0.03] to-transparent border border-white/[0.05] relative overflow-hidden">
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                    <h3 className="text-xl font-bold !text-white/90 mb-6">Dlaczego zbudowałem Decidely?</h3>
+                    <div className="space-y-4 text-[16px] md:text-lg !text-white/60 leading-relaxed font-light italic">
+                        <p>
+                            Większość narzędzi decyzyjnych oferuje albo tabele, albo drzewa — rzadko oba podejścia jednocześnie. Często są to też proste kalkulatory lub systemy oparte na przestarzałych technologiach.
+                        </p>
+                        <p>
+                            Zbudowałem Decidely, aby połączyć nowoczesny interfejs z formalnymi metodami nauk decyzyjnych i sprawdzić, jak daleko można pójść, gdy potraktujemy proces podejmowania decyzji jak realny problem inżynierski.
+                        </p>
+                    </div>
+                    <div className="mt-8 flex items-center justify-center gap-4">
+                        <div className="h-[1px] w-8 bg-white/10"></div>
+                        <span className="text-sm font-semibold tracking-wider uppercase !text-white/40">Remigiusz, autor projektu</span>
+                        <div className="h-[1px] w-8 bg-white/10"></div>
+                    </div>
+                </div>
+            </section>
+
+            
+
+            {/* TECH STACK  */}
             <section className="py-20 px-6 max-w-[1200px] mx-auto text-center border-t border-white/5 bg-[#010101]">
-                <h4 className="m-0 text-xs font-semibold uppercase tracking-[2px] !text-white/40">Zbudowany na nowoczesnym staku</h4>
+                <h4 className="m-0 text-xs font-semibold uppercase tracking-[2px] !text-white/40">Architecture & Core Stack</h4>
                 <div className="mt-10 flex flex-wrap justify-center gap-10 items-center opacity-60">
-                    {['React', 'Tailwind CSS', 'Vite', 'Zustand', 'React Flow'].map(tech => (
+                    {['Java 21', 'Spring Boot 3', 'React', 'Zustand', 'React Flow', 'Tailwind CSS'].map(tech => (
                         <span key={tech} className="text-xl !text-white/60 font-medium">{tech}</span>
                     ))}
                 </div>
@@ -267,10 +352,10 @@ export default function LandingPage() {
 
             {/* ALGORITHM SIGNATURE */}
             <section className="pb-16 px-6 text-center bg-[#010101]">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]">
+                <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full border border-white/10 bg-white/5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]">
                     <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <p className="m-0 text-[11px] uppercase tracking-wider !text-white/50 font-mono font-semibold">
-                        Implements <span className="!text-emerald-400">MCDA</span>, <span className="!text-emerald-400">Expected Value Analysis</span> & <span className="!text-emerald-400">Pareto Filtering</span>.
+                    <p className="m-0 text-[12px] !text-white/60 font-mono">
+                        Includes <span className="!text-white/90 font-semibold">MCDA analysis</span>, decision-tree <span className="!text-white/90 font-semibold">EV calculations</span> and <span className="!text-white/90 font-semibold">Optimistic Concurrency Control</span>.
                     </p>
                 </div>
             </section>

@@ -15,49 +15,100 @@ import { useTreeStore } from '../store/useTreeStore.js'
 import { StageHeaders } from './StageHeaders.jsx'
 import { TreeToolbar } from './TreeToolbar.jsx'
 import { TreeLegend } from './TreeLegend.jsx' 
-import { NODE_TYPES } from '../../../constants/decisionTypes';
+import { NODE_TYPES, EVALUATION_MODES } from '../../../constants/decisionTypes';
 
-// ZMIANA: Dodajemy opcjonalny prop readOnlyData
-export function TreeCanvas({ readOnlyData = null }) {
-  // Jeśli dostarczono readOnlyData (tryb publiczny), omijamy nasłuchiwanie na store
+import { getLayoutedElements, renumberDecisionAndChanceNodes, syncColumnLabels } from '../logic/treeUtils.js';
+// ADDED: Mathematical engine to recover the winning path in Share mode
+import { evaluateAndSetWinningPath } from '../logic/treeAlgorithms.js'; 
+
+export function TreeCanvas({ readOnlyData = null, readOnlySimulationMode = false }) {
   const isReadOnly = !!readOnlyData;
 
   const storeNodes = useTreeStore((s) => s.nodes);
   const storeEdges = useTreeStore((s) => s.edges);
   const storeWinningPath = useTreeStore((s) => s.winningPath);
-  const isPreviewMode = useTreeStore((s) => s.isPreviewMode);
-
-  // ZMIANA: Logika wyboru danych: albo ze Store (normalna praca), albo z Propsa (publiczny link)
-  const baseNodes = isReadOnly ? (readOnlyData.nodes || []) : storeNodes;
-  const baseEdges = isReadOnly ? (readOnlyData.edges || []) : storeEdges;
-  const rawWinningPath = isReadOnly ? (readOnlyData.winningPath || []) : storeWinningPath;
-  const activePreviewMode = isReadOnly ? true : isPreviewMode; // ReadOnly to na sztywno zablokowany edytor
-
-  const winningPath = useMemo(() => {
-    return rawWinningPath instanceof Set 
-      ? rawWinningPath 
-      : new Set(rawWinningPath || []);
-  }, [rawWinningPath]);
+  const storeLabels = useTreeStore((s) => s.stageColumnLabels);
+  const storeEvalMode = useTreeStore((s) => s.evaluationMode);
   
+  const isPreviewMode = useTreeStore((s) => s.isPreviewMode);
+  const isSimulationMode = useTreeStore((s) => s.isSimulationMode);
+
+  const computedReadOnly = useMemo(() => {
+    if (!isReadOnly) return null;
+    
+    const rawNodes = readOnlyData.nodes || [];
+    const rawEdges = readOnlyData.edges || [];
+    const rawLabels = readOnlyData.stageColumnLabels || readOnlyData.labels || [];
+    const evalMode = readOnlyData.evaluationMode || EVALUATION_MODES.MAX;
+    
+    const layoutedNodes = getLayoutedElements(rawNodes, rawEdges);
+    const renumbered = renumberDecisionAndChanceNodes(layoutedNodes, rawEdges);
+    const stageColumnLabels = syncColumnLabels(renumbered, rawEdges, rawLabels);
+    
+    // Locally evaluate the tree to recover the winningPath
+    const stateWithMath = evaluateAndSetWinningPath({
+      nodes: renumbered,
+      edges: rawEdges,
+      evaluationMode: evalMode
+    });
+    
+    return {
+      nodes: stateWithMath.nodes,
+      edges: stateWithMath.edges,
+      labels: stageColumnLabels,
+      evalMode: stateWithMath.evaluationMode,
+      winningPath: stateWithMath.winningPath
+    };
+  }, [isReadOnly, readOnlyData]);
+
+  const baseNodes = isReadOnly ? computedReadOnly.nodes : storeNodes;
+  const baseEdges = isReadOnly ? computedReadOnly.edges : storeEdges;
+  const stageLabels = isReadOnly ? computedReadOnly.labels : storeLabels;
+  const evaluationMode = isReadOnly ? computedReadOnly.evalMode : storeEvalMode;
+  
+  // ESLINT FIX: Moving the entire path logic inside useMemo to avoid unnecessary memory allocations
+  const winningPath = useMemo(() => {
+    const rawPath = isReadOnly ? (computedReadOnly?.winningPath || []) : storeWinningPath;
+    return rawPath instanceof Set 
+      ? rawPath 
+      : new Set(rawPath || []);
+  }, [isReadOnly, computedReadOnly, storeWinningPath]);
+
+  // activeVisualLockdown applies a gray overlay and blocks clicks via CSS (removed during simulation)
+  const activeVisualLockdown = (isReadOnly && !readOnlySimulationMode) || isPreviewMode;
+  // blockInteractions prevents dragging nodes and drawing edges
+  const blockInteractions = isReadOnly || isPreviewMode;
+
   const nodes = useMemo(() => {
     return baseNodes.map((node) => ({
       ...node,
       data: {
         ...node.data,
         isHighlighted: winningPath.has(node.id),
+        isSimulationActive: isReadOnly ? readOnlySimulationMode : isSimulationMode,
+        isSharedView: isReadOnly,
       },
     }));
-  }, [baseNodes, winningPath]);
+  }, [baseNodes, winningPath, isReadOnly, readOnlySimulationMode, isSimulationMode]);
 
   const edges = useMemo(() => {
-    return baseEdges.map((edge) => ({
-      ...edge,
-      data: {
-        ...edge.data,
-        isHighlighted: winningPath.has(edge.id),
-      },
-    }));
-  }, [baseEdges, winningPath]);
+    return baseEdges.map((edge) => {
+      const siblingCount = baseEdges.filter(e => e.source === edge.source).length;
+      const sourceNode = baseNodes.find(n => n.id === edge.source);
+
+      return {
+        ...edge,
+        type: 'smartChoices',
+        data: {
+          ...edge.data,
+          isHighlighted: winningPath.has(edge.id),
+          injectedSiblingCount: siblingCount,
+          injectedSourceType: sourceNode?.type,
+          injectedIsSharedView: isReadOnly, 
+        },
+      };
+    });
+  }, [baseEdges, baseNodes, winningPath, isReadOnly]);
 
   const onInit = useCallback((rf) => {
     requestAnimationFrame(() =>
@@ -69,53 +120,46 @@ export function TreeCanvas({ readOnlyData = null }) {
   }, []);
 
   const onNodesChange = useCallback((changes) => {
-    if (isReadOnly) return; // BLOKADA: W trybie read-only ignorujemy zdarzenia
-
-    const isNoise = changes.every(
-      (c) => c.type === 'dimensions' || c.type === 'select' || c.type === 'position'
-    );
+    if (isReadOnly) return;
     
-    if (isNoise) {
-      useTreeStore.temporal.getState().pause();
-    }
-
-    useTreeStore.setState((state) => ({
-      nodes: applyNodeChanges(changes, state.nodes),
-    }));
-
-    if (isNoise) {
-      useTreeStore.temporal.getState().resume();
-    }
+    // Protect history (Zundo) from being cluttered by visual noise
+    const isNoise = changes.every(c => c.type === 'dimensions' || c.type === 'select' || c.type === 'position');
+    if (isNoise) useTreeStore.temporal.getState().pause();
+    
+    // ARCHITECTURAL NOTE (OCC & isDirty):
+    // We use direct setState instead of a dedicated store action.
+    // This intentionally bypasses the dataVersion increment and setting isDirty = true.
+    // Purely visual changes (drag, select, dimensions) represent "volatile state" 
+    // that does not require immediate Auto-Save to the database 
+    // and does not violate the business logic of the EMV model.
+    useTreeStore.setState((state) => ({ nodes: applyNodeChanges(changes, state.nodes) }));
+    
+    if (isNoise) useTreeStore.temporal.getState().resume();
   }, [isReadOnly]);
 
   const onEdgesChange = useCallback((changes) => {
-    if (isReadOnly) return; // BLOKADA: W trybie read-only ignorujemy zdarzenia
-
+    if (isReadOnly) return;
+    
+    // Protect history (Zundo) from being cluttered by visual noise
     const isNoise = changes.every((c) => c.type === 'select');
-
-    if (isNoise) {
-      useTreeStore.temporal.getState().pause();
-    }
-
-    useTreeStore.setState((state) => ({
-      edges: applyEdgeChanges(changes, state.edges),
-    }));
-
-    if (isNoise) {
-      useTreeStore.temporal.getState().resume();
-    }
+    if (isNoise) useTreeStore.temporal.getState().pause();
+    
+    // ARCHITECTURAL NOTE (OCC & isDirty): 
+    // Similarly to onNodesChange, we bypass the mutation tracking system 
+    // for purely visual edge changes (e.g., selection).
+    useTreeStore.setState((state) => ({ edges: applyEdgeChanges(changes, state.edges) }));
+    
+    if (isNoise) useTreeStore.temporal.getState().resume();
   }, [isReadOnly]);
 
 return (
     <div 
       id="tree-canvas-container" 
       className={`relative flex-1 w-full h-full min-h-[560px] bg-background transition-colors ${
-        activePreviewMode ? "opacity-90 grayscale-[0.1]" : ""
+        activeVisualLockdown ? "opacity-90 grayscale-[0.1]" : ""
       }`}
     >
-      {/* --- MAGICZNY CSS SNAJPER --- */}
-      {/* Odbiera kliknięcia tylko elementom na płótnie, przepuszczając je do tła */}
-      {activePreviewMode && (
+      {activeVisualLockdown && (
         <style>{`
           .react-flow__node *,
           .react-flow__edgelabel-renderer *,
@@ -136,46 +180,35 @@ return (
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           defaultEdgeOptions={{ type: 'smartChoices' }}
-          
-          /* --- NATYWNE BLOKADY REACT FLOW --- */
-          nodesDraggable={!activePreviewMode}
-          nodesConnectable={!activePreviewMode}
-          elementsSelectable={!activePreviewMode}
-
+          nodesDraggable={!blockInteractions}
+          nodesConnectable={!blockInteractions}
+          elementsSelectable={!blockInteractions}
           minZoom={0.35}
           maxZoom={1.75}
           proOptions={{ hideAttribution: true }}
           elevateEdgesOnSelect={false}
           elevateNodesOnSelect={false}
           fitView 
-          fitViewOptions={{ 
-            padding: 0.3, 
-            includeHiddenNodes: false,
-          }}
+          fitViewOptions={{ padding: 0.3, includeHiddenNodes: false }}
         >
-          {/* ZMIANA: Nagłówki i legenda wyświetlają się, ale upewnijmy się że działają z readOnlyData, jeśli tego używają */}
-          <StageHeaders />
-          <Background
-            id="tree-bg"
-            gap={20}
-            size={1}
-            color="var(--border)"
-            className="dark:opacity-30 transition-opacity"
+          <StageHeaders 
+            readOnlyNodes={isReadOnly ? nodes : null} 
+            readOnlyEdges={isReadOnly ? edges : null} 
+            readOnlyLabels={isReadOnly ? stageLabels : null} 
+            readOnlyEvalMode={isReadOnly ? evaluationMode : null} 
           />
+          <Background gap={20} size={1} color="var(--border)" className="dark:opacity-30 transition-opacity" />
           <CustomControls />
           <MiniMap
             className="!rounded-md !border-border !bg-muted/50"
             maskColor="var(--muted)"
             nodeStrokeWidth={1}
             nodeColor={(n) => {
-              if (n.type === NODE_TYPES.DECISION) return 'var(--card)'
-              if (n.type === NODE_TYPES.CHANCE) return 'var(--card)'
-              if (n.type === NODE_TYPES.TERMINAL) return 'var(--card)'
+              if (n.type === NODE_TYPES.DECISION || n.type === NODE_TYPES.CHANCE || n.type === NODE_TYPES.TERMINAL) return 'var(--card)'
               return 'var(--muted)'
             }}
           />
           
-          {/* ZMIANA: Pasek narzędziowy pokazujemy TYLKO jeśli NIE jesteśmy w trybie publicznego linku */}
           {!isReadOnly && <TreeToolbar />}
           <TreeLegend />
         </ReactFlow>

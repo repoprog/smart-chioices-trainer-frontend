@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { decisionApi } from '../api/decisionApi';
 import { useToastStore } from '../store/useToastStore'; 
 import { NODE_TYPES } from '../constants/decisionTypes';
 
 import { APP_ROUTES, STORAGE_KEYS } from '../constants/appConstants';
+// DODANE: AuthStore
+import useAuthStore from '../store/useAuthStore';
 
 export function useCloudProjectActions({
   projectType,
@@ -17,8 +18,9 @@ export function useCloudProjectActions({
   getCurrentStateFn,
   setGlobalDirty 
 }) {
-  const navigate = useNavigate();
   const addToast = useToastStore(s => s.addToast); 
+  // ZMIANA: Wyciągamy dane sesji i funkcję otwierającą Modal z Zustanda
+  const { isAuthenticated, openLoginModal } = useAuthStore();
 
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -28,6 +30,25 @@ export function useCloudProjectActions({
   const [historyItems, setHistoryItems] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [previewCache, setPreviewCache] = useState(null);
+
+  // --- NOWOŚĆ: Stan pamięci intencji (Intent Caching) bez sessionStorage ---
+  const [pendingSave, setPendingSave] = useState(false);
+
+  // --- EFEKT: Nasłuchuje udanego logowania i automatycznie kontynuuje zapis ---
+  useEffect(() => {
+    if (isAuthenticated && pendingSave) {
+      setPendingSave(false); 
+      
+      if (currentProjectId) {
+        setIsSnapshotModalOpen(true);
+      } else {
+        setIsCreateModalOpen(true);
+      }
+      
+      // Opcjonalnie: Cichy toast informujący, że kontynuujemy zapis
+      // addToast("Zalogowano pomyślnie. Kontynuuj zapis.", "success");
+    }
+  }, [isAuthenticated, pendingSave, currentProjectId]);
 
   // --- FETCH HISTORY FROM BACKEND ---
   useEffect(() => {
@@ -52,12 +73,23 @@ export function useCloudProjectActions({
     fetchHistory();
   }, [currentProjectId]);
 
-  // --- SMART SAVE LOGIC ---
-  const handleSaveClick = useCallback(() => {
-    if (!currentProjectId) setIsCreateModalOpen(true);
-    else setIsSnapshotModalOpen(true);
-  }, [currentProjectId]);
+  const handleSaveClick = () => {
+    if (!isAuthenticated) {
+      addToast("Twoja praca jest bezpieczna. Zaloguj się, aby przenieść ją do chmury.", "info");
+      
+      // Uzbrajamy system, aby otworzył modal zapisu zaraz po zalogowaniu
+      setPendingSave(true);
+      
+      openLoginModal(); 
+      return; 
+    }
 
+    if (currentProjectId) {
+      setIsSnapshotModalOpen(true);
+    } else {
+      setIsCreateModalOpen(true);
+    }
+  };
 
   const handleCreateProject = async ({ title, notes }) => {
     if (!title.trim()) return;
@@ -79,31 +111,19 @@ export function useCloudProjectActions({
       const isUnauthorized = error.response?.status === 401;
       const isNetworkError = !error.response;
       
+      // ZMIANA: Skoro autoryzacja dzieje się wyżej, to 401 znaczy, że wygasł token.
       if (isUnauthorized) {
-        sessionStorage.setItem(STORAGE_KEYS.PENDING_SAVE, JSON.stringify({
-          title: title, 
-          notes: notes, 
-          type: projectType 
-        }));
-        
-        const currentPath = window.location.pathname;
-        setTimeout(() => navigate(`${APP_ROUTES.LOGIN}?returnTo=${encodeURIComponent(currentPath)}`), 2000);
+         addToast("Twoja sesja wygasła. Zaloguj się ponownie.", "error");
+         openLoginModal();
+      } else {
+         addToast(isNetworkError ? "Brak połączenia z serwerem." : "Wystąpił błąd podczas tworzenia decyzji.", "error");
       }
-      
-      addToast(
-        isUnauthorized 
-          ? "Zaloguj się, aby zapisać decyzje w chmurze." 
-          : isNetworkError
-            ? "Brak połączenia z serwerem. Sprawdź internet lub spróbuj później."
-            : "Wystąpił błąd podczas tworzenia decyzji.", 
-        "error"
-      );
     } finally {
       setIsSaving(false);
     }
   };
 
-const handleCreateSnapshot = async (label) => {
+  const handleCreateSnapshot = async (label) => {
     if (!label.trim() || !currentProjectId) return;
 
     setIsSaving(true);
@@ -115,7 +135,7 @@ const handleCreateSnapshot = async (label) => {
         id: newSnapshot.id, 
         title: newSnapshot.label,
         date: newSnapshot.createdAt,
-        tags: newSnapshot.smartTags || [] // Używamy tagów wyliczonych przez backend
+        tags: newSnapshot.smartTags || [] 
       }, ...prev]);
 
       addToast(`Wersja "${label}" zapisana.`, "success");
@@ -124,14 +144,11 @@ const handleCreateSnapshot = async (label) => {
       console.error("Błąd snapshotu:", error);
       const isUnauthorized = error.response?.status === 401;
       
-      addToast(
-        isUnauthorized ? "Sesja wygasła. Zaloguj się ponownie." : "Nie udało się zapisać wersji.", 
-        "error"
-      ); 
-
       if (isUnauthorized) {
-        const currentPath = window.location.pathname;
-        setTimeout(() => navigate(`${APP_ROUTES.LOGIN}?returnTo=${encodeURIComponent(currentPath)}`), 2000);
+        addToast("Twoja sesja wygasła. Zaloguj się ponownie.", "error");
+        openLoginModal();
+      } else {
+        addToast("Nie udało się zapisać wersji.", "error"); 
       }
     } finally {
       setIsSaving(false);
@@ -139,7 +156,6 @@ const handleCreateSnapshot = async (label) => {
   };
 
   const handleSelectHistoryItem = async (id) => {
-  
     if (!currentProjectId) {
       addToast('Zapisz projekt w chmurze, aby przeglądać historię.', 'warning');
       setIsHistoryOpen(false);
@@ -171,21 +187,16 @@ const handleCreateSnapshot = async (label) => {
     }
   };
 
- // --- ZMIANA: Zmodyfikowany blok przywracania wersji ---
- const handleRestoreVersion = async () => {
+  const handleRestoreVersion = async () => {
     setIsSaving(true); 
     try {
-      // 1. Zdejmujemy blokadę zapisu
       exitPreviewMode();
       
-      // 2. Podbijamy flagi w głównym storze za pomocą funkcji podanej w propsach
       if (typeof setGlobalDirty === 'function') {
         setGlobalDirty(true);
       }
 
-      // 3. Wymuszamy zapis odblokowanego już stanu
       await saveToBackend();
-      
       addToast("Wersja przywrócona i zapisana w chmurze.", "success");
     } catch (error) {
       console.error("Błąd przywracania wersji:", error);
@@ -195,7 +206,7 @@ const handleCreateSnapshot = async (label) => {
     }
   };
 
- const handleClosePreview = async () => {
+  const handleClosePreview = async () => {
     if (previewCache) {
       loadScenarioFn(previewCache);
     } else {
@@ -221,7 +232,6 @@ const handleCreateSnapshot = async (label) => {
     isSnapshotModalOpen, setIsSnapshotModalOpen,
     historyItems,
     isSaving, setIsSaving,
-   
     handleSaveClick,
     handleCreateProject,
     handleCreateSnapshot,
