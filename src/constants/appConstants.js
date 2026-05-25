@@ -13,5 +13,6 @@ export const APP_ROUTES = {
   TABLE: '/app/table',
   TREE: '/app/tree',
   PANEL: '/app/panel',
-  SETTINGS: '/app/settings'
+  SETTINGS: '/app/settings',
+  ADMIN: '/app/admin'
 };

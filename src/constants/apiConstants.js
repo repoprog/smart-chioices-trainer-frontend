@@ -36,5 +36,12 @@ export const API_PATHS = {
   ANALYSIS: {
     TABLE: '/api/v1/analysis/table',
     TREE: '/api/v1/analysis/tree',
+  },
+  ADMIN: {
+    STATS: '/api/v1/admin/stats',
+    USERS: '/api/v1/admin/users',
+    TOGGLE_USER: (id) => `/api/v1/admin/users/${id}/toggle-active`,
+    SHARES: '/api/v1/admin/shares',
+    REVOKE_SHARE: (id) => `/api/v1/admin/shares/${id}`
   }
 };

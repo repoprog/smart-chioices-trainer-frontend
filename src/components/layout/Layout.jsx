@@ -1,12 +1,11 @@
 // src/components/layout/Layout.jsx
 import { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Table2, Network, User, Settings as SettingsIcon, LogOut, LogIn, UserPlus, TableRowsSplitIcon } from "lucide-react";
+import { Table2, Network, User, Settings as SettingsIcon, LogOut, LogIn, UserPlus, TableRowsSplitIcon, Shield } from "lucide-react";
 import useAuthStore from "../../store/useAuthStore";
 
-
-import {useTableStore} from "../../features/DecisionTable/store/useTableStore";
-import {useTreeStore} from "../../features/DecisionTree/store/useTreeStore";
+import { useTableStore } from "../../features/DecisionTable/store/useTableStore";
+import { useTreeStore } from "../../features/DecisionTree/store/useTreeStore";
 
 import { Button } from "../ui/Button";
 import { ConfirmModal } from "../modals/ConfirmModal";
@@ -63,7 +62,7 @@ export function Layout() {
   )}
 </div>
 
-          {/* Navigation  */}
+          {/* Navigation */}
           <nav className={`flex items-center gap-1 transition-all duration-300 ${
             isAnyPreview ? "pointer-events-none opacity-40 grayscale" : ""
           }`}>
@@ -93,12 +92,27 @@ export function Layout() {
               </Link>
             ))}
 
-          
+            {/* DODANE: Przycisk Panelu Admina widoczny tylko dla administratorów */}
+            {isAuthenticated && user?.role === 'ADMIN' && (
+              <Link
+                to={APP_ROUTES.ADMIN}
+                className={`flex items-center gap-2 px-4 py-2 ml-2 rounded-lg transition-colors text-sm font-medium border ${
+                  isActive(APP_ROUTES.ADMIN) 
+                    ? "bg-emerald-600 text-white border-emerald-600 shadow-sm" 
+                    : "text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                }`}
+              >
+                <Shield className="w-4 h-4" />
+                <span className="hidden md:inline">Admin</span>
+              </Link>
+            )}
+
+            <div className="w-px h-6 bg-border mx-2 hidden md:block" />
 
            {isAuthenticated ? (
   <Button
     variant="ghostDestructive"
-    className="px-2 md:px-4 py-2 ml-1"
+                className="px-2 md:px-4 py-2"
     onClick={() => setShowLogoutModal(true)}
   >
     <LogOut className="w-4 h-4 md:mr-2" />

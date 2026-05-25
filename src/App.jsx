@@ -10,6 +10,9 @@ import { DecisionTreePage } from './features/DecisionTree/DecisionTreePage.jsx';
 import LandingPage from './pages/LandingPage.jsx';
 import UserPanel from './pages/UserPanel.jsx';
 import Settings from './pages/Settings.jsx';
+import {AdminRoute}  from './components/routes/AdminRoute.jsx';
+import  {AdminDashboardPage}  from './pages/admin/AdminDashboardPage.jsx';
+
 
 // DODANE: Import nowej strony udostępnionego projektu
 import { SharedProjectPage } from './pages/SharedProjectPage.jsx'; 
@@ -85,6 +88,11 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path={APP_ROUTES.PANEL} element={<UserPanel />} />
             <Route path={APP_ROUTES.SETTINGS} element={<Settings />} />
+            
+            {/* Panel Admina */}
+            <Route element={<AdminRoute />}>
+              <Route path={APP_ROUTES.ADMIN} element={<AdminDashboardPage />} />
+            </Route>
           </Route>
         </Route>
 
